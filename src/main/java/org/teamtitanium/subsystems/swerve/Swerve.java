@@ -1,5 +1,3 @@
 package org.teamtitanium.subsystems.swerve;
 
-public class Swerve {
-    
-}
+public class Swerve {}

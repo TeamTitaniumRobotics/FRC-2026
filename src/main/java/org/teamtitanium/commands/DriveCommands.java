@@ -1,5 +1,3 @@
 package org.teamtitanium.commands;
 
-public class DriveCommands {
-    
-}
+public class DriveCommands {}

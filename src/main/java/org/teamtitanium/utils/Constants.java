@@ -1,5 +1,3 @@
 package org.teamtitanium.utils;
 
-public class Constants {
-    
-}
+public class Constants {}

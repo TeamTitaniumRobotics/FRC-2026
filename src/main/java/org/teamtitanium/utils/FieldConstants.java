@@ -1,5 +1,3 @@
 package org.teamtitanium.utils;
 
-public class FieldConstants {
-    
-}
+public class FieldConstants {}
