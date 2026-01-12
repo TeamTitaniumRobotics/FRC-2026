@@ -40,20 +40,20 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
     protected final PositionTorqueCurrentFOC positionTorqueCurrentFOC = new PositionTorqueCurrentFOC(0.0);
     protected final VelocityTorqueCurrentFOC velocityTorqueCurrentFOC = new VelocityTorqueCurrentFOC(0.0);
 
-    protected final StatusSignal<Angle> drivePosition;
-    protected final StatusSignal<AngularVelocity> driveVelocity;
-    protected final StatusSignal<Voltage> driveAppliedVolts;
-    protected final StatusSignal<Current> driveSupplyCurrentAmps;
-    protected final StatusSignal<Current> driveTorqueCurrentAmps;
-    protected final StatusSignal<Temperature> driveTempCelcius;
+    // protected final StatusSignal<Angle> drivePosition;
+    // protected final StatusSignal<AngularVelocity> driveVelocity;
+    // protected final StatusSignal<Voltage> driveAppliedVolts;
+    // protected final StatusSignal<Current> driveSupplyCurrentAmps;
+    // protected final StatusSignal<Current> driveTorqueCurrentAmps;
+    // protected final StatusSignal<Temperature> driveTempCelcius;
 
-    protected final StatusSignal<Angle> turnAbsolutePosition;
-    protected final StatusSignal<Angle> turnPosition;
-    protected final StatusSignal<AngularVelocity> turnVelocity;
-    protected final StatusSignal<Voltage> turnAppliedVolts;
-    protected final StatusSignal<Current> turnSupplyCurrentAmps;
-    protected final StatusSignal<Current> turnTorqueCurrentAmps;
-    protected final StatusSignal<Temperature> turnTempCelcius;
+    // protected final StatusSignal<Angle> turnAbsolutePosition;
+    // protected final StatusSignal<Angle> turnPosition;
+    // protected final StatusSignal<AngularVelocity> turnVelocity;
+    // protected final StatusSignal<Voltage> turnAppliedVolts;
+    // protected final StatusSignal<Current> turnSupplyCurrentAmps;
+    // protected final StatusSignal<Current> turnTorqueCurrentAmps;
+    // protected final StatusSignal<Temperature> turnTempCelcius;
 
     private final Debouncer driveConnectedDebouncer = new Debouncer(0.5);
     private final Debouncer turnConnectedDebouncer = new Debouncer(0.5);
