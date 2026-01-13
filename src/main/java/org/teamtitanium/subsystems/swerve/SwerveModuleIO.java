@@ -29,30 +29,21 @@ public interface SwerveModuleIO {
     public double[] odometryTurnPositionsRad = new double[0];
   }
 
-  public default void updateInputs(SwerveModuleIOInputs inputs) {
-  }
+  public default void updateInputs(SwerveModuleIOInputs inputs) {}
 
-  public default void setDriveOpenLoop(double output) {
-  }
+  public default void setDriveOpenLoop(double output) {}
 
-  public default void setTurnOpenLoop(double output) {
-  }
+  public default void setTurnOpenLoop(double output) {}
 
-  public default void setDriveVelocity(double velocityRadPerSec) {
-  }
+  public default void setDriveVelocity(double velocityRadPerSec) {}
 
-  public default void setDriveVelocity(double velocityRadPerSec, double feedforwardVolts) {
-  }
+  public default void setDriveVelocity(double velocityRadPerSec, double feedforwardVolts) {}
 
-  public default void setTurnPosition(double positionRad) {
-  }
+  public default void setTurnPosition(double positionRad) {}
 
-  public default void setDriveGains(Gains gains) {
-  }
+  public default void setDriveGains(Gains gains) {}
 
-  public default void setTurnGains(Gains gains) {
-  }
+  public default void setTurnGains(Gains gains) {}
 
-  public default void setBrakeMode(boolean enabled) {
-  }
+  public default void setBrakeMode(boolean enabled) {}
 }
