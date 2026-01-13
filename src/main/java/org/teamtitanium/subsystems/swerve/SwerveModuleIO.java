@@ -1,5 +1,6 @@
 package org.teamtitanium.subsystems.swerve;
 
+import edu.wpi.first.math.geometry.Rotation2d;
 import org.littletonrobotics.junction.AutoLog;
 import org.teamtitanium.utils.Constants.Gains;
 
@@ -19,7 +20,7 @@ public interface SwerveModuleIO {
             false, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, false, false, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 
     public double[] odometryDrivePositionsRad = new double[0];
-    public double[] odometryTurnPositionsRad = new double[0];
+    public Rotation2d[] odometryTurnPositions = new Rotation2d[0];
   }
 
   /***

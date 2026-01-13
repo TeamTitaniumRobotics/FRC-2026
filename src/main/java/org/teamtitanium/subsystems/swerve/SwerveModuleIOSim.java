@@ -33,9 +33,6 @@ public class SwerveModuleIOSim extends SwerveModuleIOTalonFX {
         Arrays.stream(moduleSimulation.getCachedDriveWheelFinalPositions())
             .mapToDouble(angle -> angle.in(Radians))
             .toArray();
-    inputs.odometryTurnPositionsRad =
-        Arrays.stream(moduleSimulation.getCachedSteerAbsolutePositions())
-            .mapToDouble(angle -> angle.getRadians())
-            .toArray();
+    inputs.odometryTurnPositions = moduleSimulation.getCachedSteerAbsolutePositions();
   }
 }

@@ -12,15 +12,13 @@ public interface GyroIO {
   }
 
   public record GyroIOData(
-    boolean connected,
-    double yawPositionRads,
-    double yawVelocityRadPerSec,
-    double pitchPositionRads,
-    double pitchVelocityRadPerSec,
-    double rollPositionRads,
-    double rollVelocityRadPerSec
-  ) {
-  }
+      boolean connected,
+      double yawPositionRads,
+      double yawVelocityRadPerSec,
+      double pitchPositionRads,
+      double pitchVelocityRadPerSec,
+      double rollPositionRads,
+      double rollVelocityRadPerSec) {}
 
   public default void updateInputs(GyroIOInputs inputs) {}
 }
