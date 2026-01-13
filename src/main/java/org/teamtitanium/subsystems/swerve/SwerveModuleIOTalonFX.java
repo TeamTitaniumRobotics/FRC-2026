@@ -102,7 +102,7 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
     var turnConfig = new TalonFXConfiguration();
     turnConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     turnConfig.Slot0 = swerveConstants.SteerMotorGains;
-    if (Constants.currentMode == Constants.Mode.SIM) {
+    if (Constants.getMode() == Constants.Mode.SIM) {
       turnConfig.Slot0.withKD(0.5).withKS(0);
     }
     turnConfig.Feedback.FeedbackRemoteSensorID = swerveConstants.EncoderId;

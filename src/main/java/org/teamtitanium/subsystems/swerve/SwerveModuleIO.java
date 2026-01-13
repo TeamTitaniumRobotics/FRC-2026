@@ -13,7 +13,7 @@ public interface SwerveModuleIO {
    * Data structure for Swerve Module IO Inputs.
    */
   @AutoLog
-  public class SwerveModuleIOInputs {
+  public static class SwerveModuleIOInputs {
     public SwerveModuleIOData swerveModuleData =
         new SwerveModuleIOData(
             false, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, false, false, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);

@@ -4,11 +4,14 @@ import com.ctre.phoenix6.CANBus;
 import edu.wpi.first.wpilibj.RobotBase;
 
 public class Constants {
+  public static final double loopPeriodSecs = 0.02;
   public static final boolean tuningMode = false;
-  public static final boolean disableHAL = false;
 
-  public static final Mode simMode = Mode.SIM;
-  public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
+  private static final Mode simMode = Mode.SIM;
+
+  public static Mode getMode() {
+    return RobotBase.isReal() ? Mode.REAL : simMode;
+  }
 
   public enum Mode {
     REAL,
