@@ -4,6 +4,7 @@
 
 package org.teamtitanium;
 
+import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.hal.AllianceStationID;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -15,13 +16,10 @@ import edu.wpi.first.wpilibj.simulation.DriverStationSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
-import lombok.extern.java.Log;
-
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
-
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
@@ -31,13 +29,11 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 import org.teamtitanium.subsystems.Leds;
 import org.teamtitanium.utils.CanivoreReader;
 import org.teamtitanium.utils.Constants;
+import org.teamtitanium.utils.Constants.Mode;
 import org.teamtitanium.utils.LoggedTracer;
 import org.teamtitanium.utils.PhoenixUtil;
 import org.teamtitanium.utils.TunerConstants;
 import org.teamtitanium.utils.VirtualSubsystem;
-import org.teamtitanium.utils.Constants.Mode;
-
-import com.ctre.phoenix6.SignalLogger;
 
 public class Robot extends LoggedRobot {
   private static final double loopOverrunWarningTimeout = 0.02;
@@ -59,9 +55,12 @@ public class Robot extends LoggedRobot {
   private final CanivoreReader canivoreReader = new CanivoreReader(TunerConstants.kCANBus);
 
   private final Alert canErrorAlert = new Alert("CAN Bus Error Detected", Alert.AlertType.kError);
-  private final Alert canivoreErrorAlert = new Alert("Canivore CAN Bus Error Detected", Alert.AlertType.kError);
-  private final Alert lowBatteryAlert = new Alert("Low Battery Voltage Detected", Alert.AlertType.kWarning);
-  private final Alert initializationAlert = new Alert("Please wait to enable, robot is initializing", Alert.AlertType.kWarning);
+  private final Alert canivoreErrorAlert =
+      new Alert("Canivore CAN Bus Error Detected", Alert.AlertType.kError);
+  private final Alert lowBatteryAlert =
+      new Alert("Low Battery Voltage Detected", Alert.AlertType.kWarning);
+  private final Alert initializationAlert =
+      new Alert("Please wait to enable, robot is initializing", Alert.AlertType.kWarning);
 
   public Robot() {
     Leds.getInstance(); // Initialize LED subsystem early
@@ -88,16 +87,16 @@ public class Robot extends LoggedRobot {
 
     // Configure data receivers and replay sources
     switch (Constants.getMode()) {
-      // Set up for real robot
+        // Set up for real robot
       case REAL:
         Logger.addDataReceiver(new WPILOGWriter());
         Logger.addDataReceiver(new RLOGServer());
         break;
-      // Set up for simulation
+        // Set up for simulation
       case SIM:
         Logger.addDataReceiver(new RLOGServer());
         break;
-      // Set up for replaying logs
+        // Set up for replaying logs
       case REPLAY:
         setUseTiming(false);
         String logPath = LogFileUtil.findReplayLog();
@@ -128,16 +127,22 @@ public class Robot extends LoggedRobot {
 
     // Log active commands
     Map<String, Integer> commandCounts = new HashMap<>();
-    BiConsumer<Command, Boolean> logCommandFunction = (Command command, Boolean active) -> {
-      String commandName = command.getName();
-      int count = commandCounts.getOrDefault(commandName, 0) + (active ? 1 : -1);
-      commandCounts.put(commandName, count);
-      Logger.recordOutput("CommandsUnique/" + commandName + "_" + Integer.toHexString(command.hashCode()), active);
-      Logger.recordOutput("CommandsAll/" + commandName, count > 0);
-    };
-    CommandScheduler.getInstance().onCommandInitialize((Command command) -> logCommandFunction.accept(command, true));
-    CommandScheduler.getInstance().onCommandFinish((Command command) -> logCommandFunction.accept(command, false));
-    CommandScheduler.getInstance().onCommandInterrupt((Command command) -> logCommandFunction.accept(command, false));
+    BiConsumer<Command, Boolean> logCommandFunction =
+        (Command command, Boolean active) -> {
+          String commandName = command.getName();
+          int count = commandCounts.getOrDefault(commandName, 0) + (active ? 1 : -1);
+          commandCounts.put(commandName, count);
+          Logger.recordOutput(
+              "CommandsUnique/" + commandName + "_" + Integer.toHexString(command.hashCode()),
+              active);
+          Logger.recordOutput("CommandsAll/" + commandName, count > 0);
+        };
+    CommandScheduler.getInstance()
+        .onCommandInitialize((Command command) -> logCommandFunction.accept(command, true));
+    CommandScheduler.getInstance()
+        .onCommandFinish((Command command) -> logCommandFunction.accept(command, false));
+    CommandScheduler.getInstance()
+        .onCommandInterrupt((Command command) -> logCommandFunction.accept(command, false));
 
     canInitialErrorTimer.restart();
     canErrorTimer.restart();
@@ -169,10 +174,13 @@ public class Robot extends LoggedRobot {
     if (autonomousCommand != null) {
       if (!autonomousCommand.isScheduled() && !autoMessagePrinted) {
         if (DriverStation.isAutonomousEnabled()) {
-          System.out.printf("*** Autonomous finished in %.2f seconds ***%n", Timer.getTimestamp() - autoStartTime);
-        }
-        else {
-          System.out.printf("*** Autonomous canceled in %.2f seconds ***%n", Timer.getTimestamp() - autoStartTime);
+          System.out.printf(
+              "*** Autonomous finished in %.2f seconds ***%n",
+              Timer.getTimestamp() - autoStartTime);
+        } else {
+          System.out.printf(
+              "*** Autonomous canceled in %.2f seconds ***%n",
+              Timer.getTimestamp() - autoStartTime);
         }
         autoMessagePrinted = true;
       }
@@ -183,16 +191,13 @@ public class Robot extends LoggedRobot {
   }
 
   @Override
-  public void disabledInit() {
-  }
+  public void disabledInit() {}
 
   @Override
-  public void disabledPeriodic() {
-  }
+  public void disabledPeriodic() {}
 
   @Override
-  public void disabledExit() {
-  }
+  public void disabledExit() {}
 
   @Override
   public void autonomousInit() {
@@ -204,12 +209,10 @@ public class Robot extends LoggedRobot {
   }
 
   @Override
-  public void autonomousPeriodic() {
-  }
+  public void autonomousPeriodic() {}
 
   @Override
-  public void autonomousExit() {
-  }
+  public void autonomousExit() {}
 
   @Override
   public void teleopInit() {
@@ -218,21 +221,15 @@ public class Robot extends LoggedRobot {
     }
   }
 
-  private void updateAlerts() {
+  private void updateAlerts() {}
 
-  }
-
-  private void updateDashboardOuputs() {
-
-  }
+  private void updateDashboardOuputs() {}
 
   @Override
-  public void teleopPeriodic() {
-  }
+  public void teleopPeriodic() {}
 
   @Override
-  public void teleopExit() {
-  }
+  public void teleopExit() {}
 
   @Override
   public void testInit() {
@@ -240,10 +237,8 @@ public class Robot extends LoggedRobot {
   }
 
   @Override
-  public void testPeriodic() {
-  }
+  public void testPeriodic() {}
 
   @Override
-  public void testExit() {
-  }
+  public void testExit() {}
 }
