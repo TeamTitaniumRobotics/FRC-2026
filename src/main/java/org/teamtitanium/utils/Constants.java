@@ -1,5 +1,6 @@
 package org.teamtitanium.utils;
 
+import com.ctre.phoenix6.CANBus;
 import edu.wpi.first.wpilibj.RobotBase;
 
 public class Constants {
@@ -14,6 +15,8 @@ public class Constants {
     SIM,
     REPLAY
   }
+
+  public static final CANBus RIO_CAN_BUS = CANBus.roboRIO();
 
   public record Gains(double kP, double kI, double kD, double kS, double kV, double kA) {}
 

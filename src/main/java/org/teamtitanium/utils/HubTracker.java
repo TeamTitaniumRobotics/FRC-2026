@@ -1,9 +1,8 @@
 package org.teamtitanium.utils;
 
-import java.util.Optional;
-
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import java.util.Optional;
 
 public class HubTracker {
   private static String currentGameData = "";
