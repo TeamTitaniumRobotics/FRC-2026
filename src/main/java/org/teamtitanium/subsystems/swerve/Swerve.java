@@ -9,18 +9,29 @@ import com.ctre.phoenix6.CANBus;
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Mass;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import java.util.Arrays;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import org.ironmaple.simulation.drivesims.COTS;
 import org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig;
 import org.ironmaple.simulation.drivesims.configs.SwerveModuleSimulationConfig;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.teamtitanium.utils.LoggedTracer;
+import org.teamtitanium.utils.LoggedTunableNumber;
 import org.teamtitanium.utils.TunerConstants;
+import org.teamtitanium.utils.swerve.SwerveSetpoint;
+import org.teamtitanium.utils.swerve.SwerveSetpointGenerator;
 
 public class Swerve extends SubsystemBase {
   public static final double ODOMETRY_FREQUENCY =
@@ -49,6 +60,34 @@ public class Swerve extends SubsystemBase {
   private final GyroIO gyroIO;
   private final GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
   private final SwerveModule[] swerveModules = new SwerveModule[4];
+  private final Debouncer gyroDisconnectedDebouncer =
+      new Debouncer(0.5, Debouncer.DebounceType.kFalling);
+  private final Alert gyroDisconnectedAlert =
+      new Alert("Swerve Gyro Disconnected", Alert.AlertType.kError);
+
+  private static final LoggedTunableNumber coastWaitTime =
+      new LoggedTunableNumber("Swerve/CoastWaitTimeSecs", 0.5);
+  private static final LoggedTunableNumber coastMetersPerSecThreshold =
+      new LoggedTunableNumber("Swerve/CoastMetersPerSecThreshold", 0.05);
+
+  private final Timer lastMovementTimer = new Timer();
+
+  private final SwerveDriveKinematics kinematics =
+      new SwerveDriveKinematics(getModuleTranslations());
+
+  @AutoLogOutput private boolean velocityMode = false;
+  @AutoLogOutput private boolean brakeModeEnabled = true;
+
+  private SwerveSetpoint currentSetpoint =
+      new SwerveSetpoint(
+          new ChassisSpeeds(),
+          new SwerveModuleState[] {
+            new SwerveModuleState(),
+            new SwerveModuleState(),
+            new SwerveModuleState(),
+            new SwerveModuleState()
+          });
+  private final SwerveSetpointGenerator swerveSetpointGenerator;
 
   public Swerve(
       GyroIO gyroIO,
@@ -61,6 +100,11 @@ public class Swerve extends SubsystemBase {
     this.swerveModules[1] = new SwerveModule(frModuleIO, 1, TunerConstants.FrontRight);
     this.swerveModules[2] = new SwerveModule(blModuleIO, 2, TunerConstants.BackLeft);
     this.swerveModules[3] = new SwerveModule(brModuleIO, 3, TunerConstants.BackRight);
+
+    lastMovementTimer.start();
+    setBrakeMode(true);
+
+    swerveSetpointGenerator = new SwerveSetpointGenerator(kinematics, getModuleTranslations());
 
     HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_AdvantageKit);
 
@@ -83,6 +127,13 @@ public class Swerve extends SubsystemBase {
     for (var swerveModule : swerveModules) {
       swerveModule.periodic();
     }
+  }
+
+  private void setBrakeMode(boolean enabled) {
+    if (brakeModeEnabled != enabled) {
+      Arrays.stream(swerveModules).forEach(module -> module.setBrakeMode(enabled));
+    }
+    brakeModeEnabled = enabled;
   }
 
   public static Translation2d[] getModuleTranslations() {

@@ -31,6 +31,7 @@ import org.teamtitanium.utils.CanivoreReader;
 import org.teamtitanium.utils.Constants;
 import org.teamtitanium.utils.Constants.Mode;
 import org.teamtitanium.utils.LoggedTracer;
+import org.teamtitanium.utils.NTClientLogger;
 import org.teamtitanium.utils.PhoenixUtil;
 import org.teamtitanium.utils.TunerConstants;
 import org.teamtitanium.utils.VirtualSubsystem;
@@ -188,6 +189,63 @@ public class Robot extends LoggedRobot {
 
     updateAlerts();
     updateDashboardOuputs();
+
+    var canStatus = RobotController.getCANStatus();
+    if (canStatus.transmitErrorCount > 0 || canStatus.receiveErrorCount > 0) {
+      canErrorTimer.restart();
+    }
+    canErrorAlert.set(
+        !canErrorTimer.hasElapsed(canErrorTimeThreshold)
+            && !canInitialErrorTimer.hasElapsed(canErrorTimeThreshold));
+
+    if (Constants.getMode() == Constants.Mode.REAL) {
+      var canivoreStatus = canivoreReader.getStatus();
+      if (canivoreStatus.isPresent()) {
+        Logger.recordOutput("CANivoreStatus/Status", canivoreStatus.get().Status.getName());
+        Logger.recordOutput("CANivoreStatus/Utilization", canivoreStatus.get().BusUtilization);
+        Logger.recordOutput("CANivoreStatus/OffCount", canivoreStatus.get().BusOffCount);
+        Logger.recordOutput("CANivoreStatus/TxFullCount", canivoreStatus.get().TxFullCount);
+        Logger.recordOutput("CANivoreStatus/ReceiveErrorCount", canivoreStatus.get().REC);
+        Logger.recordOutput("CANivoreStatus/TransmitErrorCount", canivoreStatus.get().TEC);
+        if (!canivoreStatus.get().Status.isOK()
+            || canStatus.transmitErrorCount > 0
+            || canStatus.receiveErrorCount > 0) {
+          canivoreErrorTimer.restart();
+        }
+      }
+
+      canivoreErrorAlert.set(
+          !canivoreErrorTimer.hasElapsed(canivoreErrorTimeThreshold)
+              && !canInitialErrorTimer.hasElapsed(canErrorTimeThreshold));
+    }
+
+    // Log NetworkTables data
+    NTClientLogger.log();
+
+    // Low Battery Alert
+    lowBatteryCycleCount++;
+    if (DriverStation.isEnabled()) {
+      disabledTimer.reset();
+    }
+    if (RobotController.getBatteryVoltage() <= lowBatteryVoltageThreshold
+        && disabledTimer.hasElapsed(lowBatteryDisabledTimeThreshold)
+        && lowBatteryMinCycleCount >= lowBatteryCycleCount) {
+      lowBatteryAlert.set(true);
+      // TODO: Send low battery alert to LEDs
+    }
+
+    // Initialization Alert
+    initializationAlert.set(isInitializing());
+
+    LoggedTracer.record("RobotPeriodic");
+  }
+
+  private void updateAlerts() {}
+
+  private void updateDashboardOuputs() {}
+
+  public static boolean isInitializing() {
+    return Timer.getTimestamp() < 45.0;
   }
 
   @Override
@@ -201,6 +259,7 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void autonomousInit() {
+    autoStartTime = Timer.getTimestamp();
     autonomousCommand = Commands.none(); // TODO: Add autonomous command here
 
     if (autonomousCommand != null) {
@@ -220,10 +279,6 @@ public class Robot extends LoggedRobot {
       autonomousCommand.cancel();
     }
   }
-
-  private void updateAlerts() {}
-
-  private void updateDashboardOuputs() {}
 
   @Override
   public void teleopPeriodic() {}

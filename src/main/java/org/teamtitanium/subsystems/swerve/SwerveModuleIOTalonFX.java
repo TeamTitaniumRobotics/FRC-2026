@@ -192,7 +192,7 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
 
   @Override
   public void updateInputs(SwerveModuleIOInputs inputs) {
-    inputs.swerveModuleData =
+    inputs.moduleData =
         new SwerveModuleIOData(
             BaseStatusSignal.isAllGood(
                 drivePosition,

@@ -15,7 +15,7 @@ public interface SwerveModuleIO {
    */
   @AutoLog
   public static class SwerveModuleIOInputs {
-    public SwerveModuleIOData swerveModuleData =
+    public SwerveModuleIOData moduleData =
         new SwerveModuleIOData(
             false, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, false, false, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 
@@ -36,7 +36,7 @@ public interface SwerveModuleIO {
       double driveTorqueCurrentAmps,
       double driveTempCelcius,
       boolean turnConnected,
-      boolean turnCanCoderConnected,
+      boolean turnCANcoderConnected,
       double turnAbsolutePositionRad,
       double turnPositionRad,
       double turnVelocityRadPerSec,
@@ -75,7 +75,7 @@ public interface SwerveModuleIO {
 
   /***
    * Sets the drive motor to the given velocity in radians per second with
-   * feedforward voltage.
+   * feedforward current.
    *
    * @param velocityRadPerSec The target velocity in radians per second.
    * @param torqueFF  The feedforward torque to be applied.
