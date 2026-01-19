@@ -25,12 +25,11 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import lombok.Setter;
-
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import lombok.Setter;
 import org.ironmaple.simulation.drivesims.COTS;
 import org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig;
 import org.ironmaple.simulation.drivesims.configs.SwerveModuleSimulationConfig;
@@ -46,61 +45,63 @@ import org.teamtitanium.utils.swerve.SwerveSetpoint;
 import org.teamtitanium.utils.swerve.SwerveSetpointGenerator;
 
 public class Swerve extends SubsystemBase {
-  public static final double ODOMETRY_FREQUENCY = new CANBus(TunerConstants.DrivetrainConstants.CANBusName)
-      .isNetworkFD() ? 250.0 : 100.0;
+  public static final double ODOMETRY_FREQUENCY =
+      new CANBus(TunerConstants.DrivetrainConstants.CANBusName).isNetworkFD() ? 250.0 : 100.0;
 
   private static final Mass ROBOT_MASS = Pounds.of(150);
   private static final double WHEEL_COF = 1.5;
-  public static final DriveTrainSimulationConfig mapleSimConfig = DriveTrainSimulationConfig.Default()
-      .withRobotMass(ROBOT_MASS)
-      .withCustomModuleTranslations(getModuleTranslations())
-      .withGyro(COTS.ofPigeon2())
-      .withSwerveModule(
-          new SwerveModuleSimulationConfig(
-              DCMotor.getKrakenX60(1),
-              DCMotor.getFalcon500(1),
-              TunerConstants.FrontLeft.DriveMotorGearRatio,
-              TunerConstants.FrontLeft.SteerMotorGearRatio,
-              Volts.of(TunerConstants.FrontLeft.DriveFrictionVoltage),
-              Volts.of(TunerConstants.FrontLeft.SteerFrictionVoltage),
-              Meters.of(TunerConstants.FrontLeft.WheelRadius),
-              KilogramSquareMeters.of(TunerConstants.FrontLeft.SteerInertia),
-              WHEEL_COF));
+  public static final DriveTrainSimulationConfig mapleSimConfig =
+      DriveTrainSimulationConfig.Default()
+          .withRobotMass(ROBOT_MASS)
+          .withCustomModuleTranslations(getModuleTranslations())
+          .withGyro(COTS.ofPigeon2())
+          .withSwerveModule(
+              new SwerveModuleSimulationConfig(
+                  DCMotor.getKrakenX60(1),
+                  DCMotor.getFalcon500(1),
+                  TunerConstants.FrontLeft.DriveMotorGearRatio,
+                  TunerConstants.FrontLeft.SteerMotorGearRatio,
+                  Volts.of(TunerConstants.FrontLeft.DriveFrictionVoltage),
+                  Volts.of(TunerConstants.FrontLeft.SteerFrictionVoltage),
+                  Meters.of(TunerConstants.FrontLeft.WheelRadius),
+                  KilogramSquareMeters.of(TunerConstants.FrontLeft.SteerInertia),
+                  WHEEL_COF));
 
   public static final Lock odometryLock = new ReentrantLock();
   private final GyroIO gyroIO;
   private final GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
   private final SwerveModule[] swerveModules = new SwerveModule[4];
   private final SysIdRoutine sysId;
-  private final Debouncer gyroDisconnectedDebouncer = new Debouncer(0.5, Debouncer.DebounceType.kFalling);
-  private final Alert gyroDisconnectedAlert = new Alert("Swerve Gyro Disconnected", Alert.AlertType.kError);
+  private final Debouncer gyroDisconnectedDebouncer =
+      new Debouncer(0.5, Debouncer.DebounceType.kFalling);
+  private final Alert gyroDisconnectedAlert =
+      new Alert("Swerve Gyro Disconnected", Alert.AlertType.kError);
 
-  private static final LoggedTunableNumber coastWaitTime = new LoggedTunableNumber("Swerve/CoastWaitTimeSecs", 0.5);
-  private static final LoggedTunableNumber coastMetersPerSecThreshold = new LoggedTunableNumber(
-      "Swerve/CoastMetersPerSecThreshold", 0.05);
+  private static final LoggedTunableNumber coastWaitTime =
+      new LoggedTunableNumber("Swerve/CoastWaitTimeSecs", 0.5);
+  private static final LoggedTunableNumber coastMetersPerSecThreshold =
+      new LoggedTunableNumber("Swerve/CoastMetersPerSecThreshold", 0.05);
 
   private final Timer lastMovementTimer = new Timer();
 
-  private final SwerveDriveKinematics kinematics = new SwerveDriveKinematics(getModuleTranslations());
+  private final SwerveDriveKinematics kinematics =
+      new SwerveDriveKinematics(getModuleTranslations());
 
-  @AutoLogOutput
-  private boolean velocityMode = false;
-  @AutoLogOutput
-  private boolean brakeModeEnabled = true;
+  @AutoLogOutput private boolean velocityMode = false;
+  @AutoLogOutput private boolean brakeModeEnabled = true;
 
-  private SwerveSetpoint currentSetpoint = new SwerveSetpoint(
-      new ChassisSpeeds(),
-      new SwerveModuleState[] {
-          new SwerveModuleState(),
-          new SwerveModuleState(),
-          new SwerveModuleState(),
-          new SwerveModuleState()
-      });
+  private SwerveSetpoint currentSetpoint =
+      new SwerveSetpoint(
+          new ChassisSpeeds(),
+          new SwerveModuleState[] {
+            new SwerveModuleState(),
+            new SwerveModuleState(),
+            new SwerveModuleState(),
+            new SwerveModuleState()
+          });
   private final SwerveSetpointGenerator swerveSetpointGenerator;
 
-  @Setter
-  @AutoLogOutput
-  private CoastRequest coastRequest = CoastRequest.ALWAYS_BRAKE;
+  @Setter @AutoLogOutput private CoastRequest coastRequest = CoastRequest.ALWAYS_BRAKE;
 
   public Swerve(
       GyroIO gyroIO,
@@ -121,10 +122,15 @@ public class Swerve extends SubsystemBase {
 
     HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_AdvantageKit);
 
-    sysId = new SysIdRoutine(
-        new SysIdRoutine.Config(null, null, null,
-            (state) -> Logger.recordOutput("Swerve/SysIdState", state.toString())),
-        new SysIdRoutine.Mechanism((voltage) -> runCharacterization(voltage.in(Volts)), null, this));
+    sysId =
+        new SysIdRoutine(
+            new SysIdRoutine.Config(
+                null,
+                null,
+                null,
+                (state) -> Logger.recordOutput("Swerve/SysIdState", state.toString())),
+            new SysIdRoutine.Mechanism(
+                (voltage) -> runCharacterization(voltage.in(Volts)), null, this));
 
     PhoenixOdometryThread.getInstance().start();
   }
@@ -159,32 +165,55 @@ public class Swerve extends SubsystemBase {
     }
 
     // Update robot state with odometry updates
-    double[] sampleTimestamps = Constants.getMode() == Constants.Mode.SIM ? new double[] { Timer.getTimestamp() }
-        : gyroInputs.odometryYawTimestamps;
+    double[] sampleTimestamps =
+        Constants.getMode() == Constants.Mode.SIM
+            ? new double[] {Timer.getTimestamp()}
+            : gyroInputs.odometryYawTimestamps;
     int sampleCount = sampleTimestamps.length;
     for (int i = 0; i < sampleCount; i++) {
       var wheelPositions = new SwerveModulePosition[4];
       for (int j = 0; j < 4; j++) {
         wheelPositions[j] = swerveModules[j].getOdometryPositions()[i];
       }
-      RobotState.getInstance().addOdometryObservation(new RobotState.OdometryObservation(wheelPositions,
-          Optional.ofNullable(
-              gyroInputs.gyroData.connected() ? Rotation2d.fromRadians(gyroInputs.odometryYawPositionsRads[i]) : null),
-          sampleTimestamps[i]));
+      RobotState.getInstance()
+          .addOdometryObservation(
+              new RobotState.OdometryObservation(
+                  wheelPositions,
+                  Optional.ofNullable(
+                      gyroInputs.gyroData.connected()
+                          ? Rotation2d.fromRadians(gyroInputs.odometryYawPositionsRads[i])
+                          : null),
+                  sampleTimestamps[i]));
 
       // Log 3D estimated pose with pitch and roll adjustments
-      Logger.recordOutput("RobotState/EstimatedPose3d", new Pose3d(RobotState.getInstance().getEstimatedPose())
-          .exp(new Twist3d(0.0, 0.0,
-              Math.abs(gyroInputs.gyroData.pitchPositionRads()) * TunerConstants.FrontLeft.LocationX, 0.0,
-              gyroInputs.gyroData.pitchPositionRads(), 0.0))
-          .exp(new Twist3d(0.0, 0.0,
-              Math.abs(gyroInputs.gyroData.rollPositionRads()) * TunerConstants.FrontLeft.LocationY,
-              gyroInputs.gyroData.rollPositionRads(), 0.0, 0.0)));
+      Logger.recordOutput(
+          "RobotState/EstimatedPose3d",
+          new Pose3d(RobotState.getInstance().getEstimatedPose())
+              .exp(
+                  new Twist3d(
+                      0.0,
+                      0.0,
+                      Math.abs(gyroInputs.gyroData.pitchPositionRads())
+                          * TunerConstants.FrontLeft.LocationX,
+                      0.0,
+                      gyroInputs.gyroData.pitchPositionRads(),
+                      0.0))
+              .exp(
+                  new Twist3d(
+                      0.0,
+                      0.0,
+                      Math.abs(gyroInputs.gyroData.rollPositionRads())
+                          * TunerConstants.FrontLeft.LocationY,
+                      gyroInputs.gyroData.rollPositionRads(),
+                      0.0,
+                      0.0)));
     }
 
     RobotState.getInstance().addSwerveSpeeds(getChassisSpeeds());
-    RobotState.getInstance().setPitch(Rotation2d.fromRadians(gyroInputs.gyroData.pitchPositionRads()));
-    RobotState.getInstance().setRoll(Rotation2d.fromRadians(gyroInputs.gyroData.rollPositionRads()));
+    RobotState.getInstance()
+        .setPitch(Rotation2d.fromRadians(gyroInputs.gyroData.pitchPositionRads()));
+    RobotState.getInstance()
+        .setRoll(Rotation2d.fromRadians(gyroInputs.gyroData.rollPositionRads()));
 
     // Update break mode based on coast request
     if (DriverStation.isEnabled()) {
@@ -196,8 +225,11 @@ public class Swerve extends SubsystemBase {
         if (DriverStation.isEnabled()) {
           setBrakeMode(true);
         } else {
-          if (Arrays.stream(swerveModules).anyMatch(
-              swerveModule -> Math.abs(swerveModule.getVelocityMetersPerSec()) > coastMetersPerSecThreshold.get())) {
+          if (Arrays.stream(swerveModules)
+              .anyMatch(
+                  swerveModule ->
+                      Math.abs(swerveModule.getVelocityMetersPerSec())
+                          > coastMetersPerSecThreshold.get())) {
             lastMovementTimer.reset();
           }
           if (lastMovementTimer.hasElapsed(coastWaitTime.get())) {
@@ -215,8 +247,10 @@ public class Swerve extends SubsystemBase {
     }
 
     // Update gyro disconnected alert
-    gyroDisconnectedAlert.set(!gyroDisconnectedDebouncer.calculate(gyroInputs.gyroData.connected())
-        && Constants.getMode() != Constants.Mode.SIM && !Robot.isInitializing());
+    gyroDisconnectedAlert.set(
+        !gyroDisconnectedDebouncer.calculate(gyroInputs.gyroData.connected())
+            && Constants.getMode() != Constants.Mode.SIM
+            && !Robot.isInitializing());
 
     // Record swerve periodic cycle time
     LoggedTracer.record("Swerve/Periodic");
@@ -251,10 +285,10 @@ public class Swerve extends SubsystemBase {
 
   public static Translation2d[] getModuleTranslations() {
     return new Translation2d[] {
-        new Translation2d(TunerConstants.FrontLeft.LocationX, TunerConstants.FrontLeft.LocationY),
-        new Translation2d(TunerConstants.FrontRight.LocationX, TunerConstants.FrontRight.LocationY),
-        new Translation2d(TunerConstants.BackLeft.LocationX, TunerConstants.BackLeft.LocationY),
-        new Translation2d(TunerConstants.BackRight.LocationX, TunerConstants.BackRight.LocationY)
+      new Translation2d(TunerConstants.FrontLeft.LocationX, TunerConstants.FrontLeft.LocationY),
+      new Translation2d(TunerConstants.FrontRight.LocationX, TunerConstants.FrontRight.LocationY),
+      new Translation2d(TunerConstants.BackLeft.LocationX, TunerConstants.BackLeft.LocationY),
+      new Translation2d(TunerConstants.BackRight.LocationX, TunerConstants.BackRight.LocationY)
     };
   }
 
