@@ -26,8 +26,8 @@ public class RobotState {
   }
 
   // Poses
-  @Getter @AutoLogOutput private Pose2d odometryPose = Pose2d.kZero;
-  @Getter @AutoLogOutput private Pose2d estimatedPose = Pose2d.kZero;
+  @Getter @Setter @AutoLogOutput private Pose2d odometryPose = Pose2d.kZero;
+  @Getter @Setter @AutoLogOutput private Pose2d estimatedPose = Pose2d.kZero;
 
   private final TimeInterpolatableBuffer<Pose2d> poseBuffer =
       TimeInterpolatableBuffer.createBuffer(poseBufferSizeSeconds);
@@ -73,6 +73,10 @@ public class RobotState {
     // Update estimated pose from difference from last pose
     Twist2d finalTwist = lastOdometryPose.log(odometryPose);
     estimatedPose = estimatedPose.exp(finalTwist);
+  }
+
+  public Rotation2d getRotation() {
+    return estimatedPose.getRotation();
   }
 
   public void addSwerveSpeeds(ChassisSpeeds speeds) {

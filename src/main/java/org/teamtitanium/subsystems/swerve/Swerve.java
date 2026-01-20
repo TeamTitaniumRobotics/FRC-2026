@@ -2,6 +2,7 @@ package org.teamtitanium.subsystems.swerve;
 
 import static edu.wpi.first.units.Units.KilogramSquareMeters;
 import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Pounds;
 import static edu.wpi.first.units.Units.Volts;
 
@@ -9,6 +10,8 @@ import com.ctre.phoenix6.CANBus;
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
+import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -18,7 +21,9 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Mass;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -26,6 +31,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -39,14 +45,28 @@ import org.teamtitanium.Robot;
 import org.teamtitanium.RobotState;
 import org.teamtitanium.utils.Constants;
 import org.teamtitanium.utils.LoggedTracer;
+import org.teamtitanium.utils.LoggedTunableBoolean;
 import org.teamtitanium.utils.LoggedTunableNumber;
 import org.teamtitanium.utils.TunerConstants;
+import org.teamtitanium.utils.swerve.ModuleLimits;
 import org.teamtitanium.utils.swerve.SwerveSetpoint;
 import org.teamtitanium.utils.swerve.SwerveSetpointGenerator;
 
 public class Swerve extends SubsystemBase {
+  public static final LoggedTunableBoolean useSwerveSetpointGenerator =
+      new LoggedTunableBoolean("Swerve/UseSwerveSetpointGenerator", false);
+
   public static final double ODOMETRY_FREQUENCY =
       new CANBus(TunerConstants.DrivetrainConstants.CANBusName).isNetworkFD() ? 250.0 : 100.0;
+
+  public static final double DRIVE_BASE_RADIUS =
+      Math.max(
+          Math.max(
+              Math.hypot(TunerConstants.FrontLeft.LocationX, TunerConstants.FrontLeft.LocationY),
+              Math.hypot(TunerConstants.FrontRight.LocationX, TunerConstants.FrontRight.LocationY)),
+          Math.max(
+              Math.hypot(TunerConstants.BackLeft.LocationX, TunerConstants.BackLeft.LocationX),
+              Math.hypot(TunerConstants.BackRight.LocationX, TunerConstants.BackRight.LocationY)));
 
   private static final Mass ROBOT_MASS = Pounds.of(150);
   private static final double WHEEL_COF = 1.5;
@@ -100,6 +120,14 @@ public class Swerve extends SubsystemBase {
             new SwerveModuleState()
           });
   private final SwerveSetpointGenerator swerveSetpointGenerator;
+
+  private final double maxLinearAcceleration = 22.0;
+  private final double maxAngularVelocity = Units.degreesToRadians(1080.0);
+  private final ModuleLimits moduleLimitsFree =
+      new ModuleLimits(
+          TunerConstants.kSpeedAt12Volts.in(MetersPerSecond),
+          maxLinearAcceleration,
+          maxAngularVelocity);
 
   @Setter @AutoLogOutput private CoastRequest coastRequest = CoastRequest.ALWAYS_BRAKE;
 
@@ -256,9 +284,84 @@ public class Swerve extends SubsystemBase {
     LoggedTracer.record("Swerve/Periodic");
   }
 
+  public void runVelocity(ChassisSpeeds speeds) {
+    velocityMode = true;
+    ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(speeds, Constants.loopPeriodSecs);
+    SwerveModuleState[] setpointStatesUnoptimized = kinematics.toSwerveModuleStates(discreteSpeeds);
+    SwerveModuleState[] setpointStates = setpointStatesUnoptimized;
+    if (useSwerveSetpointGenerator.get()) {
+      currentSetpoint =
+          swerveSetpointGenerator.generateSetpoint(
+              moduleLimitsFree, currentSetpoint, discreteSpeeds, Constants.loopPeriodSecs);
+      setpointStates = currentSetpoint.moduleStates();
+      Logger.recordOutput("Swerve/SwerveChassisSpeeds/Setpoints", currentSetpoint.chassisSpeeds());
+    }
+
+    Logger.recordOutput("Swerve/SwerveStates/SetpointsUnoptimized", setpointStatesUnoptimized);
+    Logger.recordOutput("Swerve/SwerveStates/Setpoints", setpointStates);
+
+    SwerveModuleState[] moduleStates = getModuleStates();
+    for (int i = 0; i < 4; i++) {
+      Rotation2d wheelAngle = moduleStates[i].angle;
+      setpointStates[i].optimize(wheelAngle);
+      setpointStates[i].cosineScale(wheelAngle);
+
+      swerveModules[i].runSetpoint(setpointStates[i]);
+    }
+  }
+
+  public void runVelocity(ChassisSpeeds speeds, List<Vector<N2>> moduleForces) {
+    velocityMode = true;
+    ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(speeds, Constants.loopPeriodSecs);
+    SwerveModuleState[] setpointStatesUnoptimized = kinematics.toSwerveModuleStates(discreteSpeeds);
+    currentSetpoint =
+        swerveSetpointGenerator.generateSetpoint(
+            moduleLimitsFree, currentSetpoint, discreteSpeeds, Constants.loopPeriodSecs);
+    SwerveModuleState[] setpointStates = currentSetpoint.moduleStates();
+
+    Logger.recordOutput("Swerve/SwerveStates/SetpointsUnoptimized", setpointStatesUnoptimized);
+    Logger.recordOutput("Swerve/SwerveStates/Setpoints", setpointStates);
+    Logger.recordOutput("Swerve/SwerveChassisSpeeds/Setpoints", currentSetpoint.chassisSpeeds());
+
+    SwerveModuleState[] wheelForces = new SwerveModuleState[4];
+    SwerveModuleState[] moduleStates = getModuleStates();
+    for (int i = 0; i < 4; i++) {
+      Rotation2d wheelAngle = moduleStates[i].angle;
+      setpointStates[i].optimize(wheelAngle);
+      setpointStates[i].cosineScale(wheelAngle);
+
+      var wheelForce = moduleForces.get(i);
+      Vector<N2> wheelDirection = VecBuilder.fill(wheelAngle.getCos(), wheelAngle.getSin());
+      double wheelTorqueNm = wheelForce.dot(wheelDirection) * TunerConstants.FrontLeft.WheelRadius;
+      swerveModules[i].runSetpoint(setpointStates[i], wheelTorqueNm);
+
+      wheelForces[i] = new SwerveModuleState(wheelTorqueNm, setpointStates[i].angle);
+    }
+    Logger.recordOutput("Swerve/SwerveStates/ModuleForces", wheelForces);
+  }
+
   public void runCharacterization(double output) {
+    velocityMode = false;
     for (var swerveModule : swerveModules) {
       swerveModule.runCharacterization(output);
+    }
+  }
+
+  public void stop() {
+    runVelocity(new ChassisSpeeds());
+  }
+
+  public void stopWithX() {
+    Rotation2d[] headings = new Rotation2d[4];
+    for (int i = 0; i < 4; i++) {
+      headings[i] = getModuleTranslations()[i].getAngle();
+    }
+    kinematics.resetHeadings(headings);
+
+    SwerveModuleState[] states = kinematics.toSwerveModuleStates(new ChassisSpeeds());
+    for (int i = 0; i < 4; i++) {
+      states[i].optimize(swerveModules[i].getAngle());
+      swerveModules[i].runSetpoint(states[i]);
     }
   }
 

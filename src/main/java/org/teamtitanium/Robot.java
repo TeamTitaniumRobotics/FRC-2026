@@ -6,6 +6,8 @@ package org.teamtitanium;
 
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.hal.AllianceStationID;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.IterativeRobotBase;
@@ -16,17 +18,24 @@ import edu.wpi.first.wpilibj.simulation.DriverStationSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import org.ironmaple.simulation.SimulatedArena;
+import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
-import org.littletonrobotics.junction.rlog.RLOGServer;
+import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
+import org.teamtitanium.commands.DriveCommands;
 import org.teamtitanium.subsystems.Leds;
+import org.teamtitanium.subsystems.swerve.GyroIOSim;
+import org.teamtitanium.subsystems.swerve.Swerve;
+import org.teamtitanium.subsystems.swerve.SwerveModuleIOSim;
 import org.teamtitanium.utils.CanivoreReader;
 import org.teamtitanium.utils.Constants;
 import org.teamtitanium.utils.Constants.Mode;
@@ -46,6 +55,12 @@ public class Robot extends LoggedRobot {
   private static int lowBatteryCycleCount = 0;
 
   private Command autonomousCommand;
+
+  private final Swerve swerve;
+
+  private final CommandXboxController driver = new CommandXboxController(0);
+
+  private SwerveDriveSimulation swerveDriveSimulation = null;
 
   private double autoStartTime = 0.0;
   private boolean autoMessagePrinted = false;
@@ -91,11 +106,11 @@ public class Robot extends LoggedRobot {
         // Set up for real robot
       case REAL:
         Logger.addDataReceiver(new WPILOGWriter());
-        Logger.addDataReceiver(new RLOGServer());
+        Logger.addDataReceiver(new NT4Publisher());
         break;
         // Set up for simulation
       case SIM:
-        Logger.addDataReceiver(new RLOGServer());
+        Logger.addDataReceiver(new NT4Publisher());
         break;
         // Set up for replaying logs
       case REPLAY:
@@ -156,6 +171,35 @@ public class Robot extends LoggedRobot {
       DriverStationSim.setAllianceStationId(AllianceStationID.Blue1);
       DriverStationSim.notifyNewData();
     }
+
+    switch (Constants.getMode()) {
+      case REAL -> {
+        swerve = null;
+      }
+      case SIM -> {
+        swerveDriveSimulation =
+            new SwerveDriveSimulation(Swerve.mapleSimConfig, new Pose2d(3, 3, new Rotation2d()));
+        SimulatedArena.getInstance().addDriveTrainSimulation(swerveDriveSimulation);
+        swerve =
+            new Swerve(
+                new GyroIOSim(swerveDriveSimulation.getGyroSimulation()),
+                new SwerveModuleIOSim(
+                    TunerConstants.FrontLeft, swerveDriveSimulation.getModules()[0]),
+                new SwerveModuleIOSim(
+                    TunerConstants.FrontRight, swerveDriveSimulation.getModules()[1]),
+                new SwerveModuleIOSim(
+                    TunerConstants.BackLeft, swerveDriveSimulation.getModules()[2]),
+                new SwerveModuleIOSim(
+                    TunerConstants.BackRight, swerveDriveSimulation.getModules()[3]));
+        RobotState.getInstance().setEstimatedPose(new Pose2d(3, 3, new Rotation2d()));
+        RobotState.getInstance().setOdometryPose(new Pose2d(3, 3, new Rotation2d()));
+      }
+      default -> {
+        swerve = null;
+      }
+    }
+
+    configureButtonBindings();
   }
 
   @Override
@@ -240,6 +284,16 @@ public class Robot extends LoggedRobot {
     LoggedTracer.record("RobotPeriodic");
   }
 
+  private void configureButtonBindings() {
+    swerve.setDefaultCommand(
+        DriveCommands.joystickDrive(
+            swerve,
+            () -> -driver.getLeftY(),
+            () -> -driver.getLeftX(),
+            () -> -driver.getRightX(),
+            () -> false));
+  }
+
   private void updateAlerts() {}
 
   private void updateDashboardOuputs() {}
@@ -249,7 +303,14 @@ public class Robot extends LoggedRobot {
   }
 
   @Override
-  public void disabledInit() {}
+  public void disabledInit() {
+    if (Constants.getMode() != Mode.SIM) {
+      return;
+    }
+
+    swerveDriveSimulation.setSimulationWorldPose(new Pose2d(3, 3, new Rotation2d()));
+    SimulatedArena.getInstance().resetFieldForAuto();
+  }
 
   @Override
   public void disabledPeriodic() {}
@@ -285,6 +346,13 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void teleopExit() {}
+
+  @Override
+  public void simulationPeriodic() {
+    SimulatedArena.getInstance().simulationPeriodic();
+    Logger.recordOutput(
+        "FieldSimulation/RobotPosition", swerveDriveSimulation.getSimulatedDriveTrainPose());
+  }
 
   @Override
   public void testInit() {
