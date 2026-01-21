@@ -69,7 +69,7 @@ public class Swerve extends SubsystemBase {
               Math.hypot(TunerConstants.BackRight.LocationX, TunerConstants.BackRight.LocationY)));
 
   private static final Mass ROBOT_MASS = Pounds.of(150);
-  private static final double WHEEL_COF = 1.5;
+  private static final double WHEEL_COF = 1.2;
   public static final DriveTrainSimulationConfig mapleSimConfig =
       DriveTrainSimulationConfig.Default()
           .withRobotMass(ROBOT_MASS)
@@ -79,8 +79,8 @@ public class Swerve extends SubsystemBase {
               new SwerveModuleSimulationConfig(
                   DCMotor.getKrakenX60(1),
                   DCMotor.getFalcon500(1),
-                  TunerConstants.FrontLeft.DriveMotorGearRatio,
-                  TunerConstants.FrontLeft.SteerMotorGearRatio,
+                  7.363636363636365,
+                  15.42857142857143,
                   Volts.of(TunerConstants.FrontLeft.DriveFrictionVoltage),
                   Volts.of(TunerConstants.FrontLeft.SteerFrictionVoltage),
                   Meters.of(TunerConstants.FrontLeft.WheelRadius),
@@ -302,9 +302,9 @@ public class Swerve extends SubsystemBase {
 
     SwerveModuleState[] moduleStates = getModuleStates();
     for (int i = 0; i < 4; i++) {
-      Rotation2d wheelAngle = moduleStates[i].angle;
-      setpointStates[i].optimize(wheelAngle);
-      setpointStates[i].cosineScale(wheelAngle);
+      // Rotation2d wheelAngle = moduleStates[i].angle;
+      // setpointStates[i].optimize(wheelAngle);
+      // setpointStates[i].cosineScale(wheelAngle);
 
       swerveModules[i].runSetpoint(setpointStates[i]);
     }

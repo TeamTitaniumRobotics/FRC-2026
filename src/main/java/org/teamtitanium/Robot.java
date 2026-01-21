@@ -282,6 +282,8 @@ public class Robot extends LoggedRobot {
     initializationAlert.set(isInitializing());
 
     LoggedTracer.record("RobotPeriodic");
+
+    MechanismVisualizer.getInstance().log("MechanismVisualizer");
   }
 
   private void configureButtonBindings() {
@@ -292,6 +294,48 @@ public class Robot extends LoggedRobot {
             () -> -driver.getLeftX(),
             () -> -driver.getRightX(),
             () -> false));
+
+    driver
+        .rightBumper()
+        .onTrue(
+            Commands.runOnce(
+                () ->
+                    MechanismVisualizer.getInstance()
+                        .setTurretAngle(
+                            MechanismVisualizer.getInstance()
+                                .getTurretAngle()
+                                .plus(Rotation2d.fromDegrees(15)))));
+    driver
+        .leftBumper()
+        .onTrue(
+            Commands.runOnce(
+                () ->
+                    MechanismVisualizer.getInstance()
+                        .setTurretAngle(
+                            MechanismVisualizer.getInstance()
+                                .getTurretAngle()
+                                .minus(Rotation2d.fromDegrees(15)))));
+
+    driver
+        .rightTrigger()
+        .onTrue(
+            Commands.runOnce(
+                () ->
+                    MechanismVisualizer.getInstance()
+                        .setHoodAngle(
+                            MechanismVisualizer.getInstance()
+                                .getHoodAngle()
+                                .plus(Rotation2d.fromDegrees(15)))));
+    driver
+        .leftTrigger()
+        .onTrue(
+            Commands.runOnce(
+                () ->
+                    MechanismVisualizer.getInstance()
+                        .setHoodAngle(
+                            MechanismVisualizer.getInstance()
+                                .getHoodAngle()
+                                .minus(Rotation2d.fromDegrees(15)))));
   }
 
   private void updateAlerts() {}
