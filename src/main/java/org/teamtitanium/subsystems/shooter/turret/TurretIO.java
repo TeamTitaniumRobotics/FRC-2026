@@ -21,7 +21,7 @@ public interface TurretIO {
   public default void setPosition(double positionRots) {}
 
   public default void setVoltage(double volts) {}
-  
+
   public default void setGains(Gains gains) {}
 
   public default void setConstraints(Constraints constraints) {}

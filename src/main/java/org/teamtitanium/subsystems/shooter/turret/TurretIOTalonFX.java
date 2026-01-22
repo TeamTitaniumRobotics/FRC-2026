@@ -2,9 +2,6 @@ package org.teamtitanium.subsystems.shooter.turret;
 
 import static org.teamtitanium.subsystems.shooter.turret.TurretConstants.*;
 
-import org.teamtitanium.utils.Constants;
-import org.teamtitanium.utils.PhoenixUtil;
-
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -12,12 +9,13 @@ import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
-
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
+import org.teamtitanium.utils.Constants;
+import org.teamtitanium.utils.PhoenixUtil;
 
 public class TurretIOTalonFX implements TurretIO {
   private final TalonFX turretMotor;
@@ -44,11 +42,12 @@ public class TurretIOTalonFX implements TurretIO {
     torqueCurrent = turretMotor.getTorqueCurrent();
     temperature = turretMotor.getDeviceTemp();
 
-    BaseStatusSignal.setUpdateFrequencyForAll(100,
-        position, velocity, appliedVoltage, supplyCurrent, torqueCurrent, temperature);
+    BaseStatusSignal.setUpdateFrequencyForAll(
+        100, position, velocity, appliedVoltage, supplyCurrent, torqueCurrent, temperature);
     PhoenixUtil.tryUntilOk(5, () -> ParentDevice.optimizeBusUtilizationForAll(turretMotor));
 
-    PhoenixUtil.registerSignals(Constants.RIO_CAN_BUS,
+    PhoenixUtil.registerSignals(
+        Constants.RIO_CAN_BUS,
         position,
         velocity,
         appliedVoltage,
@@ -62,5 +61,4 @@ public class TurretIOTalonFX implements TurretIO {
     // TODO Auto-generated method stub
     throw new UnsupportedOperationException("Unimplemented method 'updateInputs'");
   }
-
 }
