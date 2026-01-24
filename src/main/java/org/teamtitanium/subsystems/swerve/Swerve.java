@@ -302,9 +302,9 @@ public class Swerve extends SubsystemBase {
 
     SwerveModuleState[] moduleStates = getModuleStates();
     for (int i = 0; i < 4; i++) {
-      // Rotation2d wheelAngle = moduleStates[i].angle;
-      // setpointStates[i].optimize(wheelAngle);
-      // setpointStates[i].cosineScale(wheelAngle);
+      Rotation2d wheelAngle = moduleStates[i].angle;
+      setpointStates[i].optimize(wheelAngle);
+      setpointStates[i].cosineScale(wheelAngle);
 
       swerveModules[i].runSetpoint(setpointStates[i]);
     }

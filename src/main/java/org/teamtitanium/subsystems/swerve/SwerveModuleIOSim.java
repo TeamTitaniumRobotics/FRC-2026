@@ -1,38 +1,126 @@
 package org.teamtitanium.subsystems.swerve;
 
-import static edu.wpi.first.units.Units.Radians;
-
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
-import java.util.Arrays;
-import org.ironmaple.simulation.drivesims.SwerveModuleSimulation;
-import org.teamtitanium.utils.PhoenixUtil;
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.system.plant.LinearSystemId;
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 
-public class SwerveModuleIOSim extends SwerveModuleIOTalonFX {
-  private final SwerveModuleSimulation moduleSimulation;
+public class SwerveModuleIOSim implements SwerveModuleIO {
+  private static final double DRIVE_KP = 0.05;
+  private static final double DRIVE_KD = 0.0;
+  private static final double DRIVE_KS = 0.0;
+  private static final double DRIVE_KV_ROT = 0.91035;
+  private static final double DRIVE_KV = 1.0 / Units.rotationsToRadians(1.0 / DRIVE_KV_ROT);
+
+  private static final double TURN_KP = 8.0;
+  private static final double TURN_KD = 0.0;
+
+  private static final DCMotor DRIVE_MOTOR = DCMotor.getKrakenX60Foc(1);
+  private static final DCMotor TURN_MOTOR = DCMotor.getKrakenX60Foc(1);
+
+  private final DCMotorSim driveMotorSim;
+  private final DCMotorSim turnMotorSim;
+
+  private boolean driveClosedLoop = false;
+  private boolean turnClosedLoop = false;
+
+  private PIDController driveController = new PIDController(DRIVE_KP, 0.0, DRIVE_KD);
+  private PIDController turnController = new PIDController(TURN_KP, 0.0, TURN_KD);
+
+  private double driveFFVolts = 0.0;
+  private double driveAppliedVolts = 0.0;
+  private double turnAppliedVolts = 0.0;
 
   public SwerveModuleIOSim(
       SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
-          swerveConstants,
-      SwerveModuleSimulation moduleSimulation) {
-    super(swerveConstants);
+          constants) {
+    driveMotorSim =
+        new DCMotorSim(
+            LinearSystemId.createDCMotorSystem(
+                DRIVE_MOTOR, constants.DriveInertia, constants.DriveMotorGearRatio),
+            DRIVE_MOTOR);
+    turnMotorSim =
+        new DCMotorSim(
+            LinearSystemId.createDCMotorSystem(
+                TURN_MOTOR, constants.SteerInertia, constants.SteerMotorGearRatio),
+            TURN_MOTOR);
 
-    this.moduleSimulation = moduleSimulation;
-
-    moduleSimulation.useDriveMotorController(new PhoenixUtil.TalonFXMotorControllerSim(driveMotor));
-    moduleSimulation.useSteerMotorController(
-        new PhoenixUtil.TalonFXMotorControllerWithRemoteCancoderSim(turnMotor, turnCANcoder));
+    turnController.enableContinuousInput(-Math.PI, Math.PI);
   }
 
   @Override
   public void updateInputs(SwerveModuleIOInputs inputs) {
-    super.updateInputs(inputs);
+    if (driveClosedLoop) {
+      driveAppliedVolts =
+          driveFFVolts + driveController.calculate(driveMotorSim.getAngularVelocityRadPerSec());
+    } else {
+      driveController.reset();
+    }
 
-    inputs.odometryDrivePositionsRad =
-        Arrays.stream(moduleSimulation.getCachedDriveWheelFinalPositions())
-            .mapToDouble(angle -> angle.in(Radians))
-            .toArray();
-    inputs.odometryTurnPositions = moduleSimulation.getCachedSteerAbsolutePositions();
+    if (turnClosedLoop) {
+      turnAppliedVolts = turnController.calculate(turnMotorSim.getAngularPositionRad());
+    } else {
+      turnController.reset();
+    }
+
+    driveMotorSim.setInputVoltage(MathUtil.clamp(driveAppliedVolts, -12.0, 12.0));
+    turnMotorSim.setInputVoltage(MathUtil.clamp(turnAppliedVolts, -12.0, 12.0));
+
+    driveMotorSim.update(0.02);
+    turnMotorSim.update(0.02);
+
+    inputs.moduleData =
+        new SwerveModuleIOData(
+            true,
+            driveMotorSim.getAngularPositionRad(),
+            driveMotorSim.getAngularVelocityRadPerSec(),
+            driveAppliedVolts,
+            0.0,
+            Math.abs(driveMotorSim.getCurrentDrawAmps()),
+            0.0,
+            true,
+            true,
+            turnMotorSim.getAngularPositionRad(),
+            turnMotorSim.getAngularPositionRad(),
+            turnMotorSim.getAngularAccelerationRadPerSecSq(),
+            turnAppliedVolts,
+            0.0,
+            Math.abs(turnMotorSim.getCurrentDrawAmps()),
+            0.0);
+
+    inputs.odometryDrivePositionsRad = new double[] {driveMotorSim.getAngularPositionRad()};
+    inputs.odometryTurnPositions =
+        new Rotation2d[] {new Rotation2d(turnMotorSim.getAngularPositionRad())};
+  }
+
+  @Override
+  public void setDriveOpenLoop(double output) {
+    driveClosedLoop = false;
+    driveAppliedVolts = output;
+  }
+
+  @Override
+  public void setTurnOpenLoop(double output) {
+    turnClosedLoop = false;
+    turnAppliedVolts = output;
+  }
+
+  @Override
+  public void setDriveVelocity(double velocity) {
+    driveClosedLoop = true;
+    driveFFVolts = DRIVE_KS * Math.signum(velocity) + DRIVE_KV * velocity;
+    driveController.setSetpoint(velocity);
+  }
+
+  @Override
+  public void setTurnPosition(double angle) {
+    turnClosedLoop = true;
+    turnController.setSetpoint(angle);
   }
 }
