@@ -183,10 +183,14 @@ public class Robot extends LoggedRobot {
         swerve =
             new Swerve(
                 new GyroIOSim(swerveDriveSimulation.getGyroSimulation()),
-                new SwerveModuleIOSim(TunerConstants.FrontLeft),
-                new SwerveModuleIOSim(TunerConstants.FrontRight),
-                new SwerveModuleIOSim(TunerConstants.BackLeft),
-                new SwerveModuleIOSim(TunerConstants.BackRight));
+                new SwerveModuleIOSim(
+                    TunerConstants.FrontLeft, swerveDriveSimulation.getModules()[0]),
+                new SwerveModuleIOSim(
+                    TunerConstants.FrontRight, swerveDriveSimulation.getModules()[1]),
+                new SwerveModuleIOSim(
+                    TunerConstants.BackLeft, swerveDriveSimulation.getModules()[2]),
+                new SwerveModuleIOSim(
+                    TunerConstants.BackRight, swerveDriveSimulation.getModules()[3]));
         RobotState.getInstance().setEstimatedPose(new Pose2d(3, 3, new Rotation2d()));
         RobotState.getInstance().setOdometryPose(new Pose2d(3, 3, new Rotation2d()));
       }

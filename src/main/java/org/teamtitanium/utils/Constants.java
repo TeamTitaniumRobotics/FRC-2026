@@ -5,7 +5,7 @@ import edu.wpi.first.wpilibj.RobotBase;
 
 public class Constants {
   public static final double loopPeriodSecs = 0.02;
-  public static final boolean tuningMode = false;
+  public static final boolean tuningMode = true;
   public static final boolean disableHAL = false;
 
   private static final Mode simMode = Mode.SIM;

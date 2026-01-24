@@ -253,7 +253,7 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
   public void setDriveVelocity(double velocityRadPerSec) {
     double rotationsPerSec =
         Units.radiansToRotations(velocityRadPerSec)
-            / swerveConstants.DriveMotorGearRatio; // TODO: verify you need to divide here
+            * swerveConstants.DriveMotorGearRatio; // TODO: verify you need to multiply here
     driveMotor.setControl(
         switch (swerveConstants.DriveMotorClosedLoopOutput) {
           case Voltage -> voltageOut.withOutput(rotationsPerSec);
