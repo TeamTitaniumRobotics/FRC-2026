@@ -136,14 +136,12 @@ public class SwerveModule {
 
     // Update connection alerts with debouncing
     driveDisconnectedAlert.set(
-        !driveDisconnectedDebouncer.calculate(
-            inputs.moduleData.driveConnected() && !Robot.isInitializing()));
+        !driveDisconnectedDebouncer.calculate(inputs.driveConnected && !Robot.isInitializing()));
     turnDisconnectedAlert.set(
-        !turnDisconnectedDebouncer.calculate(
-            inputs.moduleData.turnConnected() && !Robot.isInitializing()));
+        !turnDisconnectedDebouncer.calculate(inputs.turnConnected && !Robot.isInitializing()));
     turnCANcoderDisconnectedAlert.set(
         !turnCANcoderDisconnectedDebouncer.calculate(
-            inputs.moduleData.turnCANcoderConnected() && !Robot.isInitializing()));
+            inputs.turnCANcoderConnected && !Robot.isInitializing()));
 
     // Log tracer
     LoggedTracer.record("Swerve/Module" + index);
@@ -194,7 +192,7 @@ public class SwerveModule {
    * @return The current angle of the module.
    */
   public Rotation2d getAngle() {
-    return Rotation2d.fromRadians(inputs.moduleData.turnPositionRad());
+    return Rotation2d.fromRadians(inputs.turnPositionRad);
   }
 
   /**
@@ -203,7 +201,7 @@ public class SwerveModule {
    * @return The current position of the module in meters.
    */
   public double getPositionMeters() {
-    return inputs.moduleData.drivePositionRad() * constants.WheelRadius;
+    return inputs.drivePositionRad * constants.WheelRadius;
   }
 
   /**
@@ -212,7 +210,7 @@ public class SwerveModule {
    * @return The current velocity of the module in meters per second.
    */
   public double getVelocityMetersPerSec() {
-    return inputs.moduleData.driveVelocityRadPerSec() * constants.WheelRadius;
+    return inputs.driveVelocityRadPerSec * constants.WheelRadius;
   }
 
   /**
@@ -248,7 +246,7 @@ public class SwerveModule {
    * @return The wheel radius characterization position in radians.
    */
   public double getWheelRadiusCharacterizationPosition() {
-    return inputs.moduleData.drivePositionRad();
+    return inputs.drivePositionRad;
   }
 
   /**
@@ -257,7 +255,7 @@ public class SwerveModule {
    * @return The feedforward characterization velocity in rotations per second.
    */
   public double getFFCharacterizationVelocity() {
-    return Units.radiansToRotations(inputs.moduleData.driveVelocityRadPerSec());
+    return Units.radiansToRotations(inputs.driveVelocityRadPerSec);
   }
 
   /**

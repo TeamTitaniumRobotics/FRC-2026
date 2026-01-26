@@ -72,7 +72,7 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
 
   private static final Executor brakeModeExecutor = Executors.newFixedThreadPool(8);
 
-  protected SwerveModuleIOTalonFX(
+  public SwerveModuleIOTalonFX(
       SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
           swerveConstants) {
     this.swerveConstants = swerveConstants;
@@ -192,36 +192,38 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
 
   @Override
   public void updateInputs(SwerveModuleIOInputs inputs) {
-    inputs.moduleData =
-        new SwerveModuleIOData(
-            BaseStatusSignal.isAllGood(
-                drivePosition,
-                driveVelocity,
-                driveAppliedVolts,
-                driveSupplyCurrentAmps,
-                driveTorqueCurrentAmps,
-                driveTempCelcius),
-            Units.rotationsToRadians(drivePosition.getValueAsDouble()),
-            Units.rotationsToRadians(driveVelocity.getValueAsDouble()),
-            driveAppliedVolts.getValueAsDouble(),
-            driveSupplyCurrentAmps.getValueAsDouble(),
-            driveTorqueCurrentAmps.getValueAsDouble(),
-            driveTempCelcius.getValueAsDouble(),
-            BaseStatusSignal.isAllGood(
+    inputs.driveConnected =
+        BaseStatusSignal.isAllGood(
+            drivePosition,
+            driveVelocity,
+            driveAppliedVolts,
+            driveSupplyCurrentAmps,
+            driveTorqueCurrentAmps,
+            driveTempCelcius);
+    inputs.drivePositionRad = Units.rotationsToRadians(drivePosition.getValueAsDouble());
+    inputs.driveVelocityRadPerSec = Units.rotationsToRadians(driveVelocity.getValueAsDouble());
+    inputs.driveAppliedVolts = driveAppliedVolts.getValueAsDouble();
+    inputs.driveSupplyCurrentAmps = driveSupplyCurrentAmps.getValueAsDouble();
+    inputs.driveTorqueCurrentAmps = driveTorqueCurrentAmps.getValueAsDouble();
+    inputs.driveTempCelcius = driveTempCelcius.getValueAsDouble();
+
+    inputs.turnConnected =
+        BaseStatusSignal.isAllGood(
                 turnPosition,
                 turnVelocity,
                 turnAppliedVolts,
                 turnSupplyCurrentAmps,
                 turnTorqueCurrentAmps,
-                turnTempCelcius),
-            BaseStatusSignal.isAllGood(turnAbsolutePosition),
-            turnAbsolutePosition.getValueAsDouble(),
-            Units.rotationsToRadians(turnPosition.getValueAsDouble()),
-            Units.rotationsToRadians(turnVelocity.getValueAsDouble()),
-            turnAppliedVolts.getValueAsDouble(),
-            turnSupplyCurrentAmps.getValueAsDouble(),
-            turnTorqueCurrentAmps.getValueAsDouble(),
-            turnTempCelcius.getValueAsDouble());
+                turnTempCelcius)
+            && BaseStatusSignal.isAllGood(turnAbsolutePosition);
+    inputs.turnAbsolutePositionRad =
+        Units.rotationsToRadians(turnAbsolutePosition.getValueAsDouble());
+    inputs.turnPositionRad = Units.rotationsToRadians(turnPosition.getValueAsDouble());
+    inputs.turnVelocityRadPerSec = Units.rotationsToRadians(turnVelocity.getValueAsDouble());
+    inputs.turnAppliedVolts = turnAppliedVolts.getValueAsDouble();
+    inputs.turnSupplyCurrentAmps = turnSupplyCurrentAmps.getValueAsDouble();
+    inputs.turnTorqueCurrentAmps = turnTorqueCurrentAmps.getValueAsDouble();
+    inputs.turnTempCelcius = turnTempCelcius.getValueAsDouble();
 
     inputs.odometryDrivePositionsRad =
         drivePositionQueue.stream()

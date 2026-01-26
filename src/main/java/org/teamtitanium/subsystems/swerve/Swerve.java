@@ -289,13 +289,14 @@ public class Swerve extends SubsystemBase {
     ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(speeds, Constants.loopPeriodSecs);
     SwerveModuleState[] setpointStatesUnoptimized = kinematics.toSwerveModuleStates(discreteSpeeds);
     SwerveModuleState[] setpointStates = setpointStatesUnoptimized;
-    if (useSwerveSetpointGenerator.get()) {
-      currentSetpoint =
-          swerveSetpointGenerator.generateSetpoint(
-              moduleLimitsFree, currentSetpoint, discreteSpeeds, Constants.loopPeriodSecs);
-      setpointStates = currentSetpoint.moduleStates();
-      Logger.recordOutput("Swerve/SwerveChassisSpeeds/Setpoints", currentSetpoint.chassisSpeeds());
-    }
+    // if (useSwerveSetpointGenerator.get()) {
+    //   currentSetpoint =
+    //       swerveSetpointGenerator.generateSetpoint(
+    //           moduleLimitsFree, currentSetpoint, discreteSpeeds, Constants.loopPeriodSecs);
+    //   setpointStates = currentSetpoint.moduleStates();
+    //   Logger.recordOutput("Swerve/SwerveChassisSpeeds/Setpoints",
+    // currentSetpoint.chassisSpeeds());
+    // }
 
     Logger.recordOutput("Swerve/SwerveStates/SetpointsUnoptimized", setpointStatesUnoptimized);
     Logger.recordOutput("Swerve/SwerveStates/Setpoints", setpointStates);

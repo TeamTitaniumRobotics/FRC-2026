@@ -14,19 +14,38 @@ public interface TurretIO {
     public double supplyCurrentAmps = 0.0;
     public double torqueCurrentAmps = 0.0;
     public double tempCelsius = 0.0;
+
+    public boolean cancoder1Connected = false;
+    public double cancoder1PositionRots = 0.0;
+
+    public boolean cancoder2Connected = false;
+    public double cancoder2PositionRots = 0.0;
   }
 
-  public void updateInputs(TurretIOInputs inputs);
+  /** Updates the inputs for the turret. */
+  public default void updateInputs(TurretIOInputs inputs) {}
 
+  /** Sets the turret to the given position in rotations. */
   public default void setPosition(double positionRots) {}
 
+  /** Sets the turret motor to open loop control with the given voltage. */
   public default void setVoltage(double volts) {}
 
+  /** Updates the turret motor PID gains. */
   public default void setGains(Gains gains) {}
 
+  /** Updates the Motion Magic constraints for the turret. */
   public default void setConstraints(Constraints constraints) {}
 
+  /** Sets the brake mode for the turret motor. */
   public default void setBrakeMode(boolean enabled) {}
 
+  /** Sets the turret motor encoder position to the given value in rotations. */
   public default void setMotorPosition(double positionRots) {}
+
+  /** Zeros the turret using the CANcoders and Chinese Remainder Theorem. */
+  public default void zeroWithCANcoders() {}
+
+  /** Stops the turret motor. */
+  public default void stop() {}
 }
