@@ -28,6 +28,7 @@ import edu.wpi.first.units.measure.Voltage;
 import java.util.Queue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import org.littletonrobotics.junction.Logger;
 import org.teamtitanium.utils.Constants;
 import org.teamtitanium.utils.Constants.Gains;
 import org.teamtitanium.utils.PhoenixUtil;
@@ -104,7 +105,7 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
     turnConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     turnConfig.Slot0 = swerveConstants.SteerMotorGains;
     if (Constants.getMode() == Constants.Mode.SIM) {
-      turnConfig.Slot0.withKP(0.0).withKD(0.0).withKS(0);
+      turnConfig.Slot0.withKP(10.0).withKD(0.0).withKS(0);
     }
     turnConfig.Feedback.FeedbackRemoteSensorID = swerveConstants.EncoderId;
     turnConfig.Feedback.FeedbackSensorSource =
@@ -267,7 +268,7 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
   public void setDriveVelocity(double velocityRadPerSec, double torqueFF) {
     double rotationsPerSec =
         Units.radiansToRotations(velocityRadPerSec)
-            / swerveConstants.DriveMotorGearRatio; // TODO: verify you need to divide here
+            * swerveConstants.DriveMotorGearRatio; // TODO: verify you need to multiply here
     driveMotor.setControl(
         switch (swerveConstants.DriveMotorClosedLoopOutput) {
           case Voltage -> velocityVoltage.withVelocity(rotationsPerSec);
@@ -285,6 +286,8 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
           case Voltage -> positionVoltage.withPosition(rotations);
           case TorqueCurrentFOC -> positionTorqueCurrentFOC.withPosition(rotations);
         });
+
+    Logger.recordOutput("SwerveModule/TargetTurnPosition", rotations);
   }
 
   @Override

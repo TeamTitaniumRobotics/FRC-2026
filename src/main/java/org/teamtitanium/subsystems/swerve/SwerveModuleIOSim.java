@@ -3,61 +3,122 @@ package org.teamtitanium.subsystems.swerve;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
-import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
-import org.teamtitanium.utils.TunerConstants;
 
-public class SwerveModuleIOSim extends SwerveModuleIOTalonFX {
-  private final DCMotorSim driveSim =
-      new DCMotorSim(
-          LinearSystemId.createDCMotorSystem(
-              DCMotor.getKrakenX60(1), 0.025, TunerConstants.FrontLeft.DriveMotorGearRatio),
-          DCMotor.getKrakenX60(1));
-  private final DCMotorSim turnSim =
-      new DCMotorSim(
-          LinearSystemId.createDCMotorSystem(
-              DCMotor.getKrakenX60(1), 0.004, TunerConstants.FrontLeft.SteerMotorGearRatio),
-          DCMotor.getKrakenX60(1));
+public class SwerveModuleIOSim implements SwerveModuleIO {
+  private static final double DRIVE_KP = 0.05;
+  private static final double DRIVE_KD = 0.0;
+  private static final double DRIVE_KS = 0.0;
+  private static final double DRIVE_KV_ROT = 0.91035;
+  private static final double DRIVE_KV = 1.0 / Units.rotationsToRadians(1.0 / DRIVE_KV_ROT);
+
+  private static final double TURN_KP = 8.0;
+  private static final double TURN_KD = 0.0;
+
+  private static final DCMotor DRIVE_MOTOR = DCMotor.getKrakenX60Foc(1);
+  private static final DCMotor TURN_MOTOR = DCMotor.getKrakenX60Foc(1);
+
+  private final DCMotorSim driveMotorSim;
+  private final DCMotorSim turnMotorSim;
+
+  private boolean driveClosedLoop = false;
+  private boolean turnClosedLoop = false;
+
+  private PIDController driveController = new PIDController(DRIVE_KP, 0.0, DRIVE_KD);
+  private PIDController turnController = new PIDController(TURN_KP, 0.0, TURN_KD);
+
+  private double driveFFVolts = 0.0;
+  private double driveAppliedVolts = 0.0;
+  private double turnAppliedVolts = 0.0;
 
   public SwerveModuleIOSim(
       SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
-          swerveConstants) {
-    super(swerveConstants);
+          constants) {
+    driveMotorSim =
+        new DCMotorSim(
+            LinearSystemId.createDCMotorSystem(
+                DRIVE_MOTOR, constants.DriveInertia, constants.DriveMotorGearRatio),
+            DRIVE_MOTOR);
+    turnMotorSim =
+        new DCMotorSim(
+            LinearSystemId.createDCMotorSystem(
+                TURN_MOTOR, constants.SteerInertia, constants.SteerMotorGearRatio),
+            TURN_MOTOR);
+
+    turnController.enableContinuousInput(-Math.PI, Math.PI);
   }
 
   @Override
   public void updateInputs(SwerveModuleIOInputs inputs) {
-    var driveMotorSim = driveMotor.getSimState();
+    if (driveClosedLoop) {
+      driveAppliedVolts =
+          driveFFVolts + driveController.calculate(driveMotorSim.getAngularVelocityRadPerSec());
+    } else {
+      driveController.reset();
+    }
 
-    driveMotorSim.setSupplyVoltage(RobotController.getBatteryVoltage());
+    if (turnClosedLoop) {
+      turnAppliedVolts = turnController.calculate(turnMotorSim.getAngularPositionRad());
+    } else {
+      turnController.reset();
+    }
 
-    driveSim.setInputVoltage(driveMotorSim.getMotorVoltage());
-    driveSim.update(0.02);
+    driveMotorSim.setInputVoltage(MathUtil.clamp(driveAppliedVolts, -12.0, 12.0));
+    turnMotorSim.setInputVoltage(MathUtil.clamp(turnAppliedVolts, -12.0, 12.0));
 
-    driveMotorSim.setRawRotorPosition(
-        driveSim.getAngularPosition().times(TunerConstants.FrontLeft.DriveMotorGearRatio));
-    driveMotorSim.setRotorVelocity(
-        driveSim.getAngularVelocity().times(TunerConstants.FrontLeft.DriveMotorGearRatio));
+    driveMotorSim.update(0.02);
+    turnMotorSim.update(0.02);
 
-    var turnMotorSim = turnMotor.getSimState();
+    inputs.driveConnected = true;
+    inputs.drivePositionRad = driveMotorSim.getAngularPositionRad();
+    inputs.driveVelocityRadPerSec = driveMotorSim.getAngularVelocityRadPerSec();
+    inputs.driveAppliedVolts = driveAppliedVolts;
+    inputs.driveSupplyCurrentAmps = Math.abs(driveMotorSim.getCurrentDrawAmps());
+    inputs.driveTorqueCurrentAmps = Math.abs(driveMotorSim.getCurrentDrawAmps());
 
-    turnMotorSim.setSupplyVoltage(RobotController.getBatteryVoltage());
+    inputs.turnConnected = true;
+    inputs.turnCANcoderConnected = true;
+    inputs.turnAbsolutePositionRad = turnMotorSim.getAngularPositionRad();
+    inputs.turnPositionRad = turnMotorSim.getAngularPositionRad();
+    inputs.turnVelocityRadPerSec = turnMotorSim.getAngularVelocityRadPerSec();
+    inputs.turnAppliedVolts = turnAppliedVolts;
+    inputs.turnSupplyCurrentAmps = Math.abs(turnMotorSim.getCurrentDrawAmps());
+    inputs.turnTorqueCurrentAmps = Math.abs(turnMotorSim.getCurrentDrawAmps());
 
-    turnSim.setInputVoltage(turnMotorSim.getMotorVoltage());
-    turnSim.update(0.02);
-
-    turnMotorSim.setRawRotorPosition(
-        turnSim.getAngularPosition().times(TunerConstants.FrontLeft.SteerMotorGearRatio));
-    turnMotorSim.setRotorVelocity(
-        turnSim.getAngularVelocity().times(TunerConstants.FrontLeft.SteerMotorGearRatio));
-
-    super.updateInputs(inputs);
-
-    inputs.odometryDrivePositionsRad = new double[] {inputs.drivePositionRad};
+    // inputs.odometryTimestamps = new double[] {Timer.getFPGATimestamp()};
+    inputs.odometryDrivePositionsRad = new double[] {driveMotorSim.getAngularPositionRad()};
     inputs.odometryTurnPositions =
-        new Rotation2d[] {Rotation2d.fromRadians(inputs.turnPositionRad)};
+        new Rotation2d[] {new Rotation2d(turnMotorSim.getAngularPositionRad())};
+  }
+
+  @Override
+  public void setDriveOpenLoop(double output) {
+    driveClosedLoop = false;
+    driveAppliedVolts = output;
+  }
+
+  @Override
+  public void setTurnOpenLoop(double output) {
+    turnClosedLoop = false;
+    turnAppliedVolts = output;
+  }
+
+  @Override
+  public void setDriveVelocity(double velocity) {
+    driveClosedLoop = true;
+    driveFFVolts = DRIVE_KS * Math.signum(velocity) + DRIVE_KV * velocity;
+    driveController.setSetpoint(velocity);
+  }
+
+  @Override
+  public void setTurnPosition(double angle) {
+    turnClosedLoop = true;
+    turnController.setSetpoint(angle);
   }
 }

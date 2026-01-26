@@ -38,7 +38,7 @@ public class TurretConstants {
 
   // Simulation
   public static final DCMotor TURRET_GEARBOX = DCMotor.getFalcon500(1);
-  
+
   // Tolerance
   public static final double POSITION_TOLERANCE_ROTS = 0.01; // ~3.6 degrees
 }
