@@ -42,10 +42,4 @@ public interface TurretIO {
 
   /** Sets the turret motor encoder position to the given value in rotations. */
   public default void setMotorPosition(double positionRots) {}
-
-  /** Zeros the turret using the CANcoders and Chinese Remainder Theorem. */
-  public default void zeroWithCANcoders() {}
-
-  /** Stops the turret motor. */
-  public default void stop() {}
 }

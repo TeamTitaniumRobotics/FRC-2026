@@ -3,13 +3,38 @@ package org.teamtitanium.subsystems.shooter.turret;
 import static org.teamtitanium.subsystems.shooter.turret.TurretConstants.*;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
+import org.teamtitanium.utils.Constants.Constraints;
+import org.teamtitanium.utils.Constants.Gains;
+import org.teamtitanium.utils.LoggedTracer;
+import org.teamtitanium.utils.LoggedTunableNumber;
 
 public class Turret extends SubsystemBase {
+  // Real-time tunable PID gains
+  private final LoggedTunableNumber turretkP =
+      new LoggedTunableNumber("Turret/kP", TURRET_GAINS.kP());
+  private final LoggedTunableNumber turretkI =
+      new LoggedTunableNumber("Turret/kI", TURRET_GAINS.kI());
+  private final LoggedTunableNumber turretkD =
+      new LoggedTunableNumber("Turret/kD", TURRET_GAINS.kD());
+  private final LoggedTunableNumber turretkS =
+      new LoggedTunableNumber("Turret/kS", TURRET_GAINS.kS());
+  private final LoggedTunableNumber turretkV =
+      new LoggedTunableNumber("Turret/kV", TURRET_GAINS.kV());
+  private final LoggedTunableNumber turretkG =
+      new LoggedTunableNumber("Turret/kG", TURRET_GAINS.kG());
+  private final LoggedTunableNumber turretkA =
+      new LoggedTunableNumber("Turret/kA", TURRET_GAINS.kA());
+
+  // Real-time tunable constraints
+  private final LoggedTunableNumber turretMaxVelocity =
+      new LoggedTunableNumber("Turret/MaxVelocity", TURRET_CONSTRAINTS.maxVelocity());
+  private final LoggedTunableNumber turretMaxAcceleration =
+      new LoggedTunableNumber("Turret/MaxAcceleration", TURRET_CONSTRAINTS.maxAcceleration());
+
   private final TurretIO io;
   private final TurretIOInputsAutoLogged inputs = new TurretIOInputsAutoLogged();
 
@@ -19,74 +44,83 @@ public class Turret extends SubsystemBase {
   public Turret(TurretIO io) {
     this.io = io;
 
-    // Zero the turret using CANcoders on startup if available
-    // zeroTurret(); TODO: Implement CRT zeroing method
+    // Zero the turret on startup if available
+    zeroTurretCRT();
   }
 
   @Override
   public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("Turret", inputs);
+
+    if (turretkP.hasChanged(hashCode())
+        || turretkI.hasChanged(hashCode())
+        || turretkD.hasChanged(hashCode())
+        || turretkS.hasChanged(hashCode())
+        || turretkV.hasChanged(hashCode())
+        || turretkG.hasChanged(hashCode())
+        || turretkA.hasChanged(hashCode())) {
+      io.setGains(
+          new Gains(
+              turretkP.get(),
+              turretkI.get(),
+              turretkD.get(),
+              turretkS.get(),
+              turretkV.get(),
+              turretkG.get(),
+              turretkA.get()));
+    }
+
+    if (turretMaxVelocity.hasChanged(hashCode()) || turretMaxAcceleration.hasChanged(hashCode())) {
+      io.setConstraints(new Constraints(turretMaxVelocity.get(), turretMaxAcceleration.get()));
+    }
+
+    LoggedTracer.record("Turret");
   }
 
   /**
-   * Sets the turret to a specific angle using Motion Magic.
+   * Sets the turret to a position supplider
    *
-   * @param positionRots The target position in rotations
+   * @param positionRots target supplier position for the turret
+   * @return A command that repeatedly sets the turret to a position
    */
-  public void setPosition(double positionRots) {
-    targetPositionRots = MathUtil.clamp(positionRots, MIN_ANGLE_ROTS, MAX_ANGLE_ROTS);
-    io.setPosition(targetPositionRots);
+  public Command setPosition(DoubleSupplier positionRots) {
+    return run(() -> {
+          targetPositionRots =
+              MathUtil.clamp(positionRots.getAsDouble(), MIN_ANGLE_ROTS, MAX_ANGLE_ROTS);
+          io.setPosition(positionRots.getAsDouble());
+        })
+        .withName("Turret.SetPosition");
   }
 
   /**
-   * Sets the turret to a specific angle using Motion Magic.
+   * Sets the turret to a position
    *
-   * @param angle The target angle as a Rotation2d
+   * @param positionRots target position for the turret
+   * @return A command that repeatedly sets the turret to a position
    */
-  public void setAngle(Rotation2d angle) {
-    setPosition(angle.getRotations());
+  public Command setPosition(double positionRots) {
+    return setPosition(() -> positionRots);
   }
 
   /**
-   * Runs the turret at a specific voltage (open loop control).
+   * Runs the turret at a given voltage supplier
    *
-   * @param volts The voltage to apply
+   * @param voltage target voltage supplier
+   * @return A command that repeatedly runs the turret at a voltage
    */
-  public void setVoltage(double volts) {
-    io.setVoltage(volts);
-  }
-
-  /** Stops the turret motor. */
-  public void stop() {
-    io.stop();
+  public Command setVoltage(DoubleSupplier voltage) {
+    return run(() -> io.setVoltage(voltage.getAsDouble())).withName("Turret.SetVoltage");
   }
 
   /**
-   * Gets the current turret position.
+   * Runs the turret at a given voltage
    *
-   * @return The current position in rotations
+   * @param voltage target voltage
+   * @return A command that repeatedly runs the turret at a voltage
    */
-  public double getPositionRots() {
-    return inputs.positionRots;
-  }
-
-  /**
-   * Gets the current turret angle.
-   *
-   * @return The current angle as a Rotation2d
-   */
-  public Rotation2d getAngle() {
-    return Rotation2d.fromRotations(inputs.positionRots);
-  }
-
-  /**
-   * Gets the current turret velocity.
-   *
-   * @return The current velocity in rotations per second
-   */
-  public double getVelocityRps() {
-    return inputs.velocityRps;
+  public Command setVoltage(double voltage) {
+    return setVoltage(() -> voltage);
   }
 
   /**
@@ -98,11 +132,6 @@ public class Turret extends SubsystemBase {
     return Math.abs(inputs.positionRots - targetPositionRots) < POSITION_TOLERANCE_ROTS;
   }
 
-  /** Zeros the turret using the CANcoders and Chinese Remainder Theorem. */
-  public void zeroWithCANcoders() {
-    io.zeroWithCANcoders();
-  }
-
   /**
    * Sets the turret to brake mode or coast mode.
    *
@@ -112,81 +141,8 @@ public class Turret extends SubsystemBase {
     io.setBrakeMode(enabled);
   }
 
-  // -------------------- Commands --------------------
-
-  /**
-   * Command to set the turret to a specific angle.
-   *
-   * @param positionRots The target position in rotations
-   * @return A command that sets the turret position
-   */
-  public Command setPositionCommand(double positionRots) {
-    return run(() -> setPosition(positionRots)).withName("Turret.SetPosition");
-  }
-
-  /**
-   * Command to set the turret to a specific angle.
-   *
-   * @param angle The target angle as a Rotation2d
-   * @return A command that sets the turret angle
-   */
-  public Command setAngleCommand(Rotation2d angle) {
-    return setPositionCommand(angle.getRotations());
-  }
-
-  /**
-   * Command to set the turret to a specific angle and wait until at target.
-   *
-   * @param positionRots The target position in rotations
-   * @return A command that sets the turret position and finishes when at target
-   */
-  public Command setPositionAndWaitCommand(double positionRots) {
-    return run(() -> setPosition(positionRots))
-        .until(this::atTarget)
-        .withName("Turret.SetPositionAndWait");
-  }
-
-  /**
-   * Command to run the turret with a joystick input (manual control).
-   *
-   * @param velocitySupplier Supplier for velocity in rotations per second
-   * @return A command for manual turret control
-   */
-  public Command manualControlCommand(DoubleSupplier velocitySupplier) {
-    return run(() -> {
-          double velocity = velocitySupplier.getAsDouble();
-          // Simple voltage control based on velocity request
-          double volts = velocity * 2.0; // Adjust multiplier as needed
-          setVoltage(MathUtil.clamp(volts, -12.0, 12.0));
-        })
-        .withName("Turret.ManualControl");
-  }
-
-  /**
-   * Command to zero the turret using CANcoders.
-   *
-   * @return A command that zeros the turret
-   */
-  public Command zeroCommand() {
-    return runOnce(this::zeroWithCANcoders).withName("Turret.Zero");
-  }
-
-  /**
-   * Command to stop the turret.
-   *
-   * @return A command that stops the turret
-   */
-  public Command stopCommand() {
-    return runOnce(this::stop).withName("Turret.Stop");
-  }
-
-  /**
-   * Command to aim at a specific field position (example for future implementation).
-   *
-   * @param fieldAngle The target field angle
-   * @return A command that aims the turret
-   */
-  public Command aimAtAngleCommand(DoubleSupplier fieldAngle) {
-    return run(() -> setPosition(fieldAngle.getAsDouble())).withName("Turret.AimAtAngle");
+  /** Zeros the turret using two CANcoder sensors and the Chinese Remainder Theorem. */
+  public void zeroTurretCRT() {
+    // TODO: Implement CRT zeroing
   }
 }

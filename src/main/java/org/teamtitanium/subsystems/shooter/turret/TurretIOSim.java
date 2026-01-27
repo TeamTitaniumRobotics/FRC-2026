@@ -49,12 +49,6 @@ public class TurretIOSim extends TurretIOTalonFX {
   }
 
   @Override
-  public void setVoltage(double volts) {
-    super.setVoltage(volts);
-    appliedVolts = volts;
-  }
-
-  @Override
   public void setPosition(double positionRots) {
     super.setPosition(positionRots);
     // Get the voltage output from the TalonFX controller
@@ -62,8 +56,8 @@ public class TurretIOSim extends TurretIOTalonFX {
   }
 
   @Override
-  public void stop() {
-    super.stop();
-    appliedVolts = 0.0;
+  public void setVoltage(double volts) {
+    super.setVoltage(volts);
+    appliedVolts = volts;
   }
 }
