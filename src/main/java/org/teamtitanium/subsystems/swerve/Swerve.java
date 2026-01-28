@@ -69,7 +69,7 @@ public class Swerve extends SubsystemBase {
               Math.hypot(TunerConstants.BackRight.LocationX, TunerConstants.BackRight.LocationY)));
 
   private static final Mass ROBOT_MASS = Pounds.of(150);
-  private static final double WHEEL_COF = 1.5;
+  private static final double WHEEL_COF = 1.2;
   public static final DriveTrainSimulationConfig mapleSimConfig =
       DriveTrainSimulationConfig.Default()
           .withRobotMass(ROBOT_MASS)
@@ -79,8 +79,8 @@ public class Swerve extends SubsystemBase {
               new SwerveModuleSimulationConfig(
                   DCMotor.getKrakenX60(1),
                   DCMotor.getFalcon500(1),
-                  TunerConstants.FrontLeft.DriveMotorGearRatio,
-                  TunerConstants.FrontLeft.SteerMotorGearRatio,
+                  7.363636363636365,
+                  15.42857142857143,
                   Volts.of(TunerConstants.FrontLeft.DriveFrictionVoltage),
                   Volts.of(TunerConstants.FrontLeft.SteerFrictionVoltage),
                   Meters.of(TunerConstants.FrontLeft.WheelRadius),
@@ -289,13 +289,14 @@ public class Swerve extends SubsystemBase {
     ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(speeds, Constants.loopPeriodSecs);
     SwerveModuleState[] setpointStatesUnoptimized = kinematics.toSwerveModuleStates(discreteSpeeds);
     SwerveModuleState[] setpointStates = setpointStatesUnoptimized;
-    if (useSwerveSetpointGenerator.get()) {
-      currentSetpoint =
-          swerveSetpointGenerator.generateSetpoint(
-              moduleLimitsFree, currentSetpoint, discreteSpeeds, Constants.loopPeriodSecs);
-      setpointStates = currentSetpoint.moduleStates();
-      Logger.recordOutput("Swerve/SwerveChassisSpeeds/Setpoints", currentSetpoint.chassisSpeeds());
-    }
+    // if (useSwerveSetpointGenerator.get()) {
+    //   currentSetpoint =
+    //       swerveSetpointGenerator.generateSetpoint(
+    //           moduleLimitsFree, currentSetpoint, discreteSpeeds, Constants.loopPeriodSecs);
+    //   setpointStates = currentSetpoint.moduleStates();
+    //   Logger.recordOutput("Swerve/SwerveChassisSpeeds/Setpoints",
+    // currentSetpoint.chassisSpeeds());
+    // }
 
     Logger.recordOutput("Swerve/SwerveStates/SetpointsUnoptimized", setpointStatesUnoptimized);
     Logger.recordOutput("Swerve/SwerveStates/Setpoints", setpointStates);
@@ -384,6 +385,14 @@ public class Swerve extends SubsystemBase {
   @AutoLogOutput(key = "Swerve/ChassisSpeeds/Measured")
   private ChassisSpeeds getChassisSpeeds() {
     return kinematics.toChassisSpeeds(getModuleStates());
+  }
+
+  public static double getMaxLinearSpeedMetersPerSec() {
+    return TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
+  }
+
+  public static double getMaxAngularVelocityRadPerSec() {
+    return TunerConstants.kSpeedAt12Volts.in(MetersPerSecond) / DRIVE_BASE_RADIUS;
   }
 
   public static Translation2d[] getModuleTranslations() {

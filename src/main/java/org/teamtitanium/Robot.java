@@ -6,7 +6,6 @@ package org.teamtitanium;
 
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.hal.AllianceStationID;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -23,8 +22,6 @@ import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
-import org.ironmaple.simulation.SimulatedArena;
-import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
@@ -33,7 +30,7 @@ import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 import org.teamtitanium.commands.DriveCommands;
 import org.teamtitanium.subsystems.Leds;
-import org.teamtitanium.subsystems.swerve.GyroIOSim;
+import org.teamtitanium.subsystems.swerve.GyroIO;
 import org.teamtitanium.subsystems.swerve.Swerve;
 import org.teamtitanium.subsystems.swerve.SwerveModuleIOSim;
 import org.teamtitanium.utils.CanivoreReader;
@@ -59,8 +56,6 @@ public class Robot extends LoggedRobot {
   private final Swerve swerve;
 
   private final CommandXboxController driver = new CommandXboxController(0);
-
-  private SwerveDriveSimulation swerveDriveSimulation = null;
 
   private double autoStartTime = 0.0;
   private boolean autoMessagePrinted = false;
@@ -177,22 +172,13 @@ public class Robot extends LoggedRobot {
         swerve = null;
       }
       case SIM -> {
-        swerveDriveSimulation =
-            new SwerveDriveSimulation(Swerve.mapleSimConfig, new Pose2d(3, 3, new Rotation2d()));
-        SimulatedArena.getInstance().addDriveTrainSimulation(swerveDriveSimulation);
         swerve =
             new Swerve(
-                new GyroIOSim(swerveDriveSimulation.getGyroSimulation()),
-                new SwerveModuleIOSim(
-                    TunerConstants.FrontLeft, swerveDriveSimulation.getModules()[0]),
-                new SwerveModuleIOSim(
-                    TunerConstants.FrontRight, swerveDriveSimulation.getModules()[1]),
-                new SwerveModuleIOSim(
-                    TunerConstants.BackLeft, swerveDriveSimulation.getModules()[2]),
-                new SwerveModuleIOSim(
-                    TunerConstants.BackRight, swerveDriveSimulation.getModules()[3]));
-        RobotState.getInstance().setEstimatedPose(new Pose2d(3, 3, new Rotation2d()));
-        RobotState.getInstance().setOdometryPose(new Pose2d(3, 3, new Rotation2d()));
+                new GyroIO() {},
+                new SwerveModuleIOSim(TunerConstants.FrontLeft),
+                new SwerveModuleIOSim(TunerConstants.FrontRight),
+                new SwerveModuleIOSim(TunerConstants.BackLeft),
+                new SwerveModuleIOSim(TunerConstants.BackRight));
       }
       default -> {
         swerve = null;
@@ -282,6 +268,8 @@ public class Robot extends LoggedRobot {
     initializationAlert.set(isInitializing());
 
     LoggedTracer.record("RobotPeriodic");
+
+    MechanismVisualizer.getInstance().log("MechanismVisualizer");
   }
 
   private void configureButtonBindings() {
@@ -292,6 +280,48 @@ public class Robot extends LoggedRobot {
             () -> -driver.getLeftX(),
             () -> -driver.getRightX(),
             () -> false));
+
+    driver
+        .rightBumper()
+        .onTrue(
+            Commands.runOnce(
+                () ->
+                    MechanismVisualizer.getInstance()
+                        .setTurretAngle(
+                            MechanismVisualizer.getInstance()
+                                .getTurretAngle()
+                                .plus(Rotation2d.fromDegrees(15)))));
+    driver
+        .leftBumper()
+        .onTrue(
+            Commands.runOnce(
+                () ->
+                    MechanismVisualizer.getInstance()
+                        .setTurretAngle(
+                            MechanismVisualizer.getInstance()
+                                .getTurretAngle()
+                                .minus(Rotation2d.fromDegrees(15)))));
+
+    driver
+        .rightTrigger()
+        .onTrue(
+            Commands.runOnce(
+                () ->
+                    MechanismVisualizer.getInstance()
+                        .setHoodAngle(
+                            MechanismVisualizer.getInstance()
+                                .getHoodAngle()
+                                .plus(Rotation2d.fromDegrees(15)))));
+    driver
+        .leftTrigger()
+        .onTrue(
+            Commands.runOnce(
+                () ->
+                    MechanismVisualizer.getInstance()
+                        .setHoodAngle(
+                            MechanismVisualizer.getInstance()
+                                .getHoodAngle()
+                                .minus(Rotation2d.fromDegrees(15)))));
   }
 
   private void updateAlerts() {}
@@ -303,14 +333,7 @@ public class Robot extends LoggedRobot {
   }
 
   @Override
-  public void disabledInit() {
-    if (Constants.getMode() != Mode.SIM) {
-      return;
-    }
-
-    swerveDriveSimulation.setSimulationWorldPose(new Pose2d(3, 3, new Rotation2d()));
-    SimulatedArena.getInstance().resetFieldForAuto();
-  }
+  public void disabledInit() {}
 
   @Override
   public void disabledPeriodic() {}
@@ -348,11 +371,7 @@ public class Robot extends LoggedRobot {
   public void teleopExit() {}
 
   @Override
-  public void simulationPeriodic() {
-    SimulatedArena.getInstance().simulationPeriodic();
-    Logger.recordOutput(
-        "FieldSimulation/RobotPosition", swerveDriveSimulation.getSimulatedDriveTrainPose());
-  }
+  public void simulationPeriodic() {}
 
   @Override
   public void testInit() {

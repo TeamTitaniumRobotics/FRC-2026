@@ -15,35 +15,27 @@ public interface SwerveModuleIO {
    */
   @AutoLog
   public static class SwerveModuleIOInputs {
-    public SwerveModuleIOData moduleData =
-        new SwerveModuleIOData(
-            false, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, false, false, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    public boolean driveConnected = false;
+    public double drivePositionRad = 0.0;
+    public double driveVelocityRadPerSec = 0.0;
+    public double driveAppliedVolts = 0.0;
+    public double driveSupplyCurrentAmps = 0.0;
+    public double driveTorqueCurrentAmps = 0.0;
+    public double driveTempCelcius = 0.0;
+
+    public boolean turnConnected = false;
+    public boolean turnCANcoderConnected = false;
+    public double turnAbsolutePositionRad = 0.0;
+    public double turnPositionRad = 0.0;
+    public double turnVelocityRadPerSec = 0.0;
+    public double turnAppliedVolts = 0.0;
+    public double turnSupplyCurrentAmps = 0.0;
+    public double turnTorqueCurrentAmps = 0.0;
+    public double turnTempCelcius = 0.0;
 
     public double[] odometryDrivePositionsRad = new double[0];
     public Rotation2d[] odometryTurnPositions = new Rotation2d[0];
   }
-
-  /***
-   * Data structure for Swerve Module IO Data. Storing the data in a record can
-   * improve performance and immutability.
-   */
-  public record SwerveModuleIOData(
-      boolean driveConnected,
-      double drivePositionRad,
-      double driveVelocityRadPerSec,
-      double driveAppliedVolts,
-      double driveSupplyCurrentAmps,
-      double driveTorqueCurrentAmps,
-      double driveTempCelcius,
-      boolean turnConnected,
-      boolean turnCANcoderConnected,
-      double turnAbsolutePositionRad,
-      double turnPositionRad,
-      double turnVelocityRadPerSec,
-      double turnAppliedVolts,
-      double turnSupplyCurrentAmps,
-      double turnTorqueCurrentAmps,
-      double turnTempCelcius) {}
 
   /***
    * Updates the inputs for the swerve module.
