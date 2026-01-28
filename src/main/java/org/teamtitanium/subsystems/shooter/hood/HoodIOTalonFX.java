@@ -4,12 +4,9 @@ import static org.teamtitanium.subsystems.shooter.hood.HoodConstants.*;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
-import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
-import com.ctre.phoenix6.hardware.CANcoder;
-import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -26,7 +23,6 @@ import org.teamtitanium.utils.PhoenixUtil;
 
 public class HoodIOTalonFX implements HoodIO {
   protected final TalonFX hoodMotor;
-  private final CANcoder cancoder;
 
   private final TalonFXConfiguration config = new TalonFXConfiguration();
 
@@ -40,11 +36,8 @@ public class HoodIOTalonFX implements HoodIO {
   private final StatusSignal<Current> torqueCurrent;
   private final StatusSignal<Temperature> temperature;
 
-  private final StatusSignal<Angle> cancoderPosition;
-
   public HoodIOTalonFX() {
-    hoodMotor = new TalonFX(HOOD_MOTOR_ID, HOOD_CANBUS);
-    cancoder = new CANcoder(HOOD_CANCODER_ID, HOOD_CANBUS);
+    hoodMotor = new TalonFX(HOOD_MOTOR_ID, Constants.RIO_CAN_BUS);
 
     // Configure TalonFX
     config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
@@ -86,13 +79,6 @@ public class HoodIOTalonFX implements HoodIO {
 
     PhoenixUtil.tryUntilOk(5, () -> hoodMotor.getConfigurator().apply(config));
 
-    // Configure CANcoder
-    CANcoderConfiguration cancoderConfig = new CANcoderConfiguration();
-    cancoderConfig.MagnetSensor.SensorDirection =
-        com.ctre.phoenix6.signals.SensorDirectionValue.CounterClockwise_Positive;
-    cancoderConfig.MagnetSensor.MagnetOffset = CANCODER_OFFSET_ROTS;
-    PhoenixUtil.tryUntilOk(5, () -> cancoder.getConfigurator().apply(cancoderConfig));
-
     // Get status signals
     position = hoodMotor.getPosition();
     velocity = hoodMotor.getVelocity();
@@ -101,14 +87,9 @@ public class HoodIOTalonFX implements HoodIO {
     torqueCurrent = hoodMotor.getTorqueCurrent();
     temperature = hoodMotor.getDeviceTemp();
 
-    cancoderPosition = cancoder.getAbsolutePosition();
-
     // Set update frequencies
     BaseStatusSignal.setUpdateFrequencyForAll(
         100, position, velocity, appliedVoltage, supplyCurrent, torqueCurrent, temperature);
-    BaseStatusSignal.setUpdateFrequencyForAll(50, cancoderPosition);
-
-    PhoenixUtil.tryUntilOk(5, () -> ParentDevice.optimizeBusUtilizationForAll(hoodMotor, cancoder));
 
     PhoenixUtil.registerSignals(
         Constants.RIO_CAN_BUS,
@@ -117,25 +98,20 @@ public class HoodIOTalonFX implements HoodIO {
         appliedVoltage,
         supplyCurrent,
         torqueCurrent,
-        temperature,
-        cancoderPosition);
+        temperature);
   }
 
   @Override
   public void updateInputs(HoodIOInputs inputs) {
     inputs.motorConnected =
-        BaseStatusSignal.refreshAll(
-                position, velocity, appliedVoltage, supplyCurrent, torqueCurrent, temperature)
-            .isOK();
+        BaseStatusSignal.isAllGood(
+            position, velocity, appliedVoltage, supplyCurrent, torqueCurrent, temperature);
     inputs.positionRots = position.getValueAsDouble();
     inputs.velocityRps = velocity.getValueAsDouble();
     inputs.appliedVolts = appliedVoltage.getValueAsDouble();
     inputs.supplyCurrentAmps = supplyCurrent.getValueAsDouble();
     inputs.torqueCurrentAmps = torqueCurrent.getValueAsDouble();
     inputs.tempCelsius = temperature.getValueAsDouble();
-
-    inputs.cancoderConnected = BaseStatusSignal.refreshAll(cancoderPosition).isOK();
-    inputs.cancoderPositionRots = cancoderPosition.getValueAsDouble();
   }
 
   @Override
@@ -176,17 +152,5 @@ public class HoodIOTalonFX implements HoodIO {
   @Override
   public void setMotorPosition(double positionRots) {
     hoodMotor.setPosition(positionRots);
-  }
-
-  @Override
-  public void zeroWithCANcoder() {
-    // Set motor position to match CANcoder absolute position
-    double absolutePosition = cancoderPosition.getValueAsDouble();
-    setMotorPosition(absolutePosition);
-  }
-
-  @Override
-  public void stop() {
-    hoodMotor.stopMotor();
   }
 }

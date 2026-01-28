@@ -27,33 +27,23 @@ public class FlywheelIOSim extends FlywheelIOTalonFX {
     flywheelSim.setInputVoltage(appliedVolts);
     flywheelSim.update(0.02); // 20ms loop time
 
-    // Get simulated values (both motors see same velocity)
+    // Get simulated values (both motors see same velocity)\
+    double positionRots = flywheelSim.getAngularPositionRotations();
     double velocityRps = flywheelSim.getAngularVelocityRPM() / 60.0;
     double currentAmps = flywheelSim.getCurrentDrawAmps() / 2.0; // Split between two motors
 
     inputs.leftMotorConnected = true;
-    inputs.leftVelocityRps = velocityRps;
-    inputs.leftAppliedVolts = appliedVolts;
-    inputs.leftSupplyCurrentAmps = currentAmps;
-    inputs.leftTorqueCurrentAmps = currentAmps;
-    inputs.leftTempCelsius = 25.0; // Assume constant temperature in sim
-
     inputs.rightMotorConnected = true;
-    inputs.rightVelocityRps = velocityRps;
-    inputs.rightAppliedVolts = appliedVolts;
-    inputs.rightSupplyCurrentAmps = currentAmps;
-    inputs.rightTorqueCurrentAmps = currentAmps;
-    inputs.rightTempCelsius = 25.0;
+    inputs.positionRots = positionRots;
+    inputs.velocityRps = velocityRps;
+    inputs.appliedVolts = new double[] {appliedVolts, appliedVolts};
+    inputs.supplyCurrentAmps = new double[] {currentAmps, currentAmps};
+    inputs.torqueCurrentAmps = new double[] {currentAmps, currentAmps};
+    inputs.tempCelsius = new double[] {25.0, 25.0}; // Assume constant temperature in sim
 
     // Update the real motor velocities for velocity control
     leftMotor.getSimState().setRotorVelocity(velocityRps * FLYWHEEL_GEAR_RATIO);
     rightMotor.getSimState().setRotorVelocity(velocityRps * FLYWHEEL_GEAR_RATIO);
-  }
-
-  @Override
-  public void setVoltage(double volts) {
-    super.setVoltage(volts);
-    appliedVolts = volts;
   }
 
   @Override
@@ -64,8 +54,8 @@ public class FlywheelIOSim extends FlywheelIOTalonFX {
   }
 
   @Override
-  public void stop() {
-    super.stop();
-    appliedVolts = 0.0;
+  public void setVoltage(double volts) {
+    super.setVoltage(volts);
+    appliedVolts = volts;
   }
 }

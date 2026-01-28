@@ -9,7 +9,6 @@ public class TurretConstants {
   public static final int TURRET_MOTOR_ID = 15;
   public static final int TURRET_CANCODER_1_ID = 16;
   public static final int TURRET_CANCODER_2_ID = 17;
-  public static final String TURRET_CANBUS = "";
 
   // Physical Constants
   public static final double TURRET_GEAR_RATIO = (90.0 / 10.0) * (54.0 / 12.0); // 40.5:1 reduction
@@ -31,7 +30,7 @@ public class TurretConstants {
       new Constraints(2.0, 4.0); // Max velocity (rps), accel (rps^2)
 
   // PID Gains
-  public static final Gains TURRET_GAINS = new Gains(0.0, 0.0, 0.0);
+  public static final Gains TURRET_GAINS = new Gains(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 
   // Current Limits
   public static final double STATOR_CURRENT_LIMIT = 60.0;

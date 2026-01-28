@@ -1,15 +1,35 @@
 package org.teamtitanium.subsystems.shooter.hood;
 
+import static edu.wpi.first.units.Units.Rotations;
 import static org.teamtitanium.subsystems.shooter.hood.HoodConstants.*;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
+import org.teamtitanium.utils.Constants.Constraints;
+import org.teamtitanium.utils.Constants.Gains;
+import org.teamtitanium.utils.LoggedTracer;
+import org.teamtitanium.utils.LoggedTunableNumber;
 
 public class Hood extends SubsystemBase {
+  // Real-time tunable PID gains
+  private final LoggedTunableNumber hoodkP = new LoggedTunableNumber("Hood/kP", HOOD_GAINS.kP());
+  private final LoggedTunableNumber hoodkI = new LoggedTunableNumber("Hood/kI", HOOD_GAINS.kI());
+  private final LoggedTunableNumber hoodkD = new LoggedTunableNumber("Hood/kD", HOOD_GAINS.kD());
+  private final LoggedTunableNumber hoodkS = new LoggedTunableNumber("Hood/kS", HOOD_GAINS.kS());
+  private final LoggedTunableNumber hoodkV = new LoggedTunableNumber("Hood/kV", HOOD_GAINS.kV());
+  private final LoggedTunableNumber hoodkG = new LoggedTunableNumber("Hood/kG", HOOD_GAINS.kG());
+  private final LoggedTunableNumber hoodkA = new LoggedTunableNumber("Hood/kA", HOOD_GAINS.kA());
+
+  // Real-time tunable constraints
+  private final LoggedTunableNumber hoodMaxVelocity =
+      new LoggedTunableNumber("Hood/MaxVelocity", HOOD_MOTION_CONSTRAINTS.maxVelocity());
+  private final LoggedTunableNumber hoodMaxAcceleration =
+      new LoggedTunableNumber("Hood/MaxAcceleration", HOOD_MOTION_CONSTRAINTS.maxAcceleration());
+
   private final HoodIO io;
   private final HoodIOInputsAutoLogged inputs = new HoodIOInputsAutoLogged();
 
@@ -18,9 +38,6 @@ public class Hood extends SubsystemBase {
   /** Creates a new Hood subsystem. */
   public Hood(HoodIO io) {
     this.io = io;
-
-    // Zero the hood using CANcoder on startup
-    io.zeroWithCANcoder();
   }
 
   @Override
@@ -28,70 +45,89 @@ public class Hood extends SubsystemBase {
     io.updateInputs(inputs);
     Logger.processInputs("Hood", inputs);
 
-    // Log additional data
-    Logger.recordOutput("Hood/TargetPositionRots", targetPositionRots);
-    Logger.recordOutput("Hood/TargetPositionDeg", targetPositionRots * 360.0);
-    Logger.recordOutput("Hood/AtTarget", atTarget());
+    if (hoodkP.hasChanged(hashCode())
+        || hoodkI.hasChanged(hashCode())
+        || hoodkD.hasChanged(hashCode())
+        || hoodkS.hasChanged(hashCode())
+        || hoodkV.hasChanged(hashCode())
+        || hoodkG.hasChanged(hashCode())
+        || hoodkA.hasChanged(hashCode())) {
+      io.setGains(
+          new Gains(
+              hoodkP.get(),
+              hoodkI.get(),
+              hoodkD.get(),
+              hoodkS.get(),
+              hoodkV.get(),
+              hoodkG.get(),
+              hoodkA.get()));
+    }
+
+    if (hoodMaxVelocity.hasChanged(hashCode()) || hoodMaxAcceleration.hasChanged(hashCode())) {
+      io.setConstraints(new Constraints(hoodMaxVelocity.get(), hoodMaxAcceleration.get()));
+    }
+
+    Logger.recordOutput("Hood/TargetPosition", targetPositionRots);
+
+    LoggedTracer.record("Hood");
   }
 
   /**
-   * Sets the hood to a specific angle using Motion Magic.
+   * Sets the hood to a position supplier
    *
-   * @param positionRots The target position in rotations
+   * @param positionRots target supplier position for the hood
+   * @return A command that repeatedly sets the hood to a position
    */
-  public void setPosition(double positionRots) {
-    targetPositionRots = MathUtil.clamp(positionRots, MIN_ANGLE_ROTS, MAX_ANGLE_ROTS);
-    io.setPosition(targetPositionRots);
+  public Command setPosition(DoubleSupplier positionRots) {
+    return run(() -> {
+          targetPositionRots =
+              MathUtil.clamp(positionRots.getAsDouble(), MIN_ANGLE_ROTS, MAX_ANGLE_ROTS);
+          io.setPosition(positionRots.getAsDouble());
+        })
+        .withName("Hood.SetPosition");
   }
 
   /**
-   * Sets the hood to a specific angle using Motion Magic.
+   * Sets the hood to a position
    *
-   * @param angle The target angle as a Rotation2d
+   * @param positionRots target position for the hood
+   * @return A command that repeatedly sets the hood to a position
    */
-  public void setAngle(Rotation2d angle) {
-    setPosition(angle.getRotations());
+  public Command setPosition(double positionRots) {
+    return setPosition(() -> positionRots);
   }
 
   /**
-   * Runs the hood at a specific voltage (open loop control).
+   * Runs the hood at a given voltage supplier
    *
-   * @param volts The voltage to apply
+   * @param voltage target voltage supplier
+   * @return A command that repeatedly runs the hood at a voltage
    */
-  public void setVoltage(double volts) {
-    io.setVoltage(volts);
-  }
-
-  /** Stops the hood motor. */
-  public void stop() {
-    io.stop();
+  public Command setVoltage(DoubleSupplier voltage) {
+    return run(() -> io.setVoltage(voltage.getAsDouble())).withName("Hood.SetVoltage");
   }
 
   /**
-   * Gets the current hood position.
+   * Runs the hood at a given voltage
    *
-   * @return The current position in rotations
+   * @param voltage target voltage
+   * @return A command that repeatedly runs the hood at a voltage
    */
-  public double getPositionRots() {
-    return inputs.positionRots;
+  public Command setVoltage(double voltage) {
+    return setVoltage(() -> voltage);
+  }
+
+  public Command zeroHood() {
+    return setVoltage(0.0); // TODO: Implement current & velocity zeroing
   }
 
   /**
-   * Gets the current hood angle.
+   * Gets the current position of the hood.
    *
-   * @return The current angle as a Rotation2d
+   * @return The current hood angle
    */
-  public Rotation2d getAngle() {
-    return Rotation2d.fromRotations(inputs.positionRots);
-  }
-
-  /**
-   * Gets the current hood velocity.
-   *
-   * @return The current velocity in rotations per second
-   */
-  public double getVelocityRps() {
-    return inputs.velocityRps;
+  public Angle getPosition() {
+    return Rotations.of(inputs.positionRots);
   }
 
   /**
@@ -103,11 +139,6 @@ public class Hood extends SubsystemBase {
     return Math.abs(inputs.positionRots - targetPositionRots) < POSITION_TOLERANCE_ROTS;
   }
 
-  /** Zeros the hood using the CANcoder absolute position. */
-  public void zeroWithCANcoder() {
-    io.zeroWithCANcoder();
-  }
-
   /**
    * Sets the hood to brake mode or coast mode.
    *
@@ -115,92 +146,5 @@ public class Hood extends SubsystemBase {
    */
   public void setBrakeMode(boolean enabled) {
     io.setBrakeMode(enabled);
-  }
-
-  // -------------------- Commands --------------------
-
-  /**
-   * Command to set the hood to a specific angle.
-   *
-   * @param positionRots The target position in rotations
-   * @return A command that sets the hood position
-   */
-  public Command setPositionCommand(double positionRots) {
-    return run(() -> setPosition(positionRots)).withName("Hood.SetPosition");
-  }
-
-  /**
-   * Command to set the hood to a specific angle.
-   *
-   * @param angle The target angle as a Rotation2d
-   * @return A command that sets the hood angle
-   */
-  public Command setAngleCommand(Rotation2d angle) {
-    return setPositionCommand(angle.getRotations());
-  }
-
-  /**
-   * Command to set the hood to a specific angle and wait until at target.
-   *
-   * @param positionRots The target position in rotations
-   * @return A command that sets the hood position and finishes when at target
-   */
-  public Command setPositionAndWaitCommand(double positionRots) {
-    return run(() -> setPosition(positionRots))
-        .until(this::atTarget)
-        .withName("Hood.SetPositionAndWait");
-  }
-
-  /**
-   * Command to run the hood with a joystick input (manual control).
-   *
-   * @param velocitySupplier Supplier for velocity in rotations per second
-   * @return A command for manual hood control
-   */
-  public Command manualControlCommand(DoubleSupplier velocitySupplier) {
-    return run(() -> {
-          double velocity = velocitySupplier.getAsDouble();
-          // Simple voltage control based on velocity request
-          double volts = velocity * 3.0; // Adjust multiplier as needed
-          setVoltage(MathUtil.clamp(volts, -12.0, 12.0));
-        })
-        .withName("Hood.ManualControl");
-  }
-
-  /**
-   * Command to zero the hood using CANcoder.
-   *
-   * @return A command that zeros the hood
-   */
-  public Command zeroCommand() {
-    return runOnce(this::zeroWithCANcoder).withName("Hood.Zero");
-  }
-
-  /**
-   * Command to stop the hood.
-   *
-   * @return A command that stops the hood
-   */
-  public Command stopCommand() {
-    return runOnce(this::stop).withName("Hood.Stop");
-  }
-
-  /**
-   * Command to set hood to stow position (horizontal).
-   *
-   * @return A command that stows the hood
-   */
-  public Command stowCommand() {
-    return setPositionCommand(MIN_ANGLE_ROTS).withName("Hood.Stow");
-  }
-
-  /**
-   * Command to set hood angle based on distance calculation.
-   *
-   * @param angleSupplier Supplier for calculated angle
-   * @return A command that aims the hood
-   */
-  public Command aimAtAngleCommand(DoubleSupplier angleSupplier) {
-    return run(() -> setPosition(angleSupplier.getAsDouble())).withName("Hood.AimAtAngle");
   }
 }

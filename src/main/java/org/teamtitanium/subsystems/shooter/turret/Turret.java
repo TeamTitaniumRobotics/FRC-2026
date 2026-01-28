@@ -1,8 +1,10 @@
 package org.teamtitanium.subsystems.shooter.turret;
 
+import static edu.wpi.first.units.Units.Rotations;
 import static org.teamtitanium.subsystems.shooter.turret.TurretConstants.*;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import java.util.function.DoubleSupplier;
@@ -24,8 +26,6 @@ public class Turret extends SubsystemBase {
       new LoggedTunableNumber("Turret/kS", TURRET_GAINS.kS());
   private final LoggedTunableNumber turretkV =
       new LoggedTunableNumber("Turret/kV", TURRET_GAINS.kV());
-  private final LoggedTunableNumber turretkG =
-      new LoggedTunableNumber("Turret/kG", TURRET_GAINS.kG());
   private final LoggedTunableNumber turretkA =
       new LoggedTunableNumber("Turret/kA", TURRET_GAINS.kA());
 
@@ -58,7 +58,6 @@ public class Turret extends SubsystemBase {
         || turretkD.hasChanged(hashCode())
         || turretkS.hasChanged(hashCode())
         || turretkV.hasChanged(hashCode())
-        || turretkG.hasChanged(hashCode())
         || turretkA.hasChanged(hashCode())) {
       io.setGains(
           new Gains(
@@ -67,13 +66,15 @@ public class Turret extends SubsystemBase {
               turretkD.get(),
               turretkS.get(),
               turretkV.get(),
-              turretkG.get(),
+              0.0,
               turretkA.get()));
     }
 
     if (turretMaxVelocity.hasChanged(hashCode()) || turretMaxAcceleration.hasChanged(hashCode())) {
       io.setConstraints(new Constraints(turretMaxVelocity.get(), turretMaxAcceleration.get()));
     }
+
+    Logger.recordOutput("Turret/TargetPosition", targetPositionRots);
 
     LoggedTracer.record("Turret");
   }
@@ -121,6 +122,15 @@ public class Turret extends SubsystemBase {
    */
   public Command setVoltage(double voltage) {
     return setVoltage(() -> voltage);
+  }
+
+  /**
+   * Gets the current position of the turret.
+   *
+   * @return The current turret angle
+   */
+  public Angle getPosition() {
+    return Rotations.of(inputs.positionRots);
   }
 
   /**

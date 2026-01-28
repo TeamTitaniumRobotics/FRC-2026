@@ -14,7 +14,6 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
-
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
@@ -76,7 +75,6 @@ public class TurretIOTalonFX implements TurretIO {
     motorConfig.Slot0.kD = TURRET_GAINS.kD();
     motorConfig.Slot0.kS = TURRET_GAINS.kS();
     motorConfig.Slot0.kV = TURRET_GAINS.kV();
-    motorConfig.Slot0.kG = TURRET_GAINS.kG();
     motorConfig.Slot0.kA = TURRET_GAINS.kA();
 
     // Motion Magic configuration
@@ -129,7 +127,8 @@ public class TurretIOTalonFX implements TurretIO {
   @Override
   public void updateInputs(TurretIOInputs inputs) {
     inputs.motorConnected =
-        BaseStatusSignal.isAllGood(position, velocity, appliedVoltage, supplyCurrent, torqueCurrent, temperature);
+        BaseStatusSignal.isAllGood(
+            position, velocity, appliedVoltage, supplyCurrent, torqueCurrent, temperature);
     inputs.positionRots = position.getValueAsDouble();
     inputs.velocityRps = velocity.getValueAsDouble();
     inputs.appliedVolts = appliedVoltage.getValueAsDouble();

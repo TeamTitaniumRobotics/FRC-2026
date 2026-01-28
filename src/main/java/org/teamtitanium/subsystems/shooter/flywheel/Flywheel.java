@@ -1,13 +1,32 @@
 package org.teamtitanium.subsystems.shooter.flywheel;
 
+import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static org.teamtitanium.subsystems.shooter.flywheel.FlywheelConstants.*;
 
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
+import org.teamtitanium.utils.Constants.Gains;
+import org.teamtitanium.utils.LoggedTracer;
+import org.teamtitanium.utils.LoggedTunableNumber;
 
 public class Flywheel extends SubsystemBase {
+  // Real-time tunable PID gains
+  private final LoggedTunableNumber flywheelkP =
+      new LoggedTunableNumber("Flywheel/kP", FLYWHEEL_GAINS.kP());
+  private final LoggedTunableNumber flywheelkI =
+      new LoggedTunableNumber("Flywheel/kI", FLYWHEEL_GAINS.kI());
+  private final LoggedTunableNumber flywheelkD =
+      new LoggedTunableNumber("Flywheel/kD", FLYWHEEL_GAINS.kD());
+  private final LoggedTunableNumber flywheelkS =
+      new LoggedTunableNumber("Flywheel/kS", FLYWHEEL_GAINS.kS());
+  private final LoggedTunableNumber flywheelkV =
+      new LoggedTunableNumber("Flywheel/kV", FLYWHEEL_GAINS.kV());
+  private final LoggedTunableNumber flywheelkA =
+      new LoggedTunableNumber("Flywheel/kA", FLYWHEEL_GAINS.kA());
+
   private final FlywheelIO io;
   private final FlywheelIOInputsAutoLogged inputs = new FlywheelIOInputsAutoLogged();
 
@@ -23,82 +42,77 @@ public class Flywheel extends SubsystemBase {
     io.updateInputs(inputs);
     Logger.processInputs("Flywheel", inputs);
 
-    // Log additional data
-    Logger.recordOutput("Flywheel/TargetVelocityRps", targetVelocityRps);
-    Logger.recordOutput("Flywheel/TargetVelocityRPM", targetVelocityRps * 60.0);
-    Logger.recordOutput("Flywheel/AverageVelocityRps", getAverageVelocityRps());
-    Logger.recordOutput("Flywheel/AverageVelocityRPM", getAverageVelocityRps() * 60.0);
-    Logger.recordOutput("Flywheel/AtTarget", atTarget());
+    if (flywheelkP.hasChanged(hashCode())
+        || flywheelkI.hasChanged(hashCode())
+        || flywheelkD.hasChanged(hashCode())
+        || flywheelkS.hasChanged(hashCode())
+        || flywheelkV.hasChanged(hashCode())
+        || flywheelkA.hasChanged(hashCode())) {
+      io.setGains(
+          new Gains(
+              flywheelkP.get(),
+              flywheelkI.get(),
+              flywheelkD.get(),
+              flywheelkS.get(),
+              flywheelkV.get(),
+              0.0,
+              flywheelkA.get()));
+    }
+
+    LoggedTracer.record("Flywheel");
   }
 
   /**
-   * Sets the flywheel to a specific velocity using closed-loop control.
+   * Sets the flywheel to a velocity supplier
    *
-   * @param velocityRps The target velocity in rotations per second
+   * @param velocityRps target supplier velocity for the flywheel
+   * @return A command that repeatedly sets the flywheel to a velocity
    */
-  public void setVelocity(double velocityRps) {
-    targetVelocityRps = velocityRps;
-    io.setVelocity(velocityRps);
+  public Command setVelocity(DoubleSupplier velocityRps) {
+    return run(() -> {
+          targetVelocityRps = velocityRps.getAsDouble();
+          io.setVelocity(velocityRps.getAsDouble());
+        })
+        .withName("Flywheel.SetVelocity");
   }
 
   /**
-   * Sets the flywheel to a specific velocity in RPM.
+   * Sets the flywheel to a velocity
    *
-   * @param velocityRPM The target velocity in RPM
+   * @param velocityRps target velocity for the flywheel
+   * @return A command that repeatedly sets the flywheel to a velocity
    */
-  public void setVelocityRPM(double velocityRPM) {
-    setVelocity(velocityRPM / 60.0);
+  public Command setVelocity(double velocityRps) {
+    return setVelocity(() -> velocityRps);
   }
 
   /**
-   * Runs the flywheel at a specific voltage (open loop control).
+   * Runs the flywheel at a given voltage supplier
    *
-   * @param volts The voltage to apply
+   * @param voltage target voltage supplier
+   * @return A command that repeatedly runs the flywheel at a voltage
    */
-  public void setVoltage(double volts) {
-    io.setVoltage(volts);
+  public Command setVoltage(DoubleSupplier voltage) {
+    return run(() -> io.setVoltage(voltage.getAsDouble())).withName("Flywheel.SetVoltage");
   }
 
-  /** Stops the flywheel motors. */
-  public void stop() {
-    targetVelocityRps = 0.0;
-    io.stop();
+  /**
+   * Runs the flywheel at a given voltage
+   *
+   * @param voltage target voltage
+   * @return A command that repeatedly runs the flywheel at a voltage
+   */
+  public Command setVoltage(double voltage) {
+    return setVoltage(() -> voltage);
   }
 
   /**
    * Gets the average velocity of both flywheel motors.
    *
-   * @return The average velocity in rotations per second
+   * @return The average flywheel velocity
    */
-  public double getAverageVelocityRps() {
-    return (inputs.leftVelocityRps + inputs.rightVelocityRps) / 2.0;
-  }
-
-  /**
-   * Gets the average velocity of both flywheel motors in RPM.
-   *
-   * @return The average velocity in RPM
-   */
-  public double getAverageVelocityRPM() {
-    return getAverageVelocityRps() * 60.0;
-  }
-
-  /**
-   * Gets the left motor velocity.
-   *
-   * @return The left motor velocity in rotations per second
-   */
-  public double getLeftVelocityRps() {
-    return inputs.leftVelocityRps;
-  }
-
-  /**
-   * Gets the right motor velocity.
-   *
-   * @return The right motor velocity in rotations per second
-   */
-  public double getRightVelocityRps() {
-    return inputs.rightVelocityRps;
+  public AngularVelocity getVelocity() {
+    return RotationsPerSecond.of(inputs.velocityRps);
   }
 
   /**
@@ -107,7 +121,7 @@ public class Flywheel extends SubsystemBase {
    * @return True if at target within tolerance
    */
   public boolean atTarget() {
-    return Math.abs(getAverageVelocityRps() - targetVelocityRps) < VELOCITY_TOLERANCE_RPS;
+    return Math.abs(inputs.velocityRps - targetVelocityRps) < VELOCITY_TOLERANCE_RPS;
   }
 
   /**
@@ -119,67 +133,9 @@ public class Flywheel extends SubsystemBase {
     io.setBrakeMode(enabled);
   }
 
-  // -------------------- Commands --------------------
-
-  /**
-   * Command to set the flywheel to a specific velocity.
-   *
-   * @param velocityRps The target velocity in rotations per second
-   * @return A command that sets the flywheel velocity
-   */
-  public Command setVelocityCommand(double velocityRps) {
-    return run(() -> setVelocity(velocityRps)).withName("Flywheel.SetVelocity");
-  }
-
-  /**
-   * Command to set the flywheel to a specific velocity in RPM.
-   *
-   * @param velocityRPM The target velocity in RPM
-   * @return A command that sets the flywheel velocity
-   */
-  public Command setVelocityRPMCommand(double velocityRPM) {
-    return setVelocityCommand(velocityRPM / 60.0);
-  }
-
-  /**
-   * Command to set the flywheel velocity and wait until at target.
-   *
-   * @param velocityRps The target velocity in rotations per second
-   * @return A command that sets velocity and finishes when at target
-   */
-  public Command setVelocityAndWaitCommand(double velocityRps) {
-    return run(() -> setVelocity(velocityRps))
-        .until(this::atTarget)
-        .withName("Flywheel.SetVelocityAndWait");
-  }
-
-  /**
-   * Command to run the flywheel with variable velocity input.
-   *
-   * @param velocitySupplier Supplier for velocity in rotations per second
-   * @return A command for variable flywheel control
-   */
-  public Command variableVelocityCommand(DoubleSupplier velocitySupplier) {
-    return run(() -> setVelocity(velocitySupplier.getAsDouble()))
-        .withName("Flywheel.VariableVelocity");
-  }
-
-  /**
-   * Command to stop the flywheel.
-   *
-   * @return A command that stops the flywheel
-   */
-  public Command stopCommand() {
-    return runOnce(this::stop).withName("Flywheel.Stop");
-  }
-
-  /**
-   * Command to idle the flywheel at a low velocity.
-   *
-   * @param idleVelocityRps The idle velocity in rotations per second
-   * @return A command that runs the flywheel at idle speed
-   */
-  public Command idleCommand(double idleVelocityRps) {
-    return run(() -> setVelocity(idleVelocityRps)).withName("Flywheel.Idle");
+  /** Stops the flywheel motors. */
+  public void stop() {
+    targetVelocityRps = 0.0;
+    io.setVoltage(0.0);
   }
 }

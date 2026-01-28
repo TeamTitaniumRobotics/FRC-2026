@@ -5,16 +5,20 @@ import static org.teamtitanium.subsystems.shooter.flywheel.FlywheelConstants.*;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
+import java.util.List;
 import org.teamtitanium.utils.Constants;
 import org.teamtitanium.utils.Constants.Gains;
 import org.teamtitanium.utils.PhoenixUtil;
@@ -28,21 +32,16 @@ public class FlywheelIOTalonFX implements FlywheelIO {
   private final VelocityVoltage velocityControl = new VelocityVoltage(0.0);
   private final VoltageOut voltageOut = new VoltageOut(0.0);
 
-  private final StatusSignal<AngularVelocity> leftVelocity;
-  private final StatusSignal<Voltage> leftAppliedVoltage;
-  private final StatusSignal<Current> leftSupplyCurrent;
-  private final StatusSignal<Current> leftTorqueCurrent;
-  private final StatusSignal<Temperature> leftTemperature;
-
-  private final StatusSignal<AngularVelocity> rightVelocity;
-  private final StatusSignal<Voltage> rightAppliedVoltage;
-  private final StatusSignal<Current> rightSupplyCurrent;
-  private final StatusSignal<Current> rightTorqueCurrent;
-  private final StatusSignal<Temperature> rightTemperature;
+  private final StatusSignal<Angle> position;
+  private final StatusSignal<AngularVelocity> velocity;
+  private final List<StatusSignal<Voltage>> appliedVolts;
+  private final List<StatusSignal<Current>> supplyCurrent;
+  private final List<StatusSignal<Current>> torqueCurrent;
+  private final List<StatusSignal<Temperature>> temperature;
 
   public FlywheelIOTalonFX() {
-    leftMotor = new TalonFX(FLYWHEEL_LEFT_MOTOR_ID, FLYWHEEL_CANBUS);
-    rightMotor = new TalonFX(FLYWHEEL_RIGHT_MOTOR_ID, FLYWHEEL_CANBUS);
+    leftMotor = new TalonFX(FLYWHEEL_LEFT_MOTOR_ID, Constants.RIO_CAN_BUS);
+    rightMotor = new TalonFX(FLYWHEEL_RIGHT_MOTOR_ID, Constants.RIO_CAN_BUS);
 
     // Configure motors
     config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
@@ -75,92 +74,85 @@ public class FlywheelIOTalonFX implements FlywheelIO {
     // Right motor should be inverted (opposite side of shooter)
     config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     PhoenixUtil.tryUntilOk(5, () -> rightMotor.getConfigurator().apply(config));
+    rightMotor.setControl(new Follower(FLYWHEEL_LEFT_MOTOR_ID, MotorAlignmentValue.Opposed));
 
     // Get status signals
-    leftVelocity = leftMotor.getVelocity();
-    leftAppliedVoltage = leftMotor.getMotorVoltage();
-    leftSupplyCurrent = leftMotor.getSupplyCurrent();
-    leftTorqueCurrent = leftMotor.getTorqueCurrent();
-    leftTemperature = leftMotor.getDeviceTemp();
-
-    rightVelocity = rightMotor.getVelocity();
-    rightAppliedVoltage = rightMotor.getMotorVoltage();
-    rightSupplyCurrent = rightMotor.getSupplyCurrent();
-    rightTorqueCurrent = rightMotor.getTorqueCurrent();
-    rightTemperature = rightMotor.getDeviceTemp();
+    position = leftMotor.getPosition();
+    velocity = leftMotor.getVelocity();
+    appliedVolts = List.of(leftMotor.getMotorVoltage(), rightMotor.getMotorVoltage());
+    supplyCurrent = List.of(leftMotor.getSupplyCurrent(), rightMotor.getSupplyCurrent());
+    torqueCurrent = List.of(leftMotor.getTorqueCurrent(), rightMotor.getTorqueCurrent());
+    temperature = List.of(leftMotor.getDeviceTemp(), rightMotor.getDeviceTemp());
 
     // Set update frequencies
     BaseStatusSignal.setUpdateFrequencyForAll(
         100,
-        leftVelocity,
-        leftAppliedVoltage,
-        leftSupplyCurrent,
-        leftTorqueCurrent,
-        leftTemperature,
-        rightVelocity,
-        rightAppliedVoltage,
-        rightSupplyCurrent,
-        rightTorqueCurrent,
-        rightTemperature);
+        position,
+        velocity,
+        appliedVolts.get(0),
+        appliedVolts.get(1),
+        supplyCurrent.get(0),
+        supplyCurrent.get(1),
+        torqueCurrent.get(0),
+        torqueCurrent.get(1),
+        temperature.get(0),
+        temperature.get(1));
 
     PhoenixUtil.tryUntilOk(
         5, () -> ParentDevice.optimizeBusUtilizationForAll(leftMotor, rightMotor));
 
     PhoenixUtil.registerSignals(
         Constants.RIO_CAN_BUS,
-        leftVelocity,
-        leftAppliedVoltage,
-        leftSupplyCurrent,
-        leftTorqueCurrent,
-        leftTemperature,
-        rightVelocity,
-        rightAppliedVoltage,
-        rightSupplyCurrent,
-        rightTorqueCurrent,
-        rightTemperature);
+        position,
+        velocity,
+        appliedVolts.get(0),
+        appliedVolts.get(1),
+        supplyCurrent.get(0),
+        supplyCurrent.get(1),
+        torqueCurrent.get(0),
+        torqueCurrent.get(1),
+        temperature.get(0),
+        temperature.get(1));
   }
 
   @Override
   public void updateInputs(FlywheelIOInputs inputs) {
     inputs.leftMotorConnected =
-        BaseStatusSignal.refreshAll(
-                leftVelocity,
-                leftAppliedVoltage,
-                leftSupplyCurrent,
-                leftTorqueCurrent,
-                leftTemperature)
-            .isOK();
-    inputs.leftVelocityRps = leftVelocity.getValueAsDouble();
-    inputs.leftAppliedVolts = leftAppliedVoltage.getValueAsDouble();
-    inputs.leftSupplyCurrentAmps = leftSupplyCurrent.getValueAsDouble();
-    inputs.leftTorqueCurrentAmps = leftTorqueCurrent.getValueAsDouble();
-    inputs.leftTempCelsius = leftTemperature.getValueAsDouble();
-
+        BaseStatusSignal.isAllGood(
+            position,
+            velocity,
+            appliedVolts.get(0),
+            supplyCurrent.get(0),
+            torqueCurrent.get(0),
+            temperature.get(0));
     inputs.rightMotorConnected =
-        BaseStatusSignal.refreshAll(
-                rightVelocity,
-                rightAppliedVoltage,
-                rightSupplyCurrent,
-                rightTorqueCurrent,
-                rightTemperature)
-            .isOK();
-    inputs.rightVelocityRps = rightVelocity.getValueAsDouble();
-    inputs.rightAppliedVolts = rightAppliedVoltage.getValueAsDouble();
-    inputs.rightSupplyCurrentAmps = rightSupplyCurrent.getValueAsDouble();
-    inputs.rightTorqueCurrentAmps = rightTorqueCurrent.getValueAsDouble();
-    inputs.rightTempCelsius = rightTemperature.getValueAsDouble();
+        BaseStatusSignal.isAllGood(
+            position,
+            velocity,
+            appliedVolts.get(1),
+            supplyCurrent.get(1),
+            torqueCurrent.get(1),
+            temperature.get(1));
+
+    inputs.positionRots = position.getValueAsDouble();
+    inputs.velocityRps = velocity.getValueAsDouble();
+    inputs.appliedVolts = appliedVolts.stream().mapToDouble(s -> s.getValueAsDouble()).toArray();
+    inputs.supplyCurrentAmps =
+        supplyCurrent.stream().mapToDouble(s -> s.getValueAsDouble()).toArray();
+    inputs.torqueCurrentAmps =
+        torqueCurrent.stream().mapToDouble(s -> s.getValueAsDouble()).toArray();
+    inputs.tempCelsius = temperature.stream().mapToDouble(s -> s.getValueAsDouble()).toArray();
+    temperature.stream().mapToDouble(s -> s.getValueAsDouble()).toArray();
   }
 
   @Override
   public void setVelocity(double velocityRps) {
     leftMotor.setControl(velocityControl.withVelocity(velocityRps));
-    rightMotor.setControl(velocityControl.withVelocity(velocityRps));
   }
 
   @Override
   public void setVoltage(double volts) {
     leftMotor.setControl(voltageOut.withOutput(volts));
-    rightMotor.setControl(voltageOut.withOutput(volts));
   }
 
   @Override
@@ -180,11 +172,5 @@ public class FlywheelIOTalonFX implements FlywheelIO {
     config.MotorOutput.NeutralMode = enabled ? NeutralModeValue.Brake : NeutralModeValue.Coast;
     PhoenixUtil.tryUntilOk(5, () -> leftMotor.getConfigurator().apply(config));
     PhoenixUtil.tryUntilOk(5, () -> rightMotor.getConfigurator().apply(config));
-  }
-
-  @Override
-  public void stop() {
-    leftMotor.stopMotor();
-    rightMotor.stopMotor();
   }
 }

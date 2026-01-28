@@ -36,19 +36,9 @@ public class HoodIOSim extends HoodIOTalonFX {
     inputs.torqueCurrentAmps = hoodSim.getCurrentDrawAmps();
     inputs.tempCelsius = 25.0; // Assume constant temperature in sim
 
-    // Simulate CANcoder
-    inputs.cancoderConnected = true;
-    inputs.cancoderPositionRots = inputs.positionRots;
-
     // Update the real motor position for Motion Magic control
     hoodMotor.getSimState().setRawRotorPosition(inputs.positionRots * HOOD_GEAR_RATIO);
     hoodMotor.getSimState().setRotorVelocity(inputs.velocityRps * HOOD_GEAR_RATIO);
-  }
-
-  @Override
-  public void setVoltage(double volts) {
-    super.setVoltage(volts);
-    appliedVolts = volts;
   }
 
   @Override
@@ -59,8 +49,8 @@ public class HoodIOSim extends HoodIOTalonFX {
   }
 
   @Override
-  public void stop() {
-    super.stop();
-    appliedVolts = 0.0;
+  public void setVoltage(double volts) {
+    super.setVoltage(volts);
+    appliedVolts = volts;
   }
 }

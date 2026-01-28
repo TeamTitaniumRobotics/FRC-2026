@@ -14,9 +14,6 @@ public interface HoodIO {
     public double supplyCurrentAmps = 0.0;
     public double torqueCurrentAmps = 0.0;
     public double tempCelsius = 0.0;
-
-    public boolean cancoderConnected = false;
-    public double cancoderPositionRots = 0.0;
   }
 
   /** Updates the inputs for the hood. */
@@ -39,10 +36,4 @@ public interface HoodIO {
 
   /** Sets the hood motor encoder position to the given value in rotations. */
   public default void setMotorPosition(double positionRots) {}
-
-  /** Zeros the hood using the CANcoder absolute position. */
-  public default void zeroWithCANcoder() {}
-
-  /** Stops the hood motor. */
-  public default void stop() {}
 }

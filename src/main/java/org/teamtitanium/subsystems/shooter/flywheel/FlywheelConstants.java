@@ -10,8 +10,12 @@ public class FlywheelConstants {
   public static final String FLYWHEEL_CANBUS = "";
 
   // Physical Constants
-  public static final double FLYWHEEL_GEAR_RATIO = 1.0 / 1.0; // Direct drive
+  public static final double FLYWHEEL_GEAR_RATIO =
+      0.5; // 1:2 reduction (motor spins twice for each flywheel rotation)
   public static final double FLYWHEEL_MOMENT_OF_INERTIA = 0.008; // kg*m^2
+
+  // Tolerance
+  public static final double VELOCITY_TOLERANCE_RPS = 1.0; // ~60 RPM tolerance
 
   // PID Gains (Velocity control)
   public static final Gains FLYWHEEL_GAINS = new Gains(0.1, 0.0, 0.0, 0.0, 0.12, 0.0, 0.0);
@@ -22,7 +26,4 @@ public class FlywheelConstants {
 
   // Simulation
   public static final DCMotor FLYWHEEL_GEARBOX = DCMotor.getKrakenX60Foc(2); // Two motors
-
-  // Tolerance
-  public static final double VELOCITY_TOLERANCE_RPS = 1.0; // ~60 RPM tolerance
 }
