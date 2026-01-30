@@ -42,6 +42,7 @@ import org.teamtitanium.utils.PhoenixUtil;
 import org.teamtitanium.utils.TunerConstants;
 import org.teamtitanium.utils.VirtualSubsystem;
 import choreo.auto.AutoChooser;
+import org.teamtitanium.autos.*;
 
 public class Robot extends LoggedRobot {
   private static final double loopOverrunWarningTimeout = 0.02;
