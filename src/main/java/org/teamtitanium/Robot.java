@@ -4,6 +4,7 @@
 
 package org.teamtitanium;
 
+import choreo.auto.AutoChooser;
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.hal.AllianceStationID;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -14,10 +15,12 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.Watchdog;
 import edu.wpi.first.wpilibj.simulation.DriverStationSim;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
@@ -28,6 +31,7 @@ import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
+import org.teamtitanium.autos.*;
 import org.teamtitanium.commands.DriveCommands;
 import org.teamtitanium.subsystems.Leds;
 import org.teamtitanium.subsystems.swerve.GyroIO;
@@ -41,10 +45,6 @@ import org.teamtitanium.utils.NTClientLogger;
 import org.teamtitanium.utils.PhoenixUtil;
 import org.teamtitanium.utils.TunerConstants;
 import org.teamtitanium.utils.VirtualSubsystem;
-import choreo.auto.AutoChooser;
-import org.teamtitanium.autos.*;
-import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Robot extends LoggedRobot {
   private static final double loopOverrunWarningTimeout = 0.02;
@@ -79,10 +79,10 @@ public class Robot extends LoggedRobot {
 
   private final AutoChooser autoChooser = new AutoChooser();
   private final AutoRoutines autos;
-  
+
   public Robot() {
     Leds.getInstance(); // Initialize LED subsystem early
-    
+
     // Set up logger
     Logger.recordMetadata("TuningMode", Boolean.toString(Constants.tuningMode));
     Logger.recordMetadata("RuntimeType", getRuntimeType().toString());
@@ -121,7 +121,6 @@ public class Robot extends LoggedRobot {
         Logger.setReplaySource(new WPILOGReader(logPath));
         Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim")));
         break;
-        
     }
 
     // Start the logger
@@ -192,16 +191,16 @@ public class Robot extends LoggedRobot {
         swerve = null;
       }
     }
-    
+
     autos = new AutoRoutines(swerve);
-    
+
     // Create an AutoChooser
     autoChooser.addRoutine("NewAuto", () -> autos.exampleAutoRoutine());
     // Put the auto chooser on the dashboard
     SmartDashboard.putData(autoChooser);
     // Schedule the selected auto during the autonomous period
     RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());
-    
+
     configureButtonBindings();
   }
 
