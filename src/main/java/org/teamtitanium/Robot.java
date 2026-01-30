@@ -45,7 +45,6 @@ import choreo.auto.AutoChooser;
 import org.teamtitanium.autos.*;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import java.util.function.Supplier;
 
 public class Robot extends LoggedRobot {
   private static final double loopOverrunWarningTimeout = 0.02;
@@ -194,7 +193,7 @@ public class Robot extends LoggedRobot {
       }
     }
     // Create an AutoChooser
-    autoChooser.addRoutine("NewAuto", Supplier<autos.exampleAutoRoutine()>);
+    autoChooser.addRoutine("NewAuto", () -> autos.exampleAutoRoutine());
     // Put the auto chooser on the dashboard
     SmartDashboard.putData(autoChooser);
     // Schedule the selected auto during the autonomous period
