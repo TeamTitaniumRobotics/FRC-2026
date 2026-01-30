@@ -43,6 +43,8 @@ import org.teamtitanium.utils.TunerConstants;
 import org.teamtitanium.utils.VirtualSubsystem;
 import choreo.auto.AutoChooser;
 import org.teamtitanium.autos.*;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Robot extends LoggedRobot {
   private static final double loopOverrunWarningTimeout = 0.02;
