@@ -17,7 +17,7 @@ public class AutoRoutines {
     public AutoRoutines(Swerve swerve) {
         this.swerve = swerve;
         this.factory = new AutoFactory(robotState::getEstimatedPose, // A function that returns the current robot pose
-        null, // A function that resets the current robot pose to the provided Pose2d
+        robotState::setEstimatedPose, // A function that resets the current robot pose to the provided Pose2d
         null, // The drive subsystem trajectory follower 
         true, // If alliance flipping should be enabled 
         swerve, // The drive subsystem
