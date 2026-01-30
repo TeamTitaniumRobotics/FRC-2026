@@ -7,8 +7,9 @@ import org.teamtitanium.RobotState;
 import edu.wpi.first.wpilibj2.command.Commands;
 import lombok.Getter;
 import org.teamtitanium.subsystems.swerve.Swerve;
+import java.util.function.Supplier;
 
-public class AutoRoutines {
+public class AutoRoutines implements Supplier<AutoRoutine> {
 
     private final Swerve swerve;
     @Getter private final AutoFactory factory;
@@ -24,6 +25,9 @@ public class AutoRoutines {
         null); 
     }
 
+    public AutoRoutine get() {
+        return exampleAutoRoutine();
+    }
 
     public AutoRoutine exampleAutoRoutine() {
         AutoRoutine routine = factory.newRoutine("exampleRoutine"); //Name the routine
