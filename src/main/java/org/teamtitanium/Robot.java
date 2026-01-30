@@ -193,7 +193,7 @@ public class Robot extends LoggedRobot {
       }
     }
     // Create an AutoChooser
-    autoChooser.addRoutine("NewAuto", autos.exampleAutoRoutine());
+    autoChooser.addRoutine("NewAuto", Supplier<autos.exampleAutoRoutine()>);
     // Put the auto chooser on the dashboard
     SmartDashboard.putData(autoChooser);
     // Schedule the selected auto during the autonomous period
