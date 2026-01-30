@@ -41,6 +41,7 @@ import org.teamtitanium.utils.NTClientLogger;
 import org.teamtitanium.utils.PhoenixUtil;
 import org.teamtitanium.utils.TunerConstants;
 import org.teamtitanium.utils.VirtualSubsystem;
+import choreo.auto.AutoChooser;
 
 public class Robot extends LoggedRobot {
   private static final double loopOverrunWarningTimeout = 0.02;
@@ -73,9 +74,19 @@ public class Robot extends LoggedRobot {
   private final Alert initializationAlert =
       new Alert("Please wait to enable, robot is initializing", Alert.AlertType.kWarning);
 
+  private final AutoChooser autoChooser = new AutoChooser();
+  private final AutoRoutines autos = new AutoRoutines(swerve);
+  
   public Robot() {
     Leds.getInstance(); // Initialize LED subsystem early
 
+    // Create an AutoChooser
+    autoChooser.addRoutine("NewAuto", autos.exampleAutoRoutine());
+    // Put the auto chooser on the dashboard
+    SmartDashboard.putData(autoChooser);
+    // Schedule the selected auto during the autonomous period
+    RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());
+    
     // Set up logger
     Logger.recordMetadata("TuningMode", Boolean.toString(Constants.tuningMode));
     Logger.recordMetadata("RuntimeType", getRuntimeType().toString());
