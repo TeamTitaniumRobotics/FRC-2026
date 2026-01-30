@@ -78,7 +78,7 @@ public class Robot extends LoggedRobot {
       new Alert("Please wait to enable, robot is initializing", Alert.AlertType.kWarning);
 
   private final AutoChooser autoChooser = new AutoChooser();
-  private final AutoRoutines autos = new AutoRoutines(swerve);
+  private final AutoRoutines autos;
   
   public Robot() {
     Leds.getInstance(); // Initialize LED subsystem early
@@ -192,6 +192,9 @@ public class Robot extends LoggedRobot {
         swerve = null;
       }
     }
+    
+    autos = new AutoRoutines(swerve);
+    
     // Create an AutoChooser
     autoChooser.addRoutine("NewAuto", () -> autos.exampleAutoRoutine());
     // Put the auto chooser on the dashboard
