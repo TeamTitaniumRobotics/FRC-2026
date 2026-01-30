@@ -79,13 +79,6 @@ public class Robot extends LoggedRobot {
   
   public Robot() {
     Leds.getInstance(); // Initialize LED subsystem early
-
-    // Create an AutoChooser
-    autoChooser.addRoutine("NewAuto", autos.exampleAutoRoutine());
-    // Put the auto chooser on the dashboard
-    SmartDashboard.putData(autoChooser);
-    // Schedule the selected auto during the autonomous period
-    RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());
     
     // Set up logger
     Logger.recordMetadata("TuningMode", Boolean.toString(Constants.tuningMode));
@@ -125,6 +118,7 @@ public class Robot extends LoggedRobot {
         Logger.setReplaySource(new WPILOGReader(logPath));
         Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim")));
         break;
+        
     }
 
     // Start the logger
@@ -195,7 +189,13 @@ public class Robot extends LoggedRobot {
         swerve = null;
       }
     }
-
+    // Create an AutoChooser
+    autoChooser.addRoutine("NewAuto", autos.exampleAutoRoutine());
+    // Put the auto chooser on the dashboard
+    SmartDashboard.putData(autoChooser);
+    // Schedule the selected auto during the autonomous period
+    RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());
+    
     configureButtonBindings();
   }
 
