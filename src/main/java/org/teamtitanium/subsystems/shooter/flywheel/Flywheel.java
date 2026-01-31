@@ -73,7 +73,6 @@ public class Flywheel extends SubsystemBase {
   /** Creates a new Flywheel subsystem. */
   public Flywheel(FlywheelIO io) {
     this.io = io;
-    setDefaultCommand(setStateVelocity());
   }
 
   @Override
@@ -106,7 +105,7 @@ public class Flywheel extends SubsystemBase {
    *
    * @return A command that repeatedly sets the flywheel to the current state's velocity
    */
-  private Command setStateVelocity() {
+  public Command setStateVelocity() {
     return run(() -> {
           if (!manualOverride) {
             targetVelocityRps = currentState.getTargetVelocityRps().in(RotationsPerSecond);

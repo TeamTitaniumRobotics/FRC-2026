@@ -34,9 +34,20 @@ import org.teamtitanium.subsystems.shooter.flywheel.Flywheel;
 import org.teamtitanium.subsystems.shooter.flywheel.FlywheelIO;
 import org.teamtitanium.subsystems.shooter.flywheel.FlywheelIOSim;
 import org.teamtitanium.subsystems.shooter.flywheel.FlywheelIOTalonFX;
+import org.teamtitanium.subsystems.shooter.hood.Hood;
+import org.teamtitanium.subsystems.shooter.hood.HoodIO;
+import org.teamtitanium.subsystems.shooter.hood.HoodIOSim;
+import org.teamtitanium.subsystems.shooter.hood.HoodIOTalonFX;
+import org.teamtitanium.subsystems.shooter.turret.Turret;
+import org.teamtitanium.subsystems.shooter.turret.TurretIO;
+import org.teamtitanium.subsystems.shooter.turret.TurretIOSim;
+import org.teamtitanium.subsystems.shooter.turret.TurretIOTalonFX;
 import org.teamtitanium.subsystems.swerve.GyroIO;
+import org.teamtitanium.subsystems.swerve.GyroIOPigeon2;
 import org.teamtitanium.subsystems.swerve.Swerve;
+import org.teamtitanium.subsystems.swerve.SwerveModuleIO;
 import org.teamtitanium.subsystems.swerve.SwerveModuleIOSim;
+import org.teamtitanium.subsystems.swerve.SwerveModuleIOTalonFX;
 import org.teamtitanium.utils.CanivoreReader;
 import org.teamtitanium.utils.Constants;
 import org.teamtitanium.utils.Constants.Mode;
@@ -59,6 +70,8 @@ public class Robot extends LoggedRobot {
 
   private final Swerve swerve;
   private final Flywheel flywheel;
+  private final Hood hood;
+  private final Turret turret;
 
   private final CommandXboxController driver = new CommandXboxController(0);
 
@@ -174,8 +187,16 @@ public class Robot extends LoggedRobot {
 
     switch (Constants.getMode()) {
       case REAL -> {
-        swerve = null;
+        swerve =
+            new Swerve(
+                new GyroIOPigeon2(),
+                new SwerveModuleIOTalonFX(TunerConstants.FrontLeft),
+                new SwerveModuleIOTalonFX(TunerConstants.FrontRight),
+                new SwerveModuleIOTalonFX(TunerConstants.BackLeft),
+                new SwerveModuleIOTalonFX(TunerConstants.BackRight));
         flywheel = new Flywheel(new FlywheelIOTalonFX());
+        hood = new Hood(new HoodIOTalonFX());
+        turret = new Turret(new TurretIOTalonFX());
       }
       case SIM -> {
         swerve =
@@ -186,12 +207,26 @@ public class Robot extends LoggedRobot {
                 new SwerveModuleIOSim(TunerConstants.BackLeft),
                 new SwerveModuleIOSim(TunerConstants.BackRight));
         flywheel = new Flywheel(new FlywheelIOSim());
+        hood = new Hood(new HoodIOSim());
+        turret = new Turret(new TurretIOSim());
       }
       default -> {
-        swerve = null;
+        swerve =
+            new Swerve(
+                new GyroIO() {},
+                new SwerveModuleIO() {},
+                new SwerveModuleIO() {},
+                new SwerveModuleIO() {},
+                new SwerveModuleIO() {});
         flywheel = new Flywheel(new FlywheelIO() {});
+        hood = new Hood(new HoodIO() {});
+        turret = new Turret(new TurretIO() {});
       }
     }
+
+    flywheel.setDefaultCommand(flywheel.setStateVelocity());
+    hood.setDefaultCommand(hood.setStatePosition());
+    turret.setDefaultCommand(turret.setStatePosition());
 
     configureButtonBindings();
   }

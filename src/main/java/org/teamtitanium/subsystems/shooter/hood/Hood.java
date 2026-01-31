@@ -66,17 +66,15 @@ public class Hood extends SubsystemBase {
   @Setter
   private boolean manualOverride = false;
 
-  @AutoLogOutput(key = "Hood/TargetPositionRots")
+  @AutoLogOutput(key = "Hood/TargetAngleRots")
   private double targetPositionRots = 0.0;
 
   private Trigger atSetpoint =
-      new Trigger(
-          () -> Math.abs(inputs.positionRots - targetPositionRots) < POSITION_TOLERANCE_ROTS);
+      new Trigger(() -> Math.abs(inputs.positionRots - targetPositionRots) < ANGLE_TOLERANCE_ROTS);
 
   /** Creates a new Hood subsystem. */
   public Hood(HoodIO io) {
     this.io = io;
-    setDefaultCommand(setStatePosition());
   }
 
   @Override
@@ -114,7 +112,7 @@ public class Hood extends SubsystemBase {
    *
    * @return A command that repeatedly sets the hood to the current state's target position
    */
-  private Command setStatePosition() {
+  public Command setStatePosition() {
     return run(() -> {
           if (!manualOverride) {
             targetPositionRots =

@@ -23,7 +23,7 @@ public class TurretConstants {
   public static final double MAX_ANGLE_ROTS = 0.5; // 180 degrees
 
   // Tolerance
-  public static final double POSITION_TOLERANCE_ROTS = 0.01; // ~3.6 degrees
+  public static final double ANGLE_TOLERANCE_ROTS = 0.01; // ~3.6 degrees
 
   // Motion Magic Constraints
   public static final Constraints TURRET_CONSTRAINTS =

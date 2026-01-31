@@ -26,14 +26,14 @@ public class Turret extends SubsystemBase {
     TRACK(() -> RobotState.getInstance().getTurretSetpoint()),
     EJECT(() -> Rotations.of(-0.25));
 
-    private final Supplier<Angle> targetAngleSupplier;
+    private final Supplier<Angle> targetPositionSupplier;
 
-    private TurretState(Supplier<Angle> targetAngleSupplier) {
-      this.targetAngleSupplier = targetAngleSupplier;
+    private TurretState(Supplier<Angle> targetPositionSupplier) {
+      this.targetPositionSupplier = targetPositionSupplier;
     }
 
-    public Angle getTargetAngle() {
-      return targetAngleSupplier.get();
+    public Angle getTargetPosition() {
+      return targetPositionSupplier.get();
     }
   }
 
@@ -70,9 +70,11 @@ public class Turret extends SubsystemBase {
   @Setter
   private boolean manualOverride = false;
 
-  private double targetAngleRots = 0.0;
+  @AutoLogOutput(key = "Turret/TargetPositionRots")
+  private double targetPositionRots = 0.0;
+
   private Trigger atSetpoint =
-      new Trigger(() -> Math.abs(inputs.positionRots - targetAngleRots) < POSITION_TOLERANCE_ROTS);
+      new Trigger(() -> Math.abs(inputs.positionRots - targetPositionRots) < ANGLE_TOLERANCE_ROTS);
 
   /** Creates a new Turret subsystem. */
   public Turret(TurretIO io) {
@@ -80,8 +82,6 @@ public class Turret extends SubsystemBase {
 
     // Zero the turret on startup if available
     zeroTurretCRT();
-
-    setDefaultCommand(setStateAngle());
   }
 
   @Override
@@ -113,16 +113,16 @@ public class Turret extends SubsystemBase {
     LoggedTracer.record("Turret");
   }
 
-  private Command setStateAngle() {
+  public Command setStatePosition() {
     return run(() -> {
           if (!manualOverride) {
-            targetAngleRots =
+            targetPositionRots =
                 MathUtil.clamp(
-                    currentState.getTargetAngle().in(Rotations), MIN_ANGLE_ROTS, MAX_ANGLE_ROTS);
-            io.setPosition(targetAngleRots);
+                    currentState.getTargetPosition().in(Rotations), MIN_ANGLE_ROTS, MAX_ANGLE_ROTS);
+            io.setPosition(targetPositionRots);
           }
         })
-        .withName("Turret.SetStateAngle");
+        .withName("Turret.SetStatePosition");
   }
 
   /**
@@ -134,7 +134,7 @@ public class Turret extends SubsystemBase {
   public Command setPosition(DoubleSupplier positionRots) {
     return run(() -> {
           setManualOverride(true);
-          targetAngleRots =
+          targetPositionRots =
               MathUtil.clamp(positionRots.getAsDouble(), MIN_ANGLE_ROTS, MAX_ANGLE_ROTS);
           io.setPosition(positionRots.getAsDouble());
         })

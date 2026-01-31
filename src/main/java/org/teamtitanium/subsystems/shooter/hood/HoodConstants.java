@@ -23,7 +23,7 @@ public class HoodConstants {
   public static final double MAX_ANGLE_ROTS = 0.25; // 90 degrees (vertical)
 
   // Tolerance
-  public static final double POSITION_TOLERANCE_ROTS = 0.005; // ~1.8 degrees
+  public static final double ANGLE_TOLERANCE_ROTS = 0.005; // ~1.8 degrees
 
   // Motion Magic Constraints
   public static final Constraints HOOD_MOTION_CONSTRAINTS =
