@@ -1,5 +1,6 @@
 package org.teamtitanium.subsystems.shooter.flywheel;
 
+import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static org.teamtitanium.subsystems.shooter.flywheel.FlywheelConstants.*;
 
@@ -8,8 +9,12 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
+import lombok.Getter;
+import lombok.Setter;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
+import org.teamtitanium.RobotState;
 import org.teamtitanium.utils.Constants.Gains;
 import org.teamtitanium.utils.LoggedTracer;
 import org.teamtitanium.utils.LoggedTunableNumber;
@@ -29,16 +34,46 @@ public class Flywheel extends SubsystemBase {
   private final LoggedTunableNumber flywheelkA =
       new LoggedTunableNumber("Flywheel/kA", FLYWHEEL_GAINS.kA());
 
+  public enum FlywheelState {
+    IDLE(() -> RPM.of(0.0)),
+    SCORE(() -> RobotState.getInstance().getFlywheelSetpoint()),
+    PASS(() -> RobotState.getInstance().getFlywheelSetpoint()),
+    EJECT(() -> RPM.of(30.0));
+
+    private final Supplier<AngularVelocity> targetVelocitySupplier;
+
+    private FlywheelState(Supplier<AngularVelocity> targetVelocitySupplier) {
+      this.targetVelocitySupplier = targetVelocitySupplier;
+    }
+
+    public AngularVelocity getTargetVelocityRps() {
+      return targetVelocitySupplier.get();
+    }
+  }
+
   private final FlywheelIO io;
   private final FlywheelIOInputsAutoLogged inputs = new FlywheelIOInputsAutoLogged();
 
+  @AutoLogOutput(key = "Flywheel/State")
+  @Getter
+  @Setter
+  private FlywheelState currentState = FlywheelState.IDLE;
+
+  @AutoLogOutput(key = "Flywheel/ManualOverride")
+  @Getter
+  @Setter
+  private boolean manualOverride = false;
+
+  @AutoLogOutput(key = "Flywheel/TargetVelocityRps")
   private double targetVelocityRps = 0.0;
+
   private final Trigger atSetpoint =
       new Trigger(() -> Math.abs(inputs.velocityRps - targetVelocityRps) < VELOCITY_TOLERANCE_RPS);
 
   /** Creates a new Flywheel subsystem. */
   public Flywheel(FlywheelIO io) {
     this.io = io;
+    setDefaultCommand(setStateVelocity());
   }
 
   @Override
@@ -64,6 +99,21 @@ public class Flywheel extends SubsystemBase {
     }
 
     LoggedTracer.record("Flywheel");
+  }
+
+  /**
+   * Sets the flywheel to the velocity defined by the current state
+   *
+   * @return A command that repeatedly sets the flywheel to the current state's velocity
+   */
+  private Command setStateVelocity() {
+    return run(() -> {
+          if (!manualOverride) {
+            targetVelocityRps = currentState.getTargetVelocityRps().in(RotationsPerSecond);
+            io.setVelocity(targetVelocityRps);
+          }
+        })
+        .withName("Flywheel.SetStateVelocity");
   }
 
   /**
@@ -142,5 +192,20 @@ public class Flywheel extends SubsystemBase {
   public void stop() {
     targetVelocityRps = 0.0;
     io.setVoltage(0.0);
+  }
+
+  /**
+   * Manual control command for the flywheel. Bypasses state-based control.
+   *
+   * @param voltageSupplier Voltage supplier for manual control
+   * @return A command for manual flywheel control
+   */
+  public Command manualControl(DoubleSupplier voltageSupplier) {
+    return run(() -> {
+          setManualOverride(true);
+          io.setVoltage(voltageSupplier.getAsDouble());
+        })
+        .finallyDo(() -> setManualOverride(false))
+        .withName("Flywheel.ManualControl");
   }
 }

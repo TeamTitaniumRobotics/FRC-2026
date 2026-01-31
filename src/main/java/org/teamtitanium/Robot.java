@@ -30,6 +30,10 @@ import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 import org.teamtitanium.commands.DriveCommands;
 import org.teamtitanium.subsystems.Leds;
+import org.teamtitanium.subsystems.shooter.flywheel.Flywheel;
+import org.teamtitanium.subsystems.shooter.flywheel.FlywheelIO;
+import org.teamtitanium.subsystems.shooter.flywheel.FlywheelIOSim;
+import org.teamtitanium.subsystems.shooter.flywheel.FlywheelIOTalonFX;
 import org.teamtitanium.subsystems.swerve.GyroIO;
 import org.teamtitanium.subsystems.swerve.Swerve;
 import org.teamtitanium.subsystems.swerve.SwerveModuleIOSim;
@@ -54,6 +58,7 @@ public class Robot extends LoggedRobot {
   private Command autonomousCommand;
 
   private final Swerve swerve;
+  private final Flywheel flywheel;
 
   private final CommandXboxController driver = new CommandXboxController(0);
 
@@ -170,6 +175,7 @@ public class Robot extends LoggedRobot {
     switch (Constants.getMode()) {
       case REAL -> {
         swerve = null;
+        flywheel = new Flywheel(new FlywheelIOTalonFX());
       }
       case SIM -> {
         swerve =
@@ -179,9 +185,11 @@ public class Robot extends LoggedRobot {
                 new SwerveModuleIOSim(TunerConstants.FrontRight),
                 new SwerveModuleIOSim(TunerConstants.BackLeft),
                 new SwerveModuleIOSim(TunerConstants.BackRight));
+        flywheel = new Flywheel(new FlywheelIOSim());
       }
       default -> {
         swerve = null;
+        flywheel = new Flywheel(new FlywheelIO() {});
       }
     }
 

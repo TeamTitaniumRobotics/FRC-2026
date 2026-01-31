@@ -7,34 +7,45 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import lombok.Getter;
 import org.littletonrobotics.junction.AutoLogOutput;
+import org.littletonrobotics.junction.Logger;
 import org.teamtitanium.subsystems.shooter.flywheel.Flywheel;
+import org.teamtitanium.subsystems.shooter.flywheel.Flywheel.FlywheelState;
 import org.teamtitanium.subsystems.shooter.hood.Hood;
+import org.teamtitanium.subsystems.shooter.hood.Hood.HoodState;
 import org.teamtitanium.subsystems.shooter.turret.Turret;
+import org.teamtitanium.subsystems.shooter.turret.Turret.TurretState;
 
 public class Superstructure {
   public enum SuperstructureState {
-    IDLE,
-    INTAKE,
-    PREPPED,
-    SPIN_UP_SCORE,
-    SCORE,
-    SCORE_THROUGH,
-    SPIN_UP_PASS,
-    PASS,
-    PASS_THROUGH,
-    PREP_HUB,
-    SCORE_HUB,
-    PREP_OUTPOST,
-    SCORE_OUTPOST,
-    EJECT,
-    PREP_CLIMB,
-    CLIMB,
-    CLIMB_L1,
-    DE_CLIMB_L1;
+    IDLE(FlywheelState.IDLE, HoodState.STOWED, TurretState.STOW),
+    INTAKE(FlywheelState.IDLE, HoodState.STOWED, TurretState.STOW),
+    PREPPED(FlywheelState.IDLE, HoodState.STOWED, TurretState.STOW),
+    SPIN_UP_SCORE(FlywheelState.SCORE, HoodState.SHOOT, TurretState.TRACK),
+    SCORE(FlywheelState.SCORE, HoodState.SHOOT, TurretState.TRACK),
+    SCORE_THROUGH(FlywheelState.SCORE, HoodState.SHOOT, TurretState.TRACK),
+    SPIN_UP_PASS(FlywheelState.PASS, HoodState.PASS, TurretState.TRACK),
+    PASS(FlywheelState.PASS, HoodState.PASS, TurretState.TRACK),
+    PASS_THROUGH(FlywheelState.PASS, HoodState.PASS, TurretState.TRACK),
+    PREP_HUB(FlywheelState.IDLE, HoodState.STOWED, TurretState.STOW),
+    SCORE_HUB(FlywheelState.IDLE, HoodState.STOWED, TurretState.STOW),
+    PREP_OUTPOST(FlywheelState.IDLE, HoodState.STOWED, TurretState.STOW),
+    SCORE_OUTPOST(FlywheelState.IDLE, HoodState.STOWED, TurretState.STOW),
+    EJECT(FlywheelState.IDLE, HoodState.EJECT, TurretState.STOW),
+    PREP_CLIMB(FlywheelState.IDLE, HoodState.STOWED, TurretState.STOW),
+    CLIMB(FlywheelState.IDLE, HoodState.STOWED, TurretState.STOW),
+    CLIMB_L1(FlywheelState.IDLE, HoodState.STOWED, TurretState.STOW),
+    DE_CLIMB_L1(FlywheelState.IDLE, HoodState.STOWED, TurretState.STOW);
 
+    @Getter private final FlywheelState flywheelState;
+    @Getter private final HoodState hoodState;
+    @Getter private final TurretState turretState;
     @Getter private final Trigger trigger;
 
-    private SuperstructureState() {
+    private SuperstructureState(
+        FlywheelState flywheelState, HoodState hoodState, TurretState turretState) {
+      this.flywheelState = flywheelState;
+      this.hoodState = hoodState;
+      this.turretState = turretState;
       trigger = new Trigger(() -> state == this);
     }
   }
@@ -51,8 +62,6 @@ public class Superstructure {
   private final Hood hood;
   private final Flywheel flywheel;
 
-  private final CommandXboxController driver;
-
   private final Trigger intakeReq;
   private final Trigger scoreReq;
   private final Trigger spitReq;
@@ -62,11 +71,12 @@ public class Superstructure {
     this.turret = turret;
     this.hood = hood;
     this.flywheel = flywheel;
-    this.driver = driver;
 
     intakeReq = driver.leftTrigger();
     scoreReq = driver.rightTrigger();
     spitReq = driver.back();
+
+    bindTransitions();
   }
 
   private void bindTransitions() {
@@ -121,13 +131,30 @@ public class Superstructure {
     fromTrigger.onTrue(setState(to));
   }
 
-  private Command setState(SuperstructureState state) {
+  private void setSubsystemStates() {
+    // Only update subsystem states if not in manual override
+    if (!flywheel.isManualOverride()) {
+      flywheel.setCurrentState(state.getFlywheelState());
+    }
+    if (!hood.isManualOverride()) {
+      hood.setCurrentState(state.getHoodState());
+    }
+    if (!turret.isManualOverride()) {
+      turret.setCurrentState(state.getTurretState());
+    }
+  }
+
+  private Command setState(SuperstructureState newState) {
     return Commands.runOnce(
             () -> {
+              Logger.recordOutput(
+                  "Superstructure/StateTransition", state.name() + " -> " + newState.name());
               this.previousState = Superstructure.state;
-              Superstructure.state = state;
+              Superstructure.state = newState;
               stateTimer.restart();
+              setSubsystemStates();
             })
-        .ignoringDisable(true);
+        .ignoringDisable(true)
+        .withName("SetSuperstructureState(" + newState + ")");
   }
 }
