@@ -224,10 +224,6 @@ public class Robot extends LoggedRobot {
       }
     }
 
-    flywheel.setDefaultCommand(flywheel.setStateVelocity());
-    hood.setDefaultCommand(hood.setStatePosition());
-    turret.setDefaultCommand(turret.setStatePosition());
-
     configureButtonBindings();
   }
 

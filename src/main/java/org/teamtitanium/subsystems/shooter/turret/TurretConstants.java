@@ -1,10 +1,15 @@
 package org.teamtitanium.subsystems.shooter.turret;
 
+import static edu.wpi.first.units.Units.Rotations;
+
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.units.measure.Angle;
 import org.teamtitanium.utils.Constants.Constraints;
 import org.teamtitanium.utils.Constants.Gains;
 
 public class TurretConstants {
+  public static final Angle TURRET_STOW_ANGLE = Rotations.of(0.0);
+
   // CAN IDs
   public static final int TURRET_MOTOR_ID = 15;
   public static final int TURRET_CANCODER_1_ID = 16;

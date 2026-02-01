@@ -9,43 +9,33 @@ import lombok.Getter;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.teamtitanium.subsystems.shooter.flywheel.Flywheel;
-import org.teamtitanium.subsystems.shooter.flywheel.Flywheel.FlywheelState;
 import org.teamtitanium.subsystems.shooter.hood.Hood;
-import org.teamtitanium.subsystems.shooter.hood.Hood.HoodState;
 import org.teamtitanium.subsystems.shooter.turret.Turret;
-import org.teamtitanium.subsystems.shooter.turret.Turret.TurretState;
 
 public class Superstructure {
   public enum SuperstructureState {
-    IDLE(FlywheelState.IDLE, HoodState.STOWED, TurretState.STOW),
-    INTAKE(FlywheelState.IDLE, HoodState.STOWED, TurretState.STOW),
-    PREPPED(FlywheelState.IDLE, HoodState.STOWED, TurretState.STOW),
-    SPIN_UP_SCORE(FlywheelState.SCORE, HoodState.SHOOT, TurretState.TRACK),
-    SCORE(FlywheelState.SCORE, HoodState.SHOOT, TurretState.TRACK),
-    SCORE_THROUGH(FlywheelState.SCORE, HoodState.SHOOT, TurretState.TRACK),
-    SPIN_UP_PASS(FlywheelState.PASS, HoodState.PASS, TurretState.TRACK),
-    PASS(FlywheelState.PASS, HoodState.PASS, TurretState.TRACK),
-    PASS_THROUGH(FlywheelState.PASS, HoodState.PASS, TurretState.TRACK),
-    PREP_HUB(FlywheelState.IDLE, HoodState.STOWED, TurretState.STOW),
-    SCORE_HUB(FlywheelState.IDLE, HoodState.STOWED, TurretState.STOW),
-    PREP_OUTPOST(FlywheelState.IDLE, HoodState.STOWED, TurretState.STOW),
-    SCORE_OUTPOST(FlywheelState.IDLE, HoodState.STOWED, TurretState.STOW),
-    EJECT(FlywheelState.IDLE, HoodState.EJECT, TurretState.STOW),
-    PREP_CLIMB(FlywheelState.IDLE, HoodState.STOWED, TurretState.STOW),
-    CLIMB(FlywheelState.IDLE, HoodState.STOWED, TurretState.STOW),
-    CLIMB_L1(FlywheelState.IDLE, HoodState.STOWED, TurretState.STOW),
-    DE_CLIMB_L1(FlywheelState.IDLE, HoodState.STOWED, TurretState.STOW);
+    IDLE,
+    INTAKE,
+    PREPPED,
+    SPIN_UP_SCORE,
+    SCORE,
+    SCORE_THROUGH,
+    SPIN_UP_PASS,
+    PASS,
+    PASS_THROUGH,
+    PREP_HUB,
+    SCORE_HUB,
+    PREP_OUTPOST,
+    SCORE_OUTPOST,
+    EJECT,
+    PREP_CLIMB,
+    CLIMB,
+    CLIMB_L1,
+    DE_CLIMB_L1;
 
-    @Getter private final FlywheelState flywheelState;
-    @Getter private final HoodState hoodState;
-    @Getter private final TurretState turretState;
     @Getter private final Trigger trigger;
 
-    private SuperstructureState(
-        FlywheelState flywheelState, HoodState hoodState, TurretState turretState) {
-      this.flywheelState = flywheelState;
-      this.hoodState = hoodState;
-      this.turretState = turretState;
+    private SuperstructureState() {
       trigger = new Trigger(() -> state == this);
     }
   }
@@ -131,17 +121,14 @@ public class Superstructure {
     fromTrigger.onTrue(setState(to));
   }
 
-  private void setSubsystemStates() {
-    // Only update subsystem states if not in manual override
-    if (!flywheel.isManualOverride()) {
-      flywheel.setCurrentState(state.getFlywheelState());
-    }
-    if (!hood.isManualOverride()) {
-      hood.setCurrentState(state.getHoodState());
-    }
-    if (!turret.isManualOverride()) {
-      turret.setCurrentState(state.getTurretState());
-    }
+  private void bindStates() {
+    bindCommands(SuperstructureState.IDLE, turret.stow());
+
+    bindCommands(SuperstructureState.SCORE, turret.track());
+  }
+
+  private void bindCommands(SuperstructureState state, Command... commands) {
+    state.getTrigger().whileTrue(Commands.parallel(commands));
   }
 
   private Command setState(SuperstructureState newState) {
@@ -152,7 +139,6 @@ public class Superstructure {
               this.previousState = Superstructure.state;
               Superstructure.state = newState;
               stateTimer.restart();
-              setSubsystemStates();
             })
         .ignoringDisable(true)
         .withName("SetSuperstructureState(" + newState + ")");

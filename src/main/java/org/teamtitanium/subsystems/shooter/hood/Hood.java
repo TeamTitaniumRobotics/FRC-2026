@@ -9,35 +9,14 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.util.function.DoubleSupplier;
-import java.util.function.Supplier;
-import lombok.Getter;
-import lombok.Setter;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
-import org.teamtitanium.RobotState;
 import org.teamtitanium.utils.Constants.Constraints;
 import org.teamtitanium.utils.Constants.Gains;
 import org.teamtitanium.utils.LoggedTracer;
 import org.teamtitanium.utils.LoggedTunableNumber;
 
 public class Hood extends SubsystemBase {
-  public enum HoodState {
-    STOWED(() -> HOOD_STOW_ANGLE_ROTS),
-    SHOOT(() -> RobotState.getInstance().getHoodSetpoint()),
-    PASS(() -> RobotState.getInstance().getHoodSetpoint()),
-    EJECT(() -> HOOD_EJECT_ANGLE_ROTS);
-
-    private final Supplier<Angle> targetPositionSupplier;
-
-    private HoodState(Supplier<Angle> targetPositionSupplier) {
-      this.targetPositionSupplier = targetPositionSupplier;
-    }
-
-    public Angle getTargetPosition() {
-      return targetPositionSupplier.get();
-    }
-  }
-
   // Real-time tunable PID gains
   private final LoggedTunableNumber hoodkP = new LoggedTunableNumber("Hood/kP", HOOD_GAINS.kP());
   private final LoggedTunableNumber hoodkI = new LoggedTunableNumber("Hood/kI", HOOD_GAINS.kI());
@@ -55,16 +34,6 @@ public class Hood extends SubsystemBase {
 
   private final HoodIO io;
   private final HoodIOInputsAutoLogged inputs = new HoodIOInputsAutoLogged();
-
-  @AutoLogOutput(key = "Hood/State")
-  @Getter
-  @Setter
-  private HoodState currentState = HoodState.STOWED;
-
-  @AutoLogOutput(key = "Hood/ManualOverride")
-  @Getter
-  @Setter
-  private boolean manualOverride = false;
 
   @AutoLogOutput(key = "Hood/TargetAngleRots")
   private double targetPositionRots = 0.0;
@@ -108,23 +77,6 @@ public class Hood extends SubsystemBase {
   }
 
   /**
-   * Sets the hood to the current state's target position
-   *
-   * @return A command that repeatedly sets the hood to the current state's target position
-   */
-  public Command setStatePosition() {
-    return run(() -> {
-          if (!manualOverride) {
-            targetPositionRots =
-                MathUtil.clamp(
-                    currentState.getTargetPosition().in(Rotations), MIN_ANGLE_ROTS, MAX_ANGLE_ROTS);
-            io.setPosition(targetPositionRots);
-          }
-        })
-        .withName("Hood.SetStatePosition");
-  }
-
-  /**
    * Sets the hood to a position supplier
    *
    * @param positionRots target supplier position for the hood
@@ -132,12 +84,10 @@ public class Hood extends SubsystemBase {
    */
   public Command setPosition(DoubleSupplier positionRots) {
     return run(() -> {
-          setManualOverride(true);
           targetPositionRots =
               MathUtil.clamp(positionRots.getAsDouble(), MIN_ANGLE_ROTS, MAX_ANGLE_ROTS);
           io.setPosition(positionRots.getAsDouble());
         })
-        .finallyDo(() -> setManualOverride(false))
         .withName("Hood.SetPosition");
   }
 
@@ -159,10 +109,8 @@ public class Hood extends SubsystemBase {
    */
   public Command setVoltage(DoubleSupplier voltage) {
     return run(() -> {
-          setManualOverride(true);
           io.setVoltage(voltage.getAsDouble());
         })
-        .finallyDo(() -> setManualOverride(false))
         .withName("Hood.SetVoltage");
   }
 
@@ -178,21 +126,6 @@ public class Hood extends SubsystemBase {
 
   public Command zeroHood() {
     return setVoltage(0.0); // TODO: Implement current & velocity zeroing
-  }
-
-  /**
-   * Manual control command for the hood. Bypasses state-based control.
-   *
-   * @param voltageSupplier Voltage supplier for manual control
-   * @return A command for manual hood control
-   */
-  public Command manualControl(DoubleSupplier voltageSupplier) {
-    return run(() -> {
-          setManualOverride(true);
-          io.setVoltage(voltageSupplier.getAsDouble());
-        })
-        .finallyDo(() -> setManualOverride(false))
-        .withName("Hood.ManualControl");
   }
 
   /**

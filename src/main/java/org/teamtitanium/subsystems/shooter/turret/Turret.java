@@ -10,8 +10,6 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
-import lombok.Getter;
-import lombok.Setter;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.teamtitanium.RobotState;
@@ -21,22 +19,6 @@ import org.teamtitanium.utils.LoggedTracer;
 import org.teamtitanium.utils.LoggedTunableNumber;
 
 public class Turret extends SubsystemBase {
-  public enum TurretState {
-    STOW(() -> Rotations.of(0.0)),
-    TRACK(() -> RobotState.getInstance().getTurretSetpoint()),
-    EJECT(() -> Rotations.of(-0.25));
-
-    private final Supplier<Angle> targetPositionSupplier;
-
-    private TurretState(Supplier<Angle> targetPositionSupplier) {
-      this.targetPositionSupplier = targetPositionSupplier;
-    }
-
-    public Angle getTargetPosition() {
-      return targetPositionSupplier.get();
-    }
-  }
-
   // Real-time tunable PID gains
   private final LoggedTunableNumber turretkP =
       new LoggedTunableNumber("Turret/kP", TURRET_GAINS.kP());
@@ -59,16 +41,6 @@ public class Turret extends SubsystemBase {
 
   private final TurretIO io;
   private final TurretIOInputsAutoLogged inputs = new TurretIOInputsAutoLogged();
-
-  @AutoLogOutput(key = "Turret/State")
-  @Getter
-  @Setter
-  private TurretState currentState = TurretState.STOW;
-
-  @AutoLogOutput(key = "Turret/ManualOverride")
-  @Getter
-  @Setter
-  private boolean manualOverride = false;
 
   @AutoLogOutput(key = "Turret/TargetPositionRots")
   private double targetPositionRots = 0.0;
@@ -113,16 +85,12 @@ public class Turret extends SubsystemBase {
     LoggedTracer.record("Turret");
   }
 
-  public Command setStatePosition() {
-    return run(() -> {
-          if (!manualOverride) {
-            targetPositionRots =
-                MathUtil.clamp(
-                    currentState.getTargetPosition().in(Rotations), MIN_ANGLE_ROTS, MAX_ANGLE_ROTS);
-            io.setPosition(targetPositionRots);
-          }
-        })
-        .withName("Turret.SetStatePosition");
+  public Command stow() {
+    return setPosition(TURRET_STOW_ANGLE);
+  }
+
+  public Command track() {
+    return setPosition(() -> RobotState.getInstance().getTurretSetpoint());
   }
 
   /**
@@ -131,25 +99,23 @@ public class Turret extends SubsystemBase {
    * @param positionRots target supplier position for the turret
    * @return A command that repeatedly sets the turret to a position
    */
-  public Command setPosition(DoubleSupplier positionRots) {
+  public Command setPosition(Supplier<Angle> position) {
     return run(() -> {
-          setManualOverride(true);
           targetPositionRots =
-              MathUtil.clamp(positionRots.getAsDouble(), MIN_ANGLE_ROTS, MAX_ANGLE_ROTS);
-          io.setPosition(positionRots.getAsDouble());
+              MathUtil.clamp(position.get().in(Rotations), MIN_ANGLE_ROTS, MAX_ANGLE_ROTS);
+          io.setPosition(position.get().in(Rotations));
         })
-        .finallyDo(() -> setManualOverride(false))
         .withName("Turret.SetPosition");
   }
 
   /**
    * Sets the turret to a position
    *
-   * @param positionRots target position for the turret
+   * @param position target position for the turret
    * @return A command that repeatedly sets the turret to a position
    */
-  public Command setPosition(double positionRots) {
-    return setPosition(() -> positionRots);
+  public Command setPosition(Angle position) {
+    return setPosition(() -> position);
   }
 
   /**
@@ -160,10 +126,8 @@ public class Turret extends SubsystemBase {
    */
   public Command setVoltage(DoubleSupplier voltage) {
     return run(() -> {
-          setManualOverride(true);
           io.setVoltage(voltage.getAsDouble());
         })
-        .finallyDo(() -> setManualOverride(false))
         .withName("Turret.SetVoltage");
   }
 
@@ -175,21 +139,6 @@ public class Turret extends SubsystemBase {
    */
   public Command setVoltage(double voltage) {
     return setVoltage(() -> voltage);
-  }
-
-  /**
-   * Manual control command for the turret. Bypasses state-based control.
-   *
-   * @param voltageSupplier Voltage supplier for manual control
-   * @return A command for manual turret control
-   */
-  public Command manualControl(DoubleSupplier voltageSupplier) {
-    return run(() -> {
-          setManualOverride(true);
-          io.setVoltage(voltageSupplier.getAsDouble());
-        })
-        .finallyDo(() -> setManualOverride(false))
-        .withName("Turret.ManualControl");
   }
 
   /**
