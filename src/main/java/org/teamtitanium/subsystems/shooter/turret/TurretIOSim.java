@@ -2,8 +2,15 @@ package org.teamtitanium.subsystems.shooter.turret;
 
 import static org.teamtitanium.subsystems.shooter.turret.TurretConstants.*;
 
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.system.plant.LinearSystemId;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
+import org.littletonrobotics.junction.Logger;
+import org.teamtitanium.RobotState;
 
 public class TurretIOSim extends TurretIOTalonFX {
   private final DCMotorSim turretSim;
@@ -46,6 +53,15 @@ public class TurretIOSim extends TurretIOTalonFX {
     // Update the real motor position for Motion Magic control
     turretMotor.getSimState().setRawRotorPosition(inputs.positionRots * TURRET_GEAR_RATIO);
     turretMotor.getSimState().setRotorVelocity(inputs.velocityRps * TURRET_GEAR_RATIO);
+
+    Logger.recordOutput(
+        "Turret/Sim/TurretPosition",
+        new Pose3d(RobotState.getInstance().getEstimatedPose())
+            .plus(TURRET_TO_ROBOT)
+            .plus(
+                new Transform3d(
+                    Translation3d.kZero,
+                    new Rotation3d(0.0, 0.0, Units.rotationsToRadians(inputs.positionRots)))));
   }
 
   @Override

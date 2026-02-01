@@ -2,6 +2,9 @@ package org.teamtitanium.subsystems.shooter.turret;
 
 import static edu.wpi.first.units.Units.Rotations;
 
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Angle;
 import org.teamtitanium.utils.Constants.Constraints;
@@ -43,4 +46,6 @@ public class TurretConstants {
 
   // Simulation
   public static final DCMotor TURRET_GEARBOX = DCMotor.getKrakenX44(1);
+  public static final Transform3d TURRET_TO_ROBOT =
+      new Transform3d(new Translation3d(-0.119063, 0.169863, 0.403377), Rotation3d.kZero);
 }

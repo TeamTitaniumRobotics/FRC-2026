@@ -6,7 +6,6 @@ package org.teamtitanium;
 
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.hal.AllianceStationID;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.IterativeRobotBase;
@@ -320,47 +319,52 @@ public class Robot extends LoggedRobot {
             () -> -driver.getRightX(),
             () -> false));
 
-    driver
-        .rightBumper()
-        .onTrue(
-            Commands.runOnce(
-                () ->
-                    MechanismVisualizer.getInstance()
-                        .setTurretAngle(
-                            MechanismVisualizer.getInstance()
-                                .getTurretAngle()
-                                .plus(Rotation2d.fromDegrees(15)))));
-    driver
-        .leftBumper()
-        .onTrue(
-            Commands.runOnce(
-                () ->
-                    MechanismVisualizer.getInstance()
-                        .setTurretAngle(
-                            MechanismVisualizer.getInstance()
-                                .getTurretAngle()
-                                .minus(Rotation2d.fromDegrees(15)))));
+    turret.setDefaultCommand(turret.track());
 
-    driver
-        .rightTrigger()
-        .onTrue(
-            Commands.runOnce(
-                () ->
-                    MechanismVisualizer.getInstance()
-                        .setHoodAngle(
-                            MechanismVisualizer.getInstance()
-                                .getHoodAngle()
-                                .plus(Rotation2d.fromDegrees(15)))));
-    driver
-        .leftTrigger()
-        .onTrue(
-            Commands.runOnce(
-                () ->
-                    MechanismVisualizer.getInstance()
-                        .setHoodAngle(
-                            MechanismVisualizer.getInstance()
-                                .getHoodAngle()
-                                .minus(Rotation2d.fromDegrees(15)))));
+    driver.rightBumper().whileTrue(turret.setVoltage(3.0)).onFalse(turret.setVoltage(0.0));
+    driver.leftBumper().whileTrue(turret.setVoltage(-3.0)).onFalse(turret.setVoltage(0.0));
+
+    // driver
+    //     .rightBumper()
+    //     .onTrue(
+    //         Commands.runOnce(
+    //             () ->
+    //                 MechanismVisualizer.getInstance()
+    //                     .setTurretAngle(
+    //                         MechanismVisualizer.getInstance()
+    //                             .getTurretAngle()
+    //                             .plus(Rotation2d.fromDegrees(15)))));
+    // driver
+    //     .leftBumper()
+    //     .onTrue(
+    //         Commands.runOnce(
+    //             () ->
+    //                 MechanismVisualizer.getInstance()
+    //                     .setTurretAngle(
+    //                         MechanismVisualizer.getInstance()
+    //                             .getTurretAngle()
+    //                             .minus(Rotation2d.fromDegrees(15)))));
+
+    // driver
+    //     .rightTrigger()
+    //     .onTrue(
+    //         Commands.runOnce(
+    //             () ->
+    //                 MechanismVisualizer.getInstance()
+    //                     .setHoodAngle(
+    //                         MechanismVisualizer.getInstance()
+    //                             .getHoodAngle()
+    //                             .plus(Rotation2d.fromDegrees(15)))));
+    // driver
+    //     .leftTrigger()
+    //     .onTrue(
+    //         Commands.runOnce(
+    //             () ->
+    //                 MechanismVisualizer.getInstance()
+    //                     .setHoodAngle(
+    //                         MechanismVisualizer.getInstance()
+    //                             .getHoodAngle()
+    //                             .minus(Rotation2d.fromDegrees(15)))));
   }
 
   private void updateAlerts() {}

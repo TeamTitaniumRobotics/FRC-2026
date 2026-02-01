@@ -85,10 +85,20 @@ public class Turret extends SubsystemBase {
     LoggedTracer.record("Turret");
   }
 
+  /**
+   * Sets the turret to the stowed position
+   *
+   * @return A command that sets the turret to the stowed position
+   */
   public Command stow() {
     return setPosition(TURRET_STOW_ANGLE);
   }
 
+  /**
+   * Tracks the turret to the robot state turret setpoint
+   *
+   * @return A command that repeatedly sets the turret to the robot state turret setpoint
+   */
   public Command track() {
     return setPosition(() -> RobotState.getInstance().getTurretSetpoint());
   }
