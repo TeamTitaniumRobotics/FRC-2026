@@ -3,7 +3,6 @@ package org.teamtitanium.subsystems.shooter.turret;
 import static edu.wpi.first.units.Units.Rotations;
 import static org.teamtitanium.subsystems.shooter.turret.TurretConstants.*;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -111,8 +110,8 @@ public class Turret extends SubsystemBase {
    */
   public Command setPosition(Supplier<Angle> position) {
     return run(() -> {
-          targetPositionRots =
-              MathUtil.clamp(position.get().in(Rotations), MIN_ANGLE_ROTS, MAX_ANGLE_ROTS);
+          // targetPositionRots =
+          //     MathUtil.clamp(position.get().in(Rotations), MIN_ANGLE_ROTS, MAX_ANGLE_ROTS);
           io.setPosition(position.get().in(Rotations));
         })
         .withName("Turret.SetPosition");
@@ -135,9 +134,7 @@ public class Turret extends SubsystemBase {
    * @return A command that repeatedly runs the turret at a voltage
    */
   public Command setVoltage(DoubleSupplier voltage) {
-    return run(() -> {
-          io.setVoltage(voltage.getAsDouble());
-        })
+    return runEnd(() -> io.setVoltage(voltage.getAsDouble()), () -> io.setVoltage(0.0))
         .withName("Turret.SetVoltage");
   }
 

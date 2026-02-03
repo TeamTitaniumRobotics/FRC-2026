@@ -6,7 +6,7 @@ import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.PositionVoltage;
+import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.ParentDevice;
@@ -32,7 +32,7 @@ public class TurretIOTalonFX implements TurretIO {
   private final TalonFXConfiguration motorConfig = new TalonFXConfiguration();
   private final CANcoderConfiguration cancoderConfig = new CANcoderConfiguration();
 
-  private final PositionVoltage positionVoltage = new PositionVoltage(0.0);
+  private final MotionMagicVoltage motionMagicVoltage = new MotionMagicVoltage(0.0);
   private final VoltageOut voltageOut = new VoltageOut(0.0);
 
   private final StatusSignal<Angle> position;
@@ -41,6 +41,8 @@ public class TurretIOTalonFX implements TurretIO {
   private final StatusSignal<Current> supplyCurrent;
   private final StatusSignal<Current> torqueCurrent;
   private final StatusSignal<Temperature> temperature;
+
+  protected final StatusSignal<Double> targetSetpoint;
 
   private final StatusSignal<Angle> cancoder1Position;
   private final StatusSignal<Angle> cancoder2Position;
@@ -64,10 +66,10 @@ public class TurretIOTalonFX implements TurretIO {
     motorConfig.Feedback.SensorToMechanismRatio = TURRET_GEAR_RATIO;
 
     // Soft limits
-    motorConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = MAX_ANGLE_ROTS;
-    motorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-    motorConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = MIN_ANGLE_ROTS;
-    motorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+    // motorConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = MAX_ANGLE_ROTS;
+    // motorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+    // motorConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = MIN_ANGLE_ROTS;
+    // motorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
 
     // PID configuration
     motorConfig.Slot0.kP = TURRET_GAINS.kP();
@@ -101,13 +103,16 @@ public class TurretIOTalonFX implements TurretIO {
     torqueCurrent = turretMotor.getTorqueCurrent();
     temperature = turretMotor.getDeviceTemp();
 
+    targetSetpoint = turretMotor.getClosedLoopReference();
+
     cancoder1Position = cancoder1.getAbsolutePosition();
     cancoder2Position = cancoder2.getAbsolutePosition();
 
     // Set update frequencies
     BaseStatusSignal.setUpdateFrequencyForAll(
         100, position, velocity, appliedVoltage, supplyCurrent, torqueCurrent, temperature);
-    BaseStatusSignal.setUpdateFrequencyForAll(50, cancoder1Position, cancoder2Position);
+    BaseStatusSignal.setUpdateFrequencyForAll(
+        50, cancoder1Position, cancoder2Position, targetSetpoint);
 
     PhoenixUtil.tryUntilOk(
         5, () -> ParentDevice.optimizeBusUtilizationForAll(turretMotor, cancoder1, cancoder2));
@@ -121,7 +126,8 @@ public class TurretIOTalonFX implements TurretIO {
         torqueCurrent,
         temperature,
         cancoder1Position,
-        cancoder2Position);
+        cancoder2Position,
+        targetSetpoint);
   }
 
   @Override
@@ -136,6 +142,8 @@ public class TurretIOTalonFX implements TurretIO {
     inputs.torqueCurrentAmps = torqueCurrent.getValueAsDouble();
     inputs.tempCelsius = temperature.getValueAsDouble();
 
+    inputs.setpointRots = targetSetpoint.getValueAsDouble();
+
     inputs.cancoder1Connected = BaseStatusSignal.isAllGood(cancoder1Position);
     inputs.cancoder1PositionRots = cancoder1Position.getValueAsDouble();
 
@@ -145,7 +153,7 @@ public class TurretIOTalonFX implements TurretIO {
 
   @Override
   public void setPosition(double positionRots) {
-    turretMotor.setControl(positionVoltage.withPosition(positionRots));
+    turretMotor.setControl(motionMagicVoltage.withPosition(positionRots));
   }
 
   @Override

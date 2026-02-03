@@ -4,6 +4,8 @@
 
 package org.teamtitanium;
 
+import static edu.wpi.first.units.Units.Degrees;
+
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.hal.AllianceStationID;
 import edu.wpi.first.wpilibj.Alert;
@@ -319,10 +321,14 @@ public class Robot extends LoggedRobot {
             () -> -driver.getRightX(),
             () -> false));
 
-    turret.setDefaultCommand(turret.track());
+    // turret.setDefaultCommand(turret.track());
 
-    driver.rightBumper().whileTrue(turret.setVoltage(3.0)).onFalse(turret.setVoltage(0.0));
-    driver.leftBumper().whileTrue(turret.setVoltage(-3.0)).onFalse(turret.setVoltage(0.0));
+    driver.rightTrigger().whileTrue(turret.setPosition(() -> Degrees.of(90.0)));
+    driver.leftTrigger().whileTrue(turret.setPosition(() -> Degrees.of(-90.0)));
+    driver.a().whileTrue(turret.setPosition(() -> Degrees.of(0.0)));
+
+    driver.rightBumper().whileTrue(turret.setVoltage(6.0));
+    driver.leftBumper().whileTrue(turret.setVoltage(-6.0));
 
     // driver
     //     .rightBumper()
