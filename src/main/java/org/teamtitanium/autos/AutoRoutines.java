@@ -22,7 +22,7 @@ public class AutoRoutines {
             robotState
                 ::setEstimatedPose, // A function that resets the current robot pose to the provided
             // Pose2d
-            null, // The drive subsystem trajectory follower
+            swerve::followChoreoTrajectory, // The drive subsystem trajectory follower
             true, // If alliance flipping should be enabled
             swerve, // The drive subsystem
             null);
