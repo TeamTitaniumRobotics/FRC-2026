@@ -1,5 +1,6 @@
 package org.teamtitanium.subsystems.shooter.turret;
 
+import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.Rotations;
 import static org.teamtitanium.subsystems.shooter.turret.TurretConstants.*;
 
@@ -100,6 +101,32 @@ public class Turret extends SubsystemBase {
    */
   public Command track() {
     return setPosition(() -> RobotState.getInstance().getTurretSetpoint());
+  }
+
+  public Angle getTargetAngle(Angle targetAngle, Angle currentAngle) {
+    Angle deltaAngle = targetAngle.minus(currentAngle);
+    if (deltaAngle.in(Radians) > Math.PI) {
+      deltaAngle = deltaAngle.minus(Radians.of(2 * Math.PI));
+    } else if (deltaAngle.in(Radians) < -Math.PI) {
+      deltaAngle = deltaAngle.plus(Radians.of(2 * Math.PI));
+    }
+
+    Angle optimalAngle = currentAngle.plus(deltaAngle);
+    if (currentAngle.plus(deltaAngle).in(Radians) % (2 * Math.PI)
+        == currentAngle.minus(deltaAngle).in(Radians) % (2 * Math.PI)) {
+      // If both directions are equally optimal, prefer the one closer to zero
+      if (optimalAngle.in(Radians) > 0) {
+        optimalAngle = currentAngle.minus(Radians.of(deltaAngle.abs(Radians)));
+      } else {
+        optimalAngle = currentAngle.plus(Radians.of(deltaAngle.abs(Radians)));
+      }
+    }
+    if (optimalAngle.gt(Rotations.of(MAX_ANGLE_ROTS))) {
+      optimalAngle.minus(Radians.of(2 * Math.PI));
+    } else if (optimalAngle.lt(Rotations.of(MIN_ANGLE_ROTS))) {
+      optimalAngle.plus(Radians.of(2 * Math.PI));
+    }
+    return optimalAngle;
   }
 
   /**
