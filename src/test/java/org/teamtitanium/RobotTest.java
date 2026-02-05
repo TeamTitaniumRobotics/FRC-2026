@@ -1,3 +1,5 @@
+package org.teamtitanium;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.wpi.first.hal.HAL;
@@ -7,7 +9,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
-import org.teamtitanium.Robot;
 
 /**
  * Smoke tests for Robot initialization. These tests verify that the robot code can start up without

@@ -1,3 +1,5 @@
+package org.teamtitanium.subsystems.shooter.turret;
+
 import static edu.wpi.first.units.Units.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -8,8 +10,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.teamtitanium.subsystems.shooter.turret.Turret;
-import org.teamtitanium.subsystems.shooter.turret.TurretIO;
 
 /**
  * Unit tests for Turret subsystem, specifically testing the getTargetAngle method which handles

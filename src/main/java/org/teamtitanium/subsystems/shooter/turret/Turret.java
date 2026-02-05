@@ -116,17 +116,17 @@ public class Turret extends SubsystemBase {
   }
 
   public Angle getTargetAngle(Angle targetAngle, Angle currentAngle) {
-    Angle deltaAngle = targetAngle.minus(currentAngle);
-    if (deltaAngle.in(Radians) > Math.PI) {
-      deltaAngle = deltaAngle.minus(Radians.of(2 * Math.PI));
-    } else if (deltaAngle.in(Radians) < -Math.PI) {
-      deltaAngle = deltaAngle.plus(Radians.of(2 * Math.PI));
+    double deltaAngleRad = targetAngle.minus(currentAngle).in(Radians);
+    if (deltaAngleRad > Math.PI) {
+      deltaAngleRad -= 2 * Math.PI;
+    } else if (deltaAngleRad < -Math.PI) {
+      deltaAngleRad += 2 * Math.PI;
     }
 
-    Logger.recordOutput("Turret/DeltaAngle", deltaAngle);
+    Logger.recordOutput("Turret/DeltaAngle", deltaAngleRad);
 
-    Angle optimalAngle = currentAngle.plus(deltaAngle);
-    Logger.recordOutput("Turret/OptimalAngle", optimalAngle);
+    double optimalAngleRad = currentAngle.plus(Radians.of(deltaAngleRad)).in(Radians);
+    Logger.recordOutput("Turret/OptimalAngle", optimalAngleRad);
     // if (currentAngle.plus(deltaAngle).in(Radians) % (Math.PI)
     //     == currentAngle.minus(deltaAngle).in(Radians) % (Math.PI)) {
     //   // If both directions are equally optimal, prefer the one closer to zero
@@ -136,12 +136,12 @@ public class Turret extends SubsystemBase {
     //     optimalAngle = currentAngle.plus(Radians.of(deltaAngle.abs(Radians)));
     //   }
     // }
-    if (optimalAngle.gt(Rotations.of(MAX_ANGLE_ROTS))) {
-      optimalAngle.minus(Radians.of(Math.PI));
-    } else if (optimalAngle.lt(Rotations.of(MIN_ANGLE_ROTS))) {
-      optimalAngle.plus(Radians.of(Math.PI));
+    if (optimalAngleRad > Rotations.of(MAX_ANGLE_ROTS).in(Radians)) {
+      optimalAngleRad -= 2 * Math.PI;
+    } else if (optimalAngleRad < Rotations.of(MIN_ANGLE_ROTS).in(Radians)) {
+      optimalAngleRad += 2 * Math.PI;
     }
-    return optimalAngle;
+    return Radians.of(optimalAngleRad);
   }
 
   /**
