@@ -321,7 +321,7 @@ public class Robot extends LoggedRobot {
             () -> -driver.getRightX(),
             () -> false));
 
-    // turret.setDefaultCommand(turret.track());
+    turret.setDefaultCommand(turret.track());
 
     driver.rightTrigger().whileTrue(turret.setPosition(() -> Degrees.of(90.0)));
     driver.leftTrigger().whileTrue(turret.setPosition(() -> Degrees.of(-90.0)));

@@ -27,8 +27,8 @@ public class TurretConstants {
   public static final double CANCODER_2_RATIO = 3.0; // Temp value
 
   // Mechanical Limits
-  public static final double MIN_ANGLE_ROTS = -1; // -360 degrees
-  public static final double MAX_ANGLE_ROTS = 1; // 360 degrees
+  public static final double MIN_ANGLE_ROTS = -0.5; // -180 degrees
+  public static final double MAX_ANGLE_ROTS = 0.5; // 180 degrees
 
   // Tolerance
   public static final double ANGLE_TOLERANCE_ROTS = 0.01; // ~3.6 degrees
