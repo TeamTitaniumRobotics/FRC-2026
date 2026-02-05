@@ -1,5 +1,6 @@
 package org.teamtitanium.subsystems.shooter.turret;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.Rotations;
 import static org.teamtitanium.subsystems.shooter.turret.TurretConstants.*;
@@ -38,6 +39,9 @@ public class Turret extends SubsystemBase {
       new LoggedTunableNumber("Turret/MaxVelocity", TURRET_CONSTRAINTS.maxVelocity());
   private final LoggedTunableNumber turretMaxAcceleration =
       new LoggedTunableNumber("Turret/MaxAcceleration", TURRET_CONSTRAINTS.maxAcceleration());
+
+  private final LoggedTunableNumber configNumber =
+      new LoggedTunableNumber("Turret/AdjustableNumber", 0.0);
 
   private final TurretIO io;
   private final TurretIOInputsAutoLogged inputs = new TurretIOInputsAutoLogged();
@@ -82,6 +86,14 @@ public class Turret extends SubsystemBase {
       io.setConstraints(new Constraints(turretMaxVelocity.get(), turretMaxAcceleration.get()));
     }
 
+    if (configNumber.hasChanged(hashCode())) {
+      Logger.recordOutput(
+          "Turret/TargetConfigAngle",
+          getTargetAngle(Degrees.of(configNumber.get()), getPosition()));
+    }
+
+    setDefaultCommand(setPosition(() -> Degrees.of(configNumber.get())));
+
     LoggedTracer.record("Turret");
   }
 
@@ -111,20 +123,23 @@ public class Turret extends SubsystemBase {
       deltaAngle = deltaAngle.plus(Radians.of(2 * Math.PI));
     }
 
+    Logger.recordOutput("Turret/DeltaAngle", deltaAngle);
+
     Angle optimalAngle = currentAngle.plus(deltaAngle);
-    if (currentAngle.plus(deltaAngle).in(Radians) % (2 * Math.PI)
-        == currentAngle.minus(deltaAngle).in(Radians) % (2 * Math.PI)) {
-      // If both directions are equally optimal, prefer the one closer to zero
-      if (optimalAngle.in(Radians) > 0) {
-        optimalAngle = currentAngle.minus(Radians.of(deltaAngle.abs(Radians)));
-      } else {
-        optimalAngle = currentAngle.plus(Radians.of(deltaAngle.abs(Radians)));
-      }
-    }
+    Logger.recordOutput("Turret/OptimalAngle", optimalAngle);
+    // if (currentAngle.plus(deltaAngle).in(Radians) % (Math.PI)
+    //     == currentAngle.minus(deltaAngle).in(Radians) % (Math.PI)) {
+    //   // If both directions are equally optimal, prefer the one closer to zero
+    //   if (optimalAngle.in(Radians) > 0) {
+    //     optimalAngle = currentAngle.minus(Radians.of(deltaAngle.abs(Radians)));
+    //   } else {
+    //     optimalAngle = currentAngle.plus(Radians.of(deltaAngle.abs(Radians)));
+    //   }
+    // }
     if (optimalAngle.gt(Rotations.of(MAX_ANGLE_ROTS))) {
-      optimalAngle.minus(Radians.of(2 * Math.PI));
+      optimalAngle.minus(Radians.of(Math.PI));
     } else if (optimalAngle.lt(Rotations.of(MIN_ANGLE_ROTS))) {
-      optimalAngle.plus(Radians.of(2 * Math.PI));
+      optimalAngle.plus(Radians.of(Math.PI));
     }
     return optimalAngle;
   }
@@ -139,7 +154,9 @@ public class Turret extends SubsystemBase {
     return run(() -> {
           // targetPositionRots =
           //     MathUtil.clamp(position.get().in(Rotations), MIN_ANGLE_ROTS, MAX_ANGLE_ROTS);
-          io.setPosition(position.get().in(Rotations));
+          // io.setPosition(position.get().in(Rotations));
+          targetPositionRots = getTargetAngle(position.get(), getPosition()).in(Rotations);
+          io.setPosition(targetPositionRots);
         })
         .withName("Turret.SetPosition");
   }

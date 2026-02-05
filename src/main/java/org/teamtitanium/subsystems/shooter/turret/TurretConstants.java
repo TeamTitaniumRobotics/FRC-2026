@@ -38,7 +38,7 @@ public class TurretConstants {
       new Constraints(2.0, 4.0); // Max velocity (rps), accel (rps^2)
 
   // PID Gains
-  public static final Gains TURRET_GAINS = new Gains(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+  public static final Gains TURRET_GAINS = new Gains(4.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 
   // Current Limits
   public static final double STATOR_CURRENT_LIMIT = 60.0;
