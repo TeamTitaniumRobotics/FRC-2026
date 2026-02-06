@@ -35,8 +35,10 @@ import org.teamtitanium.autos.*;
 import org.teamtitanium.commands.DriveCommands;
 import org.teamtitanium.subsystems.Leds;
 import org.teamtitanium.subsystems.swerve.GyroIO;
+import org.teamtitanium.subsystems.swerve.GyroIOPigeon2;
 import org.teamtitanium.subsystems.swerve.Swerve;
 import org.teamtitanium.subsystems.swerve.SwerveModuleIOSim;
+import org.teamtitanium.subsystems.swerve.SwerveModuleIOTalonFX;
 import org.teamtitanium.utils.CanivoreReader;
 import org.teamtitanium.utils.Constants;
 import org.teamtitanium.utils.Constants.Mode;
@@ -176,7 +178,13 @@ public class Robot extends LoggedRobot {
 
     switch (Constants.getMode()) {
       case REAL -> {
-        swerve = null;
+        swerve =
+            new Swerve(
+                new GyroIOPigeon2(),
+                new SwerveModuleIOTalonFX(TunerConstants.FrontLeft),
+                new SwerveModuleIOTalonFX(TunerConstants.FrontRight),
+                new SwerveModuleIOTalonFX(TunerConstants.BackLeft),
+                new SwerveModuleIOTalonFX(TunerConstants.BackRight));
       }
       case SIM -> {
         swerve =
