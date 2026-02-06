@@ -12,7 +12,7 @@ import org.teamtitanium.utils.PhoenixUtil;
 import org.teamtitanium.utils.TunerConstants;
 
 public class GyroIOPigeon2 implements GyroIO {
-  private final Pigeon2 pigeon =
+  private static final Pigeon2 pigeon =
       new Pigeon2(TunerConstants.DrivetrainConstants.Pigeon2Id, TunerConstants.kCANBus);
 
   private final StatusSignal<Angle> yaw = pigeon.getYaw();
@@ -60,5 +60,9 @@ public class GyroIOPigeon2 implements GyroIO {
             .toArray();
     yawTimestampQueue.clear();
     yawPositionQueue.clear();
+  }
+
+  public static void reset() {
+    pigeon.setYaw(0.0);
   }
 }
