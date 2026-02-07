@@ -82,7 +82,7 @@ chmod +x gradlew
 
 **CRITICAL - Code formatting is automatically applied on build:**
 - Spotless formatter runs **automatically** before every compilation via `compileJava.dependsOn spotlessApply`
-- Uses Google Java Format (AOSP style)
+- Uses standard Google Java Format
 - Applies to `.java`, `.gradle`, `.xml`, `.md`, and `.gitignore` files
 
 **Check formatting without auto-fixing:**
