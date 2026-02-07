@@ -349,7 +349,7 @@ Special garbage collection tuning for roboRIO (limited resources):
 ## Code Style & Conventions
 
 - **Formatter:** Google Java Format (AOSP style)
-- **Indentation:** 2 spaces for Java, XML, Markdown, Groovy Gradle
+- **Indentation:** 2 spaces for Java, XML, Markdown; 4 spaces for `.gradle` (Groovy Gradle) files
 - **Line endings:** LF (Unix-style)
 - **Imports:** Unused imports automatically removed
 - **Trailing whitespace:** Automatically removed
