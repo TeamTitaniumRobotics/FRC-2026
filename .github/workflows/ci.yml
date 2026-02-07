@@ -9,15 +9,15 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+
+    container: wpilib/roborio-cross-ubuntu:2024-22.04
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Setup WPILib
-      uses: wpilibsuite/setup-wpilib@v1
-      with:
-        wpilib-version: '2026.2.1'
+    - name: Add repository to git safe directories
+      run: git config --global --add safe.directory $GITHUB_WORKSPACE
     
     - name: Grant execute permission for gradlew
       run: chmod +x ./gradlew
