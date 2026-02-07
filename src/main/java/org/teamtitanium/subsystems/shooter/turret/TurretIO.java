@@ -15,6 +15,8 @@ public interface TurretIO {
     public double torqueCurrentAmps = 0.0;
     public double tempCelsius = 0.0;
 
+    public double setpointRots = 0.0;
+
     public boolean cancoder1Connected = false;
     public double cancoder1PositionRots = 0.0;
 

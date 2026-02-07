@@ -7,7 +7,9 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.util.function.DoubleSupplier;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.teamtitanium.utils.Constants.Constraints;
 import org.teamtitanium.utils.Constants.Gains;
@@ -33,7 +35,11 @@ public class Hood extends SubsystemBase {
   private final HoodIO io;
   private final HoodIOInputsAutoLogged inputs = new HoodIOInputsAutoLogged();
 
+  @AutoLogOutput(key = "Hood/TargetAngleRots")
   private double targetPositionRots = 0.0;
+
+  private Trigger atSetpoint =
+      new Trigger(() -> Math.abs(inputs.positionRots - targetPositionRots) < ANGLE_TOLERANCE_ROTS);
 
   /** Creates a new Hood subsystem. */
   public Hood(HoodIO io) {
@@ -66,8 +72,6 @@ public class Hood extends SubsystemBase {
     if (hoodMaxVelocity.hasChanged(hashCode()) || hoodMaxAcceleration.hasChanged(hashCode())) {
       io.setConstraints(new Constraints(hoodMaxVelocity.get(), hoodMaxAcceleration.get()));
     }
-
-    Logger.recordOutput("Hood/TargetPosition", targetPositionRots);
 
     LoggedTracer.record("Hood");
   }
@@ -104,7 +108,10 @@ public class Hood extends SubsystemBase {
    * @return A command that repeatedly runs the hood at a voltage
    */
   public Command setVoltage(DoubleSupplier voltage) {
-    return run(() -> io.setVoltage(voltage.getAsDouble())).withName("Hood.SetVoltage");
+    return run(() -> {
+          io.setVoltage(voltage.getAsDouble());
+        })
+        .withName("Hood.SetVoltage");
   }
 
   /**
@@ -133,10 +140,11 @@ public class Hood extends SubsystemBase {
   /**
    * Checks if the hood is at the target position.
    *
-   * @return True if at target within tolerance
+   * @return A trigger that is true if at target within tolerance
    */
-  public boolean atTarget() {
-    return Math.abs(inputs.positionRots - targetPositionRots) < POSITION_TOLERANCE_ROTS;
+  @AutoLogOutput(key = "Hood/AtSetpoint")
+  public Trigger atSetpoint() {
+    return atSetpoint;
   }
 
   /**

@@ -1,14 +1,19 @@
 package org.teamtitanium.subsystems.shooter.turret;
 
+import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.Rotations;
 import static org.teamtitanium.subsystems.shooter.turret.TurretConstants.*;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
+import org.teamtitanium.RobotState;
 import org.teamtitanium.utils.Constants.Constraints;
 import org.teamtitanium.utils.Constants.Gains;
 import org.teamtitanium.utils.LoggedTracer;
@@ -35,10 +40,17 @@ public class Turret extends SubsystemBase {
   private final LoggedTunableNumber turretMaxAcceleration =
       new LoggedTunableNumber("Turret/MaxAcceleration", TURRET_CONSTRAINTS.maxAcceleration());
 
+  private final LoggedTunableNumber configNumber =
+      new LoggedTunableNumber("Turret/AdjustableNumber", 0.0);
+
   private final TurretIO io;
   private final TurretIOInputsAutoLogged inputs = new TurretIOInputsAutoLogged();
 
+  @AutoLogOutput(key = "Turret/TargetPositionRots")
   private double targetPositionRots = 0.0;
+
+  private Trigger atSetpoint =
+      new Trigger(() -> Math.abs(inputs.positionRots - targetPositionRots) < ANGLE_TOLERANCE_ROTS);
 
   /** Creates a new Turret subsystem. */
   public Turret(TurretIO io) {
@@ -46,6 +58,8 @@ public class Turret extends SubsystemBase {
 
     // Zero the turret on startup if available
     zeroTurretCRT();
+
+    setDefaultCommand(setPosition(() -> Degrees.of(configNumber.get())));
   }
 
   @Override
@@ -74,9 +88,72 @@ public class Turret extends SubsystemBase {
       io.setConstraints(new Constraints(turretMaxVelocity.get(), turretMaxAcceleration.get()));
     }
 
-    Logger.recordOutput("Turret/TargetPosition", targetPositionRots);
+    Logger.recordOutput(
+        "Turret/TargetConfigAngle", getTargetAngle(Degrees.of(configNumber.get()), getPosition()));
 
     LoggedTracer.record("Turret");
+  }
+
+  /**
+   * Sets the turret to the stowed position
+   *
+   * @return A command that sets the turret to the stowed position
+   */
+  public Command stow() {
+    return setPosition(TURRET_STOW_ANGLE);
+  }
+
+  /**
+   * Tracks the turret to the robot state turret setpoint
+   *
+   * @return A command that repeatedly sets the turret to the robot state turret setpoint
+   */
+  public Command track() {
+    return setPosition(() -> RobotState.getInstance().getTurretSetpoint());
+  }
+
+  public Angle getTargetAngle(Angle targetAngle, Angle currentAngle) {
+    // Normalize target angle to [-180, 180] range
+    double targetRad = targetAngle.in(Radians);
+    while (targetRad > Math.PI) {
+      targetRad -= 2 * Math.PI;
+    }
+    while (targetRad < -Math.PI) {
+      targetRad += 2 * Math.PI;
+    }
+
+    double currentRad = currentAngle.in(Radians);
+
+    // Calculate shortest angular distance
+    double deltaAngleRad = targetRad - currentRad;
+    if (deltaAngleRad > Math.PI) {
+      deltaAngleRad -= 2 * Math.PI;
+    } else if (deltaAngleRad < -Math.PI) {
+      deltaAngleRad += 2 * Math.PI;
+    }
+
+    Logger.recordOutput("Turret/DeltaAngle", deltaAngleRad);
+
+    // Calculate optimal target position
+    double optimalAngleRad = currentRad + deltaAngleRad;
+    Logger.recordOutput("Turret/OptimalAngle", optimalAngleRad);
+
+    // Special case: if delta is exactly ±π (±180°), prefer the representation
+    // that matches the original target to avoid oscillation
+    if (Math.abs(Math.abs(deltaAngleRad) - Math.PI) < 0.001) {
+      // Use the normalized target directly to be consistent
+      optimalAngleRad = targetRad;
+    }
+
+    // Wrap to keep within [-π, π] range for continuous rotation tracking
+    // But don't wrap if we're already very close to the boundary to avoid oscillation
+    if (optimalAngleRad > Math.PI && Math.abs(optimalAngleRad - Math.PI) > 0.001) {
+      optimalAngleRad -= 2 * Math.PI;
+    } else if (optimalAngleRad < -Math.PI && Math.abs(optimalAngleRad + Math.PI) > 0.001) {
+      optimalAngleRad += 2 * Math.PI;
+    }
+
+    return Radians.of(optimalAngleRad);
   }
 
   /**
@@ -85,11 +162,10 @@ public class Turret extends SubsystemBase {
    * @param positionRots target supplier position for the turret
    * @return A command that repeatedly sets the turret to a position
    */
-  public Command setPosition(DoubleSupplier positionRots) {
+  public Command setPosition(Supplier<Angle> position) {
     return run(() -> {
-          targetPositionRots =
-              MathUtil.clamp(positionRots.getAsDouble(), MIN_ANGLE_ROTS, MAX_ANGLE_ROTS);
-          io.setPosition(positionRots.getAsDouble());
+          targetPositionRots = getTargetAngle(position.get(), getPosition()).in(Rotations);
+          io.setPosition(targetPositionRots);
         })
         .withName("Turret.SetPosition");
   }
@@ -97,11 +173,11 @@ public class Turret extends SubsystemBase {
   /**
    * Sets the turret to a position
    *
-   * @param positionRots target position for the turret
+   * @param position target position for the turret
    * @return A command that repeatedly sets the turret to a position
    */
-  public Command setPosition(double positionRots) {
-    return setPosition(() -> positionRots);
+  public Command setPosition(Angle position) {
+    return setPosition(() -> position);
   }
 
   /**
@@ -111,7 +187,8 @@ public class Turret extends SubsystemBase {
    * @return A command that repeatedly runs the turret at a voltage
    */
   public Command setVoltage(DoubleSupplier voltage) {
-    return run(() -> io.setVoltage(voltage.getAsDouble())).withName("Turret.SetVoltage");
+    return runEnd(() -> io.setVoltage(voltage.getAsDouble()), () -> io.setVoltage(0.0))
+        .withName("Turret.SetVoltage");
   }
 
   /**
@@ -136,10 +213,11 @@ public class Turret extends SubsystemBase {
   /**
    * Checks if the turret is at the target position.
    *
-   * @return True if at target within tolerance
+   * @return A trigger that is true if at target within tolerance
    */
-  public boolean atTarget() {
-    return Math.abs(inputs.positionRots - targetPositionRots) < POSITION_TOLERANCE_ROTS;
+  @AutoLogOutput(key = "Turret/AtSetpoint")
+  public Trigger atSetpoint() {
+    return atSetpoint;
   }
 
   /**

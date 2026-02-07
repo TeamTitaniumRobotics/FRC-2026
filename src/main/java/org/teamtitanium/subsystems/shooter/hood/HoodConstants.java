@@ -1,10 +1,16 @@
 package org.teamtitanium.subsystems.shooter.hood;
 
+import static edu.wpi.first.units.Units.Rotations;
+
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.units.measure.Angle;
 import org.teamtitanium.utils.Constants.Constraints;
 import org.teamtitanium.utils.Constants.Gains;
 
 public class HoodConstants {
+  public static final Angle HOOD_STOW_ANGLE_ROTS = Rotations.of(0.0); // Rots
+  public static final Angle HOOD_EJECT_ANGLE_ROTS = Rotations.of(0.05); // Rots
+
   // CAN IDs
   public static final int HOOD_MOTOR_ID = 18;
 
@@ -17,7 +23,7 @@ public class HoodConstants {
   public static final double MAX_ANGLE_ROTS = 0.25; // 90 degrees (vertical)
 
   // Tolerance
-  public static final double POSITION_TOLERANCE_ROTS = 0.005; // ~1.8 degrees
+  public static final double ANGLE_TOLERANCE_ROTS = 0.005; // ~1.8 degrees
 
   // Motion Magic Constraints
   public static final Constraints HOOD_MOTION_CONSTRAINTS =
