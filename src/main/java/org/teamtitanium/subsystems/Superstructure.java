@@ -114,11 +114,9 @@ public class Superstructure {
 
   private void bindTransition(
       Trigger transitionTrigger, SuperstructureState to, SuperstructureState... from) {
-    Trigger fromTrigger = transitionTrigger;
     for (SuperstructureState state : from) {
-      fromTrigger = fromTrigger.and(state.getTrigger());
+      state.getTrigger().and(transitionTrigger).onTrue(setState(to));
     }
-    fromTrigger.onTrue(setState(to));
   }
 
   private void bindStates() {
