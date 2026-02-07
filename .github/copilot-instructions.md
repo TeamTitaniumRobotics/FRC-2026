@@ -300,7 +300,7 @@ Special garbage collection tuning for roboRIO (limited resources):
 
 ## WPILib RAG Server Usage
 
-- **Tool Name:** `mcp_wpilibrag_query_wpilib_docs`
+- **Tool Name:** `frc-docs`
 - **When to Use:** ALWAYS for any WPILib-related question (see mandatory requirement above)
 - **Parameters:**
   - `question`: The user's question
