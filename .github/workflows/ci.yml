@@ -31,8 +31,6 @@ jobs:
     - name: Build with Gradle
       run: ./gradlew build
       
-    # Execute all unit tests
-    - name: Run unit tests
     # Publish test results as GitHub check annotations
     - name: Publish test results
       uses: EnricoMi/publish-unit-test-result-action@v2
