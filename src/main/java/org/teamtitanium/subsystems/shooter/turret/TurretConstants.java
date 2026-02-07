@@ -1,5 +1,6 @@
 package org.teamtitanium.subsystems.shooter.turret;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Rotations;
 
 import edu.wpi.first.math.geometry.Rotation3d;
@@ -27,8 +28,9 @@ public class TurretConstants {
   public static final double CANCODER_2_RATIO = 3.0; // Temp value
 
   // Mechanical Limits
-  public static final double MIN_ANGLE_ROTS = -0.5; // -180 degrees
-  public static final double MAX_ANGLE_ROTS = 0.5; // 180 degrees
+  public static final Angle MIN_ANGLE = Degrees.of(-180.0); // -180 degrees
+  public static final Angle MAX_ANGLE = Degrees.of(180.0); // 180 degrees
+  public static final Angle TURRET_RANGE = MAX_ANGLE.minus(MIN_ANGLE); // 360 degrees
 
   // Tolerance
   public static final double ANGLE_TOLERANCE_ROTS = 0.01; // ~3.6 degrees

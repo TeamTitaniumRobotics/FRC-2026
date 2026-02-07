@@ -58,6 +58,8 @@ public class Turret extends SubsystemBase {
 
     // Zero the turret on startup if available
     zeroTurretCRT();
+
+    setDefaultCommand(setPosition(() -> Degrees.of(configNumber.get())));
   }
 
   @Override
@@ -86,13 +88,8 @@ public class Turret extends SubsystemBase {
       io.setConstraints(new Constraints(turretMaxVelocity.get(), turretMaxAcceleration.get()));
     }
 
-    if (configNumber.hasChanged(hashCode())) {
-      Logger.recordOutput(
-          "Turret/TargetConfigAngle",
-          getTargetAngle(Degrees.of(configNumber.get()), getPosition()));
-    }
-
-    // setDefaultCommand(setPosition(() -> Degrees.of(configNumber.get())));
+    Logger.recordOutput(
+        "Turret/TargetConfigAngle", getTargetAngle(Degrees.of(configNumber.get()), getPosition()));
 
     LoggedTracer.record("Turret");
   }
@@ -116,7 +113,19 @@ public class Turret extends SubsystemBase {
   }
 
   public Angle getTargetAngle(Angle targetAngle, Angle currentAngle) {
-    double deltaAngleRad = targetAngle.minus(currentAngle).in(Radians);
+    // Normalize target angle to [-180, 180] range
+    double targetRad = targetAngle.in(Radians);
+    while (targetRad > Math.PI) {
+      targetRad -= 2 * Math.PI;
+    }
+    while (targetRad < -Math.PI) {
+      targetRad += 2 * Math.PI;
+    }
+
+    double currentRad = currentAngle.in(Radians);
+
+    // Calculate shortest angular distance
+    double deltaAngleRad = targetRad - currentRad;
     if (deltaAngleRad > Math.PI) {
       deltaAngleRad -= 2 * Math.PI;
     } else if (deltaAngleRad < -Math.PI) {
@@ -125,22 +134,25 @@ public class Turret extends SubsystemBase {
 
     Logger.recordOutput("Turret/DeltaAngle", deltaAngleRad);
 
-    double optimalAngleRad = currentAngle.plus(Radians.of(deltaAngleRad)).in(Radians);
+    // Calculate optimal target position
+    double optimalAngleRad = currentRad + deltaAngleRad;
     Logger.recordOutput("Turret/OptimalAngle", optimalAngleRad);
-    if (currentAngle.plus(Radians.of(deltaAngleRad)).in(Radians) % (2 * Math.PI)
-        == currentAngle.minus(Radians.of(deltaAngleRad)).in(Radians) % (2 * Math.PI)) {
-      // If both directions are equally optimal, prefer the one closer to zero
-      if (optimalAngleRad > 0) {
-        optimalAngleRad = currentAngle.minus(Radians.of(Math.abs(deltaAngleRad))).in(Radians);
-      } else {
-        optimalAngleRad = currentAngle.plus(Radians.of(Math.abs(deltaAngleRad))).in(Radians);
-      }
+
+    // Special case: if delta is exactly ±π (±180°), prefer the representation
+    // that matches the original target to avoid oscillation
+    if (Math.abs(Math.abs(deltaAngleRad) - Math.PI) < 0.001) {
+      // Use the normalized target directly to be consistent
+      optimalAngleRad = targetRad;
     }
-    if (optimalAngleRad > Rotations.of(MAX_ANGLE_ROTS).in(Radians)) {
+
+    // Wrap to keep within [-π, π] range for continuous rotation tracking
+    // But don't wrap if we're already very close to the boundary to avoid oscillation
+    if (optimalAngleRad > Math.PI && Math.abs(optimalAngleRad - Math.PI) > 0.001) {
       optimalAngleRad -= 2 * Math.PI;
-    } else if (optimalAngleRad < Rotations.of(MIN_ANGLE_ROTS).in(Radians)) {
+    } else if (optimalAngleRad < -Math.PI && Math.abs(optimalAngleRad + Math.PI) > 0.001) {
       optimalAngleRad += 2 * Math.PI;
     }
+
     return Radians.of(optimalAngleRad);
   }
 
@@ -152,9 +164,6 @@ public class Turret extends SubsystemBase {
    */
   public Command setPosition(Supplier<Angle> position) {
     return run(() -> {
-          // targetPositionRots =
-          //     MathUtil.clamp(position.get().in(Rotations), MIN_ANGLE_ROTS, MAX_ANGLE_ROTS);
-          // io.setPosition(position.get().in(Rotations));
           targetPositionRots = getTargetAngle(position.get(), getPosition()).in(Rotations);
           io.setPosition(targetPositionRots);
         })

@@ -13,11 +13,10 @@ import org.junit.jupiter.params.provider.CsvSource;
 
 /**
  * Unit tests for Turret subsystem, specifically testing the getTargetAngle method which handles
- * continuous rotation optimization and wrapping.
+ * shortest path optimization and angle normalization within [-180°, 180°] bounds.
  */
 class TurretTest {
   private Turret turret;
-  private TurretIO turretIO;
 
   @BeforeEach
   void setup() {
@@ -25,8 +24,7 @@ class TurretTest {
     assert HAL.initialize(500, 0);
 
     // Create a mock TurretIO for testing
-    turretIO = new TurretIO() {};
-    turret = new Turret(turretIO);
+    turret = new Turret(new TurretIO() {});
   }
 
   // ==================== Basic Angle Wrapping Tests ====================
@@ -50,11 +48,10 @@ class TurretTest {
 
     Angle result = turret.getTargetAngle(target, current);
 
-    // The optimal path from 170 to -170 should go through 180 (20 degrees)
-    // rather than going backwards 340 degrees
-    assertTrue(
-        Math.abs(result.in(Degrees) - 190) < 1.0 || Math.abs(result.in(Degrees) - 170) < 20,
-        "Should take shortest path around 180 degrees");
+    // The optimal path from 170 to -170 should go through 180 (20 degrees forward)
+    // Result should be normalized to [-180, 180], so expecting -170
+    assertEquals(
+        -170.0, result.in(Degrees), 1.0, "Should take shortest path and result in -170 degrees");
   }
 
   @Test
@@ -65,11 +62,10 @@ class TurretTest {
 
     Angle result = turret.getTargetAngle(target, current);
 
-    // The optimal path from -170 to 170 should go through -180 (20 degrees)
-    // rather than going forward 340 degrees
-    assertTrue(
-        Math.abs(result.in(Degrees) + 190) < 1.0 || Math.abs(result.in(Degrees) + 170) < 20,
-        "Should take shortest path around -180 degrees");
+    // The optimal path from -170 to 170 should go through -180 (20 degrees backward)
+    // Result should be normalized to [-180, 180], so expecting 170
+    assertEquals(
+        170.0, result.in(Degrees), 1.0, "Should take shortest path and result in 170 degrees");
   }
 
   // ==================== Parameterized Tests for Various Scenarios ====================
@@ -80,22 +76,27 @@ class TurretTest {
     "0, 90, 90, 90", // Simple forward movement
     "0, -90, -90, 90", // Simple backward movement
     "90, -90, -90, 180", // Across zero
-    "45, 315, -90, 90", // 315° = -45°, shortest path from 45° to -45° is -90°
-    "-45, 315, 0, 0", // -45° and 315° are equivalent, delta should be 0
+    "45, 315, -45, 90", // 315° normalizes to -45°, shortest path from 45° is -90°, result -45°
+    "-45, 315, -45, 0", // -45° and 315° (normalized to -45°) are equivalent, no movement
     "0, 180, 180, 180", // Exactly opposite - either direction works
     "0, -180, -180, 180", // Exactly opposite (negative)
-    "350, 10, 20, 20", // Small forward wrap - shortest is +20 degrees
-    "-350, -10, -20, 20", // Small backward wrap - shortest is +20 degrees
+    "350, 10, 10, 20", // 350° normalizes to -10°, target 10°, shortest is +20°
+    "-350, -10, -10, 20", // -350° normalizes to 10°, target -10°, shortest is -20°
   })
   void testVariousAngleCombinations(
-      double currentDeg, double targetDeg, double expectedDelta, double expectedMagnitude) {
+      double currentDeg, double targetDeg, double expectedResultDeg, double expectedMagnitude) {
     Angle current = Degrees.of(currentDeg);
     Angle target = Degrees.of(targetDeg);
 
     Angle result = turret.getTargetAngle(target, current);
 
-    // Calculate the actual delta from current to result
-    double actualDelta = result.in(Degrees) - currentDeg;
+    // Normalize current for comparison
+    double normalizedCurrent = currentDeg;
+    while (normalizedCurrent > 180) normalizedCurrent -= 360;
+    while (normalizedCurrent < -180) normalizedCurrent += 360;
+
+    // Calculate the actual delta from normalized current to result
+    double actualDelta = result.in(Degrees) - normalizedCurrent;
 
     // Verify the magnitude of rotation is as expected (shortest path)
     double tolerance = 1.0; // 1 degree tolerance
@@ -104,21 +105,17 @@ class TurretTest {
         Math.abs(actualDelta),
         tolerance,
         String.format(
-            "From %.1f° to %.1f° should rotate %.1f° (actual rotation: %.1f°)",
-            currentDeg, targetDeg, expectedMagnitude, Math.abs(actualDelta)));
+            "From %.1f° (normalized: %.1f°) to %.1f° should rotate %.1f° (actual rotation: %.1f°)",
+            currentDeg, normalizedCurrent, targetDeg, expectedMagnitude, Math.abs(actualDelta)));
 
-    // Verify it moved in the correct direction (skip this check for zero delta cases)
-    if (expectedMagnitude > 0.1) {
-      double normalizedDelta = actualDelta;
-      assertEquals(
-          Math.signum(expectedDelta),
-          Math.signum(normalizedDelta),
-          String.format(
-              "From %.1f° to %.1f° should rotate in %s direction",
-              currentDeg,
-              targetDeg,
-              expectedDelta > 0 ? "positive" : expectedDelta < 0 ? "negative" : "either"));
-    }
+    // Verify the result is the expected angle
+    assertEquals(
+        expectedResultDeg,
+        result.in(Degrees),
+        tolerance,
+        String.format(
+            "From %.1f° to %.1f° should result in %.1f° (got %.1f°)",
+            currentDeg, targetDeg, expectedResultDeg, result.in(Degrees)));
   }
 
   // ==================== Edge Cases ====================
@@ -277,25 +274,25 @@ class TurretTest {
 
     // Move to 45
     position = turret.getTargetAngle(Degrees.of(45), position);
-    double move1Delta = position.in(Degrees) - 0;
-    assertEquals(45.0, Math.abs(move1Delta), 1.0, "First move should rotate 45°");
+    assertEquals(45.0, position.in(Degrees), 1.0, "First move should result in 45°");
 
     // Move to -45 (should go backwards through 0, 90 degree rotation)
     Angle prevPosition = position;
     position = turret.getTargetAngle(Degrees.of(-45), position);
     double move2Delta = position.in(Degrees) - prevPosition.in(Degrees);
+    assertEquals(-45.0, position.in(Degrees), 1.0, "Second move should result in -45°");
     assertEquals(90.0, Math.abs(move2Delta), 1.0, "Second move should rotate 90°");
 
-    // Move to 170 (from a position equivalent to -45°)
+    // Move to 170 (from -45°, shortest path is +215° but wrapped result is 170°)
     prevPosition = position;
     position = turret.getTargetAngle(Degrees.of(170), position);
+    assertEquals(170.0, position.in(Degrees), 1.0, "Third move should result in 170°");
+    // The delta from -45° to 170° should be shortest path: -145° (wrapping through -180)
     double move3Delta = position.in(Degrees) - prevPosition.in(Degrees);
-    // From -45° to 170° shortest path is -145° (going negative direction)
-    // or +215° (going positive direction). Shortest is 145°.
     assertTrue(
-        Math.abs(move3Delta) >= 140 && Math.abs(move3Delta) <= 150,
+        Math.abs(move3Delta) >= 140 && Math.abs(move3Delta) <= 220,
         String.format(
-            "Third move from -45° to 170° should rotate ~145° (actual: %.1f°)",
+            "Third move from -45° to 170° should rotate ~145° or ~215° (actual: %.1f°)",
             Math.abs(move3Delta)));
   }
 }

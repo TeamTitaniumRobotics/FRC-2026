@@ -1,5 +1,6 @@
 package org.teamtitanium.subsystems.shooter.turret;
 
+import static edu.wpi.first.units.Units.Rotations;
 import static org.teamtitanium.subsystems.shooter.turret.TurretConstants.*;
 
 import com.ctre.phoenix6.BaseStatusSignal;
@@ -66,10 +67,10 @@ public class TurretIOTalonFX implements TurretIO {
     motorConfig.Feedback.SensorToMechanismRatio = TURRET_GEAR_RATIO;
 
     // Soft limits
-    // motorConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = MAX_ANGLE_ROTS;
-    // motorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-    // motorConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = MIN_ANGLE_ROTS;
-    // motorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+    motorConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = MAX_ANGLE.in(Rotations);
+    motorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+    motorConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = MIN_ANGLE.in(Rotations);
+    motorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
 
     // PID configuration
     motorConfig.Slot0.kP = TURRET_GAINS.kP();
