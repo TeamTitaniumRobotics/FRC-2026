@@ -14,11 +14,12 @@ Before answering ANY question about:
 
 YOU MUST:
 1. **STOP** - Do not answer from memory or training data
-2. **QUERY** - Use `mcp_wpilibrag_query_wpilib_docs` tool FIRST
-3. **VERIFY** - Base your answer on the retrieved documentation
-4. **CITE** - Reference the official WPILib documentation
+2. **PREFER** - Use the `frc-docs` MCP server tools defined in `.github/copilot-mcp.json` to query the WPILib documentation FIRST, if those tools are available in your environment
+3. **FALLBACK** - If the `frc-docs` MCP tools are not available, consult the official WPILib documentation at https://docs.wpilib.org/ using your browsing capabilities or prior knowledge of its structure
+4. **VERIFY** - Base your answer on the retrieved official WPILib documentation (from the MCP tools or docs.wpilib.org)
+5. **CITE** - Explicitly reference the official WPILib documentation (tool output and/or docs.wpilib.org URLs) in your answer
 
-This is NOT optional. This is a MANDATORY step for ALL WPILib-related questions.
+This is NOT optional. It is a MANDATORY requirement that ALL WPILib-related answers be grounded in and consistent with the official WPILib documentation.
 
 ═══════════════════════════════════════════════════════════════════════════════
 
