@@ -9,6 +9,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import java.util.Optional;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -18,6 +19,9 @@ import org.teamtitanium.utils.Constants.Constraints;
 import org.teamtitanium.utils.Constants.Gains;
 import org.teamtitanium.utils.LoggedTracer;
 import org.teamtitanium.utils.LoggedTunableNumber;
+import yams.units.EasyCRT;
+import yams.units.EasyCRTConfig;
+import yams.units.EasyCRTConfig.CrtGearPair;
 
 public class Turret extends SubsystemBase {
   // Real-time tunable PID gains
@@ -46,6 +50,9 @@ public class Turret extends SubsystemBase {
   private final TurretIO io;
   private final TurretIOInputsAutoLogged inputs = new TurretIOInputsAutoLogged();
 
+  private final EasyCRT easyCRT;
+  private final EasyCRTConfig crtConfig;
+
   @AutoLogOutput(key = "Turret/TargetPositionRots")
   private double targetPositionRots = 0.0;
 
@@ -55,6 +62,21 @@ public class Turret extends SubsystemBase {
   /** Creates a new Turret subsystem. */
   public Turret(TurretIO io) {
     this.io = io;
+
+    this.crtConfig =
+        new EasyCRTConfig(
+                () -> Rotations.of(inputs.cancoder1PositionRots),
+                () -> Rotations.of(inputs.cancoder2PositionRots))
+            .withCommonDriveGear(
+                CANCODER_COMMON_RATIO,
+                CANCODER_DRIVE_GEAR_TEETH,
+                CANCODER_1_GEAR_TEETH,
+                CANCODER_2_GEAR_TEETH)
+            .withMechanismRange(MIN_ANGLE, MAX_ANGLE)
+            .withMatchTolerance(Rotations.of(0.005))
+            .withAbsoluteEncoderInversions(false, false)
+            .withCrtGearRecommendationConstraints(1.2, 15, 45, 30);
+    this.easyCRT = new EasyCRT(crtConfig);
 
     // Zero the turret on startup if available
     zeroTurretCRT();
@@ -231,6 +253,41 @@ public class Turret extends SubsystemBase {
 
   /** Zeros the turret using two CANcoder sensors and the Chinese Remainder Theorem. */
   public void zeroTurretCRT() {
-    // TODO: Implement CRT zeroing
+    Optional<Angle> zeroAngle = easyCRT.getAngleOptional();
+    if (zeroAngle.isPresent()) {
+      double zeroRots = zeroAngle.get().in(Rotations);
+      io.setMotorPosition(zeroRots);
+      Logger.recordOutput("Turret/CRT/ZeroAngleRots", zeroRots);
+    } else {
+      Logger.recordOutput("Turret/CRT/ZeroAngleRots", -999);
+    }
+    Logger.recordOutput("Turret/CRT/LastErrorRots", easyCRT.getLastErrorRotations());
+    Logger.recordOutput("Turret/CRT/LastStatus", easyCRT.getLastStatus());
+  }
+
+  public void checkCrtValues() {
+    Optional<Angle> coverage = crtConfig.getUniqueCoverage();
+    if (coverage.isPresent()) {
+      Logger.recordOutput("Turret/CRT/CoverageDegrees", coverage.get().in(Degrees));
+    } else {
+      Logger.recordOutput("Turret/CRT/CoverageDegrees", "N/A");
+    }
+
+    Optional<CrtGearPair> gearPairOpt = crtConfig.getRecommendedCrtGearPair();
+    if (gearPairOpt.isPresent()) {
+      CrtGearPair gearPair = gearPairOpt.get();
+      Logger.recordOutput("Turret/CRT/Gear1Teeth", gearPair.gearA());
+      Logger.recordOutput("Turret/CRT/Gear2Teeth", gearPair.gearB());
+      Logger.recordOutput("Turret/CRT/GCD", gearPair.gcd());
+      Logger.recordOutput("Turret/CRT/LCM", gearPair.lcm());
+      Logger.recordOutput("Turret/CRT/Iterations", gearPair.theoreticalIterations());
+    } else {
+      Logger.recordOutput("Turret/CRT/Gear1Teeth", "N/A");
+      Logger.recordOutput("Turret/CRT/Gear2Teeth", "N/A");
+      Logger.recordOutput("Turret/CRT/GCD", "N/A");
+      Logger.recordOutput("Turret/CRT/LCM", "N/A");
+      Logger.recordOutput("Turret/CRT/Iterations", "N/A");
+    }
+    Logger.recordOutput("Turret/CRT/CoverageGood", crtConfig.coverageSatisfiesRange());
   }
 }
