@@ -331,7 +331,7 @@ public class Robot extends LoggedRobot {
                                 .getHoodAngle()
                                 .minus(Rotation2d.fromDegrees(15)))));
 
-    driver.start().onTrue(Commands.runOnce(() -> GyroIOPigeon2.reset()));
+    driver.start().onTrue(Commands.runOnce(() -> swerve.resetPigeon()));
   }
 
   private void updateAlerts() {}
