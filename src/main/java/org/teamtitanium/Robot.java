@@ -191,15 +191,18 @@ public class Robot extends LoggedRobot {
         swerve = null;
       }
     }
+    if (swerve != null) {
+      autos = new AutoRoutines(swerve);
 
-    autos = new AutoRoutines(swerve);
+      // Create an AutoChooser
+      autoChooser.addRoutine("NewAuto", () -> autos.exampleAutoRoutine());
+      // Put the auto chooser on the dashboard
+      SmartDashboard.putData(autoChooser);
+    } else {
+      autos = null;
+    }
 
-    // Create an AutoChooser
-    autoChooser.addRoutine("NewAuto", () -> autos.exampleAutoRoutine());
-    // Put the auto chooser on the dashboard
-    SmartDashboard.putData(autoChooser);
-    // Schedule the selected auto during the autonomous period
-    RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());
+
 
     configureButtonBindings();
   }
@@ -360,7 +363,7 @@ public class Robot extends LoggedRobot {
   @Override
   public void autonomousInit() {
     autoStartTime = Timer.getTimestamp();
-    autonomousCommand = Commands.none(); // TODO: Add autonomous command here
+    autonomousCommand = autoChooser.selectedCommandScheduler();
 
     if (autonomousCommand != null) {
       CommandScheduler.getInstance().schedule(autonomousCommand);

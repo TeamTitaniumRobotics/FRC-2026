@@ -15,6 +15,7 @@ import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -384,20 +385,20 @@ public class Swerve extends SubsystemBase {
   }
 
   public void followChoreoTrajectory(SwerveSample sample) {
-    RobotState.getInstance().getEstimatedPose(); // Ensure odometry is up to date by getting pose
+    Pose2d pose = RobotState.getInstance().getEstimatedPose(); // Ensure odometry is up to date by getting pose
 
     // Generate the desired speeds to follow that trajectory
     ChassisSpeeds speeds =
         new ChassisSpeeds(
             sample.vx
                 + xPosController.calculate(
-                    RobotState.getInstance().getEstimatedPose().getX(), sample.x),
+                    pose.getX(), sample.x),
             sample.vy
                 + yPosController.calculate(
-                    RobotState.getInstance().getEstimatedPose().getY(), sample.y),
+                    pose.getY(), sample.y),
             sample.omega
                 + headingController.calculate(
-                    RobotState.getInstance().getEstimatedPose().getRotation().getRadians(),
+                    pose.getRotation().getRadians(),
                     sample.heading));
 
     // Apply those calculated speeds.
