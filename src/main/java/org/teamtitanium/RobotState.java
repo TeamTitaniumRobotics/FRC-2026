@@ -107,7 +107,7 @@ public class RobotState {
     // Use field position and robot velocity direction to determine whether to track hub or side of
     // zone for passing
     Translation2d hub = FieldConstants.Hub.topCenterPoint.toTranslation2d();
-    var targetAngle = getEstimatedPose().getTranslation().minus(hub).getAngle();
+    Rotation2d targetAngle = hub.minus(getEstimatedPose().getTranslation()).getAngle();
     Logger.recordOutput("Turret/Sim/TargetAngle", targetAngle);
     return Radians.of(targetAngle.getRadians());
   }

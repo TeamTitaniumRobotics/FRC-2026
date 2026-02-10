@@ -80,8 +80,6 @@ public class Turret extends SubsystemBase {
 
     // Zero the turret on startup if available
     zeroTurretCRT();
-
-    setDefaultCommand(setPosition(() -> Degrees.of(configNumber.get())));
   }
 
   @Override
@@ -109,9 +107,6 @@ public class Turret extends SubsystemBase {
     if (turretMaxVelocity.hasChanged(hashCode()) || turretMaxAcceleration.hasChanged(hashCode())) {
       io.setConstraints(new Constraints(turretMaxVelocity.get(), turretMaxAcceleration.get()));
     }
-
-    Logger.recordOutput(
-        "Turret/TargetConfigAngle", getTargetAngle(Degrees.of(configNumber.get()), getPosition()));
 
     LoggedTracer.record("Turret");
   }
@@ -265,6 +260,7 @@ public class Turret extends SubsystemBase {
     Logger.recordOutput("Turret/CRT/LastStatus", easyCRT.getLastStatus());
   }
 
+  /** Checks the CRT values and logs them. Only for use in Sim. */
   public void checkCrtValues() {
     Optional<Angle> coverage = crtConfig.getUniqueCoverage();
     if (coverage.isPresent()) {
