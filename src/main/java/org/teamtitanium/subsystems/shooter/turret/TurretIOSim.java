@@ -23,6 +23,8 @@ public class TurretIOSim extends TurretIOTalonFX {
   @Override
   public void updateInputs(TurretIOInputs inputs) {
     inputs.motorConnected = true;
+    inputs.cancoder1Connected = true;
+    inputs.cancoder2Connected = true;
 
     var motorSimState = turretMotor.getSimState();
     motorSimState.setSupplyVoltage(RobotController.getBatteryVoltage());

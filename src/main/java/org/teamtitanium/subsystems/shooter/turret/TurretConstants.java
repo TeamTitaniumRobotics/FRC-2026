@@ -20,7 +20,7 @@ public class TurretConstants {
   public static final int TURRET_CANCODER_2_ID = 17;
 
   // Physical Constants
-  public static final double TURRET_GEAR_RATIO = (85.0 / 10.0) * (50.0 / 12.0); // 40.5:1 reduction
+  public static final double TURRET_GEAR_RATIO = (85.0 / 10.0) * (50.0 / 12.0); // ~35.4:1 reduction
   public static final double TURRET_MOMENT_OF_INERTIA = 0.1; // kg*m^2
 
   // CANcoder Gear Ratios from Turret
