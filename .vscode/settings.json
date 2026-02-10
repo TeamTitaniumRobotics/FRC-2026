@@ -64,9 +64,10 @@
   "[java]": {
     "editor.defaultFormatter": "richardwillis.vscode-spotless-gradle",
     "spotlessGradle.format.enable": true,
-    // "editor.codeActionsOnSave": {
-    //   "source.fixAll.spotlessGradle": "explicit"
-    // }
+    "editor.codeActionsOnSave": {
+      "source.fixAll.spotlessGradle": "explicit"
+    }
   },
-  // "editor.formatOnSave": true
+  "editor.formatOnSave": true,
+  "wpilib.skipTests": true
 }

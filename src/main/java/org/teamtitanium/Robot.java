@@ -5,9 +5,10 @@
 package org.teamtitanium;
 
 import choreo.auto.AutoChooser;
+import static edu.wpi.first.units.Units.Degrees;
+
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.hal.AllianceStationID;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.IterativeRobotBase;
@@ -34,9 +35,24 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 import org.teamtitanium.autos.*;
 import org.teamtitanium.commands.DriveCommands;
 import org.teamtitanium.subsystems.Leds;
+import org.teamtitanium.subsystems.shooter.flywheel.Flywheel;
+import org.teamtitanium.subsystems.shooter.flywheel.FlywheelIO;
+import org.teamtitanium.subsystems.shooter.flywheel.FlywheelIOSim;
+import org.teamtitanium.subsystems.shooter.flywheel.FlywheelIOTalonFX;
+import org.teamtitanium.subsystems.shooter.hood.Hood;
+import org.teamtitanium.subsystems.shooter.hood.HoodIO;
+import org.teamtitanium.subsystems.shooter.hood.HoodIOSim;
+import org.teamtitanium.subsystems.shooter.hood.HoodIOTalonFX;
+import org.teamtitanium.subsystems.shooter.turret.Turret;
+import org.teamtitanium.subsystems.shooter.turret.TurretIO;
+import org.teamtitanium.subsystems.shooter.turret.TurretIOSim;
+import org.teamtitanium.subsystems.shooter.turret.TurretIOTalonFX;
 import org.teamtitanium.subsystems.swerve.GyroIO;
+import org.teamtitanium.subsystems.swerve.GyroIOPigeon2;
 import org.teamtitanium.subsystems.swerve.Swerve;
+import org.teamtitanium.subsystems.swerve.SwerveModuleIO;
 import org.teamtitanium.subsystems.swerve.SwerveModuleIOSim;
+import org.teamtitanium.subsystems.swerve.SwerveModuleIOTalonFX;
 import org.teamtitanium.utils.CanivoreReader;
 import org.teamtitanium.utils.Constants;
 import org.teamtitanium.utils.Constants.Mode;
@@ -58,6 +74,9 @@ public class Robot extends LoggedRobot {
   private Command autonomousCommand;
 
   private final Swerve swerve;
+  private final Flywheel flywheel;
+  private final Hood hood;
+  private final Turret turret;
 
   private final CommandXboxController driver = new CommandXboxController(0);
 
@@ -176,7 +195,16 @@ public class Robot extends LoggedRobot {
 
     switch (Constants.getMode()) {
       case REAL -> {
-        swerve = null;
+        swerve =
+            new Swerve(
+                new GyroIOPigeon2(),
+                new SwerveModuleIOTalonFX(TunerConstants.FrontLeft),
+                new SwerveModuleIOTalonFX(TunerConstants.FrontRight),
+                new SwerveModuleIOTalonFX(TunerConstants.BackLeft),
+                new SwerveModuleIOTalonFX(TunerConstants.BackRight));
+        flywheel = new Flywheel(new FlywheelIOTalonFX());
+        hood = new Hood(new HoodIOTalonFX());
+        turret = new Turret(new TurretIOTalonFX());
       }
       case SIM -> {
         swerve =
@@ -186,9 +214,21 @@ public class Robot extends LoggedRobot {
                 new SwerveModuleIOSim(TunerConstants.FrontRight),
                 new SwerveModuleIOSim(TunerConstants.BackLeft),
                 new SwerveModuleIOSim(TunerConstants.BackRight));
+        flywheel = new Flywheel(new FlywheelIOSim());
+        hood = new Hood(new HoodIOSim());
+        turret = new Turret(new TurretIOSim());
       }
       default -> {
-        swerve = null;
+        swerve =
+            new Swerve(
+                new GyroIO() {},
+                new SwerveModuleIO() {},
+                new SwerveModuleIO() {},
+                new SwerveModuleIO() {},
+                new SwerveModuleIO() {});
+        flywheel = new Flywheel(new FlywheelIO() {});
+        hood = new Hood(new HoodIO() {});
+        turret = new Turret(new TurretIO() {});
       }
     }
     if (swerve != null) {
@@ -300,47 +340,56 @@ public class Robot extends LoggedRobot {
             () -> -driver.getRightX(),
             () -> false));
 
-    driver
-        .rightBumper()
-        .onTrue(
-            Commands.runOnce(
-                () ->
-                    MechanismVisualizer.getInstance()
-                        .setTurretAngle(
-                            MechanismVisualizer.getInstance()
-                                .getTurretAngle()
-                                .plus(Rotation2d.fromDegrees(15)))));
-    driver
-        .leftBumper()
-        .onTrue(
-            Commands.runOnce(
-                () ->
-                    MechanismVisualizer.getInstance()
-                        .setTurretAngle(
-                            MechanismVisualizer.getInstance()
-                                .getTurretAngle()
-                                .minus(Rotation2d.fromDegrees(15)))));
+    // turret.setDefaultCommand(turret.track());
 
-    driver
-        .rightTrigger()
-        .onTrue(
-            Commands.runOnce(
-                () ->
-                    MechanismVisualizer.getInstance()
-                        .setHoodAngle(
-                            MechanismVisualizer.getInstance()
-                                .getHoodAngle()
-                                .plus(Rotation2d.fromDegrees(15)))));
-    driver
-        .leftTrigger()
-        .onTrue(
-            Commands.runOnce(
-                () ->
-                    MechanismVisualizer.getInstance()
-                        .setHoodAngle(
-                            MechanismVisualizer.getInstance()
-                                .getHoodAngle()
-                                .minus(Rotation2d.fromDegrees(15)))));
+    driver.rightTrigger().whileTrue(turret.setPosition(() -> Degrees.of(90.0)));
+    driver.leftTrigger().whileTrue(turret.setPosition(() -> Degrees.of(-90.0)));
+    driver.a().whileTrue(turret.setPosition(() -> Degrees.of(0.0)));
+
+    driver.rightBumper().whileTrue(turret.setVoltage(6.0));
+    driver.leftBumper().whileTrue(turret.setVoltage(-6.0));
+
+    // driver
+    //     .rightBumper()
+    //     .onTrue(
+    //         Commands.runOnce(
+    //             () ->
+    //                 MechanismVisualizer.getInstance()
+    //                     .setTurretAngle(
+    //                         MechanismVisualizer.getInstance()
+    //                             .getTurretAngle()
+    //                             .plus(Rotation2d.fromDegrees(15)))));
+    // driver
+    //     .leftBumper()
+    //     .onTrue(
+    //         Commands.runOnce(
+    //             () ->
+    //                 MechanismVisualizer.getInstance()
+    //                     .setTurretAngle(
+    //                         MechanismVisualizer.getInstance()
+    //                             .getTurretAngle()
+    //                             .minus(Rotation2d.fromDegrees(15)))));
+
+    // driver
+    //     .rightTrigger()
+    //     .onTrue(
+    //         Commands.runOnce(
+    //             () ->
+    //                 MechanismVisualizer.getInstance()
+    //                     .setHoodAngle(
+    //                         MechanismVisualizer.getInstance()
+    //                             .getHoodAngle()
+    //                             .plus(Rotation2d.fromDegrees(15)))));
+    // driver
+    //     .leftTrigger()
+    //     .onTrue(
+    //         Commands.runOnce(
+    //             () ->
+    //                 MechanismVisualizer.getInstance()
+    //                     .setHoodAngle(
+    //                         MechanismVisualizer.getInstance()
+    //                             .getHoodAngle()
+    //                             .minus(Rotation2d.fromDegrees(15)))));
   }
 
   private void updateAlerts() {}

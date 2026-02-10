@@ -1,17 +1,26 @@
 package org.teamtitanium;
 
+import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.Rotations;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
 import java.util.Optional;
 import lombok.Getter;
 import lombok.Setter;
 import org.littletonrobotics.junction.AutoLogOutput;
+import org.littletonrobotics.junction.Logger;
 import org.teamtitanium.subsystems.swerve.Swerve;
+import org.teamtitanium.utils.FieldConstants;
 
 public class RobotState {
   private static final double poseBufferSizeSeconds = 2.0;
@@ -81,6 +90,26 @@ public class RobotState {
 
   public void addSwerveSpeeds(ChassisSpeeds speeds) {
     robotVelocity = speeds;
+  }
+
+  public AngularVelocity getFlywheelSetpoint() {
+    // Placeholder value; replace with actual logic to determine flywheel setpoint
+    return RotationsPerSecond.of(0.0);
+  }
+
+  public Angle getHoodSetpoint() {
+    // Placeholder value; replace with actual logic to determine hood setpoint
+    return Rotations.of(0.0);
+  }
+
+  public Angle getTurretSetpoint() {
+    // Placeholder value; replace with actual logic to determine turret setpoint
+    // Use field position and robot velocity direction to determine whether to track hub or side of
+    // zone for passing
+    Translation2d hub = FieldConstants.Hub.topCenterPoint.toTranslation2d();
+    var targetAngle = getEstimatedPose().getTranslation().minus(hub).getAngle();
+    Logger.recordOutput("Turret/Sim/TargetAngle", targetAngle);
+    return Radians.of(targetAngle.getRadians());
   }
 
   public record OdometryObservation(
