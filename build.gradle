@@ -4,6 +4,7 @@ plugins {
     id "com.diffplug.spotless" version "6.20.0"
     id "com.peterabeles.gversion" version "1.10"
     id "io.freefair.lombok" version "6.6.1"
+    id "jacoco"
 }
 
 java {
@@ -92,7 +93,35 @@ dependencies {
 test {
     useJUnitPlatform()
     systemProperty 'junit.jupiter.extensions.autodetection.enabled', 'true'
+    finalizedBy jacocoTestReport
 }
+
+// JaCoCo test coverage configuration
+jacoco {
+    toolVersion = "0.8.11"
+}
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required = true
+        html.required = true
+        csv.required = false
+    }
+}
+
+// Enforce minimum code coverage (optional)
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                minimum = 0.30 // 30% minimum coverage to start
+            }
+        }
+    }
+}
+
+check.dependsOn jacocoTestCoverageVerification
 
 // Simulation configuration (e.g. environment variables).
 wpi.sim.addGui().defaultEnabled = true
