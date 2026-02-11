@@ -5,15 +5,15 @@ import org.teamtitanium.utils.Constants.Constraints;
 import org.teamtitanium.utils.Constants.Gains;
 
 public interface RackIO {
-    @AutoLog
-    public class RackIOInputs {
-        public boolean motorConnected = false;
-        public double positionRots = 0.0;
-        public double velocityRps = 0.0;
-        public double appliedVolts = 0.0;
-        public double supplyCurrentAmps = 0.0;
-        public double torqueCurrentAmps = 0.0;
-        public double tempCelsius = 0.0;
+  @AutoLog
+  public class RackIOInputs {
+    public boolean motorConnected = false;
+    public double positionRots = 0.0;
+    public double velocityRps = 0.0;
+    public double appliedVolts = 0.0;
+    public double supplyCurrentAmps = 0.0;
+    public double torqueCurrentAmps = 0.0;
+    public double tempCelsius = 0.0;
   }
 
   /** Updates the inputs for the rack and pinions. */

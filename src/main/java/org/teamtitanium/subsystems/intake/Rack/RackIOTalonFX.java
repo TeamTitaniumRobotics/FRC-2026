@@ -1,5 +1,3 @@
 package org.teamtitanium.subsystems.intake.Rack;
 
-public class RackIOTalonFX {
-    
-}
+public class RackIOTalonFX {}

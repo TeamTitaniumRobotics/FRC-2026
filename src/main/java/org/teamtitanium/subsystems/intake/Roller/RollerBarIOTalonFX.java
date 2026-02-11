@@ -1,5 +1,3 @@
 package org.teamtitanium.subsystems.intake.Roller;
 
-public class RollerBarIOTalonFX {
-    
-}
+public class RollerBarIOTalonFX {}

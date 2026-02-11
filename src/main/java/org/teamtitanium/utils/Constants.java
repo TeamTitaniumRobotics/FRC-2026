@@ -28,5 +28,9 @@ public class Constants {
     }
   }
 
-  public record Constraints(double maxVelocity, double maxAcceleration) {}
+  public record Constraints(double maxVelocity, double maxAcceleration, double kJerk) {
+    public Constraints(double maxVelocity, double maxAcceleration) {
+      this(maxVelocity, maxAcceleration, 0.0);
+    }
+  }
 }
