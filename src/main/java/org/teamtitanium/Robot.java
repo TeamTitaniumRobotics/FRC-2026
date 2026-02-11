@@ -321,8 +321,6 @@ public class Robot extends LoggedRobot {
             () -> -driver.getRightX(),
             () -> false));
 
-    // turret.setDefaultCommand(turret.track());
-
     driver.rightTrigger().whileTrue(turret.setPosition(() -> Degrees.of(90.0)));
     driver.leftTrigger().whileTrue(turret.setPosition(() -> Degrees.of(-90.0)));
     driver.a().whileTrue(turret.setPosition(() -> Degrees.of(0.0)));
@@ -330,47 +328,7 @@ public class Robot extends LoggedRobot {
     driver.rightBumper().whileTrue(turret.setVoltage(6.0));
     driver.leftBumper().whileTrue(turret.setVoltage(-6.0));
 
-    // driver
-    //     .rightBumper()
-    //     .onTrue(
-    //         Commands.runOnce(
-    //             () ->
-    //                 MechanismVisualizer.getInstance()
-    //                     .setTurretAngle(
-    //                         MechanismVisualizer.getInstance()
-    //                             .getTurretAngle()
-    //                             .plus(Rotation2d.fromDegrees(15)))));
-    // driver
-    //     .leftBumper()
-    //     .onTrue(
-    //         Commands.runOnce(
-    //             () ->
-    //                 MechanismVisualizer.getInstance()
-    //                     .setTurretAngle(
-    //                         MechanismVisualizer.getInstance()
-    //                             .getTurretAngle()
-    //                             .minus(Rotation2d.fromDegrees(15)))));
-
-    // driver
-    //     .rightTrigger()
-    //     .onTrue(
-    //         Commands.runOnce(
-    //             () ->
-    //                 MechanismVisualizer.getInstance()
-    //                     .setHoodAngle(
-    //                         MechanismVisualizer.getInstance()
-    //                             .getHoodAngle()
-    //                             .plus(Rotation2d.fromDegrees(15)))));
-    // driver
-    //     .leftTrigger()
-    //     .onTrue(
-    //         Commands.runOnce(
-    //             () ->
-    //                 MechanismVisualizer.getInstance()
-    //                     .setHoodAngle(
-    //                         MechanismVisualizer.getInstance()
-    //                             .getHoodAngle()
-    //                             .minus(Rotation2d.fromDegrees(15)))));
+    driver.start().onTrue(Commands.runOnce(() -> swerve.resetPigeon()));
   }
 
   private void updateAlerts() {}
