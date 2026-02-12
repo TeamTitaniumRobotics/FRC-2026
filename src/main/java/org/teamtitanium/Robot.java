@@ -8,6 +8,7 @@ import static edu.wpi.first.units.Units.Degrees;
 
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.hal.AllianceStationID;
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.IterativeRobotBase;
@@ -31,6 +32,10 @@ import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 import org.teamtitanium.commands.DriveCommands;
 import org.teamtitanium.subsystems.Leds;
+import org.teamtitanium.subsystems.genericroller.GenericRollerIO;
+import org.teamtitanium.subsystems.genericroller.GenericRollerIOSim;
+import org.teamtitanium.subsystems.genericroller.GenericRollerIOTalonFX;
+import org.teamtitanium.subsystems.intake.roller.IntakeRoller;
 import org.teamtitanium.subsystems.shooter.flywheel.Flywheel;
 import org.teamtitanium.subsystems.shooter.flywheel.FlywheelIO;
 import org.teamtitanium.subsystems.shooter.flywheel.FlywheelIOSim;
@@ -73,6 +78,7 @@ public class Robot extends LoggedRobot {
   private final Flywheel flywheel;
   private final Hood hood;
   private final Turret turret;
+  private final IntakeRoller intakeRoller;
 
   private final CommandXboxController driver = new CommandXboxController(0);
 
@@ -198,6 +204,7 @@ public class Robot extends LoggedRobot {
         flywheel = new Flywheel(new FlywheelIOTalonFX());
         hood = new Hood(new HoodIOTalonFX());
         turret = new Turret(new TurretIOTalonFX());
+        intakeRoller = new IntakeRoller(new GenericRollerIOTalonFX(IntakeRoller.constants));
       }
       case SIM -> {
         swerve =
@@ -210,6 +217,9 @@ public class Robot extends LoggedRobot {
         flywheel = new Flywheel(new FlywheelIOSim());
         hood = new Hood(new HoodIOSim());
         turret = new Turret(new TurretIOSim());
+        intakeRoller =
+            new IntakeRoller(
+                new GenericRollerIOSim(IntakeRoller.constants, DCMotor.getKrakenX44(1), 0.01));
       }
       default -> {
         swerve =
@@ -222,10 +232,13 @@ public class Robot extends LoggedRobot {
         flywheel = new Flywheel(new FlywheelIO() {});
         hood = new Hood(new HoodIO() {});
         turret = new Turret(new TurretIO() {});
+        intakeRoller = new IntakeRoller(new GenericRollerIO() {});
       }
     }
 
     configureButtonBindings();
+
+    intakeRoller.setDefaultCommand(intakeRoller.intake());
   }
 
   @Override
