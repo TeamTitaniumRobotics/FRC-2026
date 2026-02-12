@@ -4,9 +4,9 @@
 
 package org.teamtitanium;
 
-import choreo.auto.AutoChooser;
 import static edu.wpi.first.units.Units.Degrees;
 
+import choreo.auto.AutoChooser;
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.hal.AllianceStationID;
 import edu.wpi.first.wpilibj.Alert;
@@ -19,9 +19,7 @@ import edu.wpi.first.wpilibj.simulation.DriverStationSim;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
@@ -232,17 +230,15 @@ public class Robot extends LoggedRobot {
       }
     }
     if (swerve != null) {
-      autos = new AutoRoutines(swerve);
+      autos = new AutoRoutines(swerve, (sample, isStart) -> {});
 
       // Create an AutoChooser
       autoChooser.addRoutine("NewAuto", () -> autos.exampleAutoRoutine());
       // Put the auto chooser on the dashboard
-      SmartDashboard.putData(autoChooser);
+      SmartDashboard.putData("autos", autoChooser);
     } else {
       autos = null;
     }
-
-
 
     configureButtonBindings();
   }

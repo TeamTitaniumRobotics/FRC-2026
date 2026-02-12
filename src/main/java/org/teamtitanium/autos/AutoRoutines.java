@@ -1,12 +1,15 @@
 package org.teamtitanium.autos;
 
+import choreo.Choreo.TrajectoryLogger;
 import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
+import choreo.trajectory.SwerveSample;
 import edu.wpi.first.wpilibj2.command.Commands;
 import lombok.Getter;
 import org.teamtitanium.RobotState;
 import org.teamtitanium.subsystems.swerve.Swerve;
+import org.teamtitanium.utils.AllianceFlipUtil;
 
 public class AutoRoutines {
 
@@ -14,7 +17,7 @@ public class AutoRoutines {
   @Getter private final AutoFactory factory;
   private final RobotState robotState = RobotState.getInstance();
 
-  public AutoRoutines(Swerve swerve) {
+  public AutoRoutines(Swerve swerve, TrajectoryLogger<SwerveSample> trajLogger) {
     this.swerve = swerve;
     this.factory =
         new AutoFactory(
@@ -23,9 +26,9 @@ public class AutoRoutines {
                 ::setEstimatedPose, // A function that resets the current robot pose to the provided
             // Pose2d
             this.swerve::followChoreoTrajectory, // The drive subsystem trajectory follower
-            true, // If alliance flipping should be enabled
+            AllianceFlipUtil.shouldFlip(), // If alliance flipping should be enabled
             this.swerve, // The drive subsystem
-            null);
+            trajLogger);
   }
 
   public AutoRoutine exampleAutoRoutine() {

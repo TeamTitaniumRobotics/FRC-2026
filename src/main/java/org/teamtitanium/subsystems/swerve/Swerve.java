@@ -385,21 +385,17 @@ public class Swerve extends SubsystemBase {
   }
 
   public void followChoreoTrajectory(SwerveSample sample) {
-    Pose2d pose = RobotState.getInstance().getEstimatedPose(); // Ensure odometry is up to date by getting pose
+    Pose2d pose =
+        RobotState.getInstance()
+            .getEstimatedPose(); // Ensure odometry is up to date by getting pose
 
     // Generate the desired speeds to follow that trajectory
     ChassisSpeeds speeds =
         new ChassisSpeeds(
-            sample.vx
-                + xPosController.calculate(
-                    pose.getX(), sample.x),
-            sample.vy
-                + yPosController.calculate(
-                    pose.getY(), sample.y),
+            sample.vx + xPosController.calculate(pose.getX(), sample.x),
+            sample.vy + yPosController.calculate(pose.getY(), sample.y),
             sample.omega
-                + headingController.calculate(
-                    pose.getRotation().getRadians(),
-                    sample.heading));
+                + headingController.calculate(pose.getRotation().getRadians(), sample.heading));
 
     // Apply those calculated speeds.
     runVelocity(speeds);
