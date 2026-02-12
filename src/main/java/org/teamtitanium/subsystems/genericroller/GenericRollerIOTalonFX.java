@@ -1,7 +1,6 @@
 package org.teamtitanium.subsystems.genericroller;
 
 import com.ctre.phoenix6.BaseStatusSignal;
-import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
@@ -14,12 +13,13 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
+import org.teamtitanium.subsystems.genericroller.GenericRoller.GenericRollerConstants;
 import org.teamtitanium.utils.Constants.Constraints;
 import org.teamtitanium.utils.Constants.Gains;
 import org.teamtitanium.utils.PhoenixUtil;
 
 public class GenericRollerIOTalonFX implements GenericRollerIO {
-  private final TalonFX rollerMotor;
+  protected final TalonFX rollerMotor;
 
   private final TalonFXConfiguration motorConfig = new TalonFXConfiguration();
 
@@ -34,41 +34,35 @@ public class GenericRollerIOTalonFX implements GenericRollerIO {
   private final StatusSignal<Current> torqueCurrent;
   private final StatusSignal<Temperature> temperature;
 
-  public GenericRollerIOTalonFX(
-      int motorId,
-      CANBus canbus,
-      double reduction,
-      Gains gains,
-      Constraints constraints,
-      double statorCurrentLimit,
-      double supplyCurrentLimit,
-      boolean inverted,
-      boolean brake) {
-    rollerMotor = new TalonFX(motorId, canbus);
+  public GenericRollerIOTalonFX(GenericRollerConstants constants) {
+    rollerMotor = new TalonFX(constants.motorId(), constants.canbus());
 
     // Configure motor output
     motorConfig.MotorOutput.Inverted =
-        inverted ? InvertedValue.Clockwise_Positive : InvertedValue.CounterClockwise_Positive;
-    motorConfig.MotorOutput.NeutralMode = brake ? NeutralModeValue.Brake : NeutralModeValue.Coast;
+        constants.inverted()
+            ? InvertedValue.Clockwise_Positive
+            : InvertedValue.CounterClockwise_Positive;
+    motorConfig.MotorOutput.NeutralMode =
+        constants.brake() ? NeutralModeValue.Brake : NeutralModeValue.Coast;
 
     // Current current limits
-    motorConfig.CurrentLimits.StatorCurrentLimit = statorCurrentLimit;
+    motorConfig.CurrentLimits.StatorCurrentLimit = constants.statorCurrentLimit();
     motorConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    motorConfig.CurrentLimits.SupplyCurrentLimit = supplyCurrentLimit;
+    motorConfig.CurrentLimits.SupplyCurrentLimit = constants.supplyCurrentLimit();
     motorConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
 
-    motorConfig.Feedback.SensorToMechanismRatio = reduction;
+    motorConfig.Feedback.SensorToMechanismRatio = constants.reduction();
 
-    motorConfig.Slot0.kP = gains.kP();
-    motorConfig.Slot0.kI = gains.kI();
-    motorConfig.Slot0.kD = gains.kD();
-    motorConfig.Slot0.kS = gains.kS();
-    motorConfig.Slot0.kV = gains.kV();
-    motorConfig.Slot0.kA = gains.kA();
+    motorConfig.Slot0.kP = constants.gains().kP();
+    motorConfig.Slot0.kI = constants.gains().kI();
+    motorConfig.Slot0.kD = constants.gains().kD();
+    motorConfig.Slot0.kS = constants.gains().kS();
+    motorConfig.Slot0.kV = constants.gains().kV();
+    motorConfig.Slot0.kA = constants.gains().kA();
 
-    motorConfig.MotionMagic.MotionMagicCruiseVelocity = constraints.maxVelocity();
-    motorConfig.MotionMagic.MotionMagicAcceleration = constraints.maxAcceleration();
-    motorConfig.MotionMagic.MotionMagicJerk = constraints.kJerk();
+    motorConfig.MotionMagic.MotionMagicCruiseVelocity = constants.constraints().maxVelocity();
+    motorConfig.MotionMagic.MotionMagicAcceleration = constants.constraints().maxAcceleration();
+    motorConfig.MotionMagic.MotionMagicJerk = constants.constraints().kJerk();
 
     motorConfig.Voltage.PeakForwardVoltage = 12.0;
     motorConfig.Voltage.PeakReverseVoltage = -12.0;
@@ -87,7 +81,13 @@ public class GenericRollerIOTalonFX implements GenericRollerIO {
         50, position, appliedVoltage, supplyCurrent, torqueCurrent, temperature);
 
     PhoenixUtil.registerSignals(
-        canbus, position, velocity, appliedVoltage, supplyCurrent, torqueCurrent, temperature);
+        constants.canbus(),
+        position,
+        velocity,
+        appliedVoltage,
+        supplyCurrent,
+        torqueCurrent,
+        temperature);
 
     rollerMotor.optimizeBusUtilization(0.0, 1.0);
   }
