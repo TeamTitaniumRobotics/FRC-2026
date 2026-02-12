@@ -1,39 +1,44 @@
-package org.teamtitanium.subsystems.intake.Rack;
+package org.teamtitanium.subsystems.intake.rack;
 
 import org.littletonrobotics.junction.AutoLog;
 import org.teamtitanium.utils.Constants.Constraints;
 import org.teamtitanium.utils.Constants.Gains;
 
-public interface RackIO {
+public interface IntakeRackIO {
   @AutoLog
-  public class RackIOInputs {
+  public class IntakeRackIOInputs {
     public boolean motorConnected = false;
     public double positionRots = 0.0;
+    public double positionMeters = 0.0;
     public double velocityRps = 0.0;
+    public double velocityMps = 0.0;
     public double appliedVolts = 0.0;
     public double supplyCurrentAmps = 0.0;
     public double torqueCurrentAmps = 0.0;
     public double tempCelsius = 0.0;
+
+    public double setpointRots = 0.0;
+    public double setpointMeters = 0.0;
   }
 
-  /** Updates the inputs for the rack and pinions. */
-  public default void updateInputs(RackIOInputs inputs) {}
+  /** Updates the rack inputs. */
+  public default void updateInputs(IntakeRackIOInputs inputs) {}
 
-  /** Sets the rack and pinions to the given position in rotations using Motion Magic. */
+  /** Sets the rack to the given motor rotations via Motion Magic. */
   public default void setPosition(double positionRots) {}
 
-  /** Sets the rack and pinions motor to open loop control with the given voltage. */
+  /** Runs the rack open loop at the requested voltage. */
   public default void setVoltage(double volts) {}
 
-  /** Updates the rack and pinions motor PID gains. */
+  /** Updates the PID/FF constants used by the rack motor. */
   public default void setGains(Gains gains) {}
 
-  /** Updates the Motion Magic constraints for the rack and pinions. */
+  /** Updates the Motion Magic constraints. */
   public default void setConstraints(Constraints constraints) {}
 
-  /** Sets the brake mode for the rack and pinions motor. */
+  /** Enables or disables brake mode. */
   public default void setBrakeMode(boolean enabled) {}
 
-  /** Sets the rack and pinions motor encoder position to the given value in rotations. */
+  /** Forces the internal motor encoder to a given rotation value. */
   public default void setMotorPosition(double positionRots) {}
 }

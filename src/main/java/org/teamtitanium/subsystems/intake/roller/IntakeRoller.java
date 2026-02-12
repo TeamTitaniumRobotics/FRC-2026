@@ -12,7 +12,7 @@ public class IntakeRoller extends GenericRoller {
       new GenericRollerConstants(
           20,
           CANBus.roboRIO(),
-          0.0,
+          1.0,
           new Gains(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
           new Constraints(0.0, 0.0),
           60.0,

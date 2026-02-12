@@ -1,0 +1,174 @@
+package org.teamtitanium.subsystems.intake.rack;
+
+import static org.teamtitanium.subsystems.intake.rack.IntakeRackConstants.*;
+
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.FunctionalCommand;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
+import java.util.function.DoubleSupplier;
+import org.littletonrobotics.junction.AutoLogOutput;
+import org.littletonrobotics.junction.Logger;
+import org.teamtitanium.utils.Constants.Constraints;
+import org.teamtitanium.utils.Constants.Gains;
+import org.teamtitanium.utils.LoggedTracer;
+import org.teamtitanium.utils.LoggedTunableNumber;
+
+public class IntakeRack extends SubsystemBase {
+  private final LoggedTunableNumber rackkP =
+      new LoggedTunableNumber("IntakeRack/kP", RACK_GAINS.kP());
+  private final LoggedTunableNumber rackkI =
+      new LoggedTunableNumber("IntakeRack/kI", RACK_GAINS.kI());
+  private final LoggedTunableNumber rackkD =
+      new LoggedTunableNumber("IntakeRack/kD", RACK_GAINS.kD());
+  private final LoggedTunableNumber rackkS =
+      new LoggedTunableNumber("IntakeRack/kS", RACK_GAINS.kS());
+  private final LoggedTunableNumber rackkV =
+      new LoggedTunableNumber("IntakeRack/kV", RACK_GAINS.kV());
+  private final LoggedTunableNumber rackkG =
+      new LoggedTunableNumber("IntakeRack/kG", RACK_GAINS.kG());
+  private final LoggedTunableNumber rackkA =
+      new LoggedTunableNumber("IntakeRack/kA", RACK_GAINS.kA());
+
+  private final LoggedTunableNumber rackMaxVelocity =
+      new LoggedTunableNumber("IntakeRack/MaxVelocity", RACK_CONSTRAINTS.maxVelocity());
+  private final LoggedTunableNumber rackMaxAcceleration =
+      new LoggedTunableNumber("IntakeRack/MaxAcceleration", RACK_CONSTRAINTS.maxAcceleration());
+
+  private final IntakeRackIO io;
+  private final IntakeRackIOInputsAutoLogged inputs = new IntakeRackIOInputsAutoLogged();
+
+  @AutoLogOutput(key = "IntakeRack/TargetExtensionMeters")
+  private double targetExtensionMeters = STOW_EXTENSION_METERS;
+
+  @AutoLogOutput(key = "IntakeRack/IsHomed")
+  private boolean isHomed = false;
+
+  private final Alert motorDisconnectedAlert =
+      new Alert("Intake Rack Motor Disconnected", Alert.AlertType.kWarning);
+
+  private final Trigger atSetpoint =
+      new Trigger(
+          () ->
+              Math.abs(inputs.positionMeters - targetExtensionMeters) < EXTENSION_TOLERANCE_METERS);
+
+  private Debouncer homeCurrentDebouncer =
+      new Debouncer(HOMING_DEBOUNCE_TIME_SECS, DebounceType.kRising);
+  private Debouncer homeVelocityDebouncer =
+      new Debouncer(HOMING_DEBOUNCE_TIME_SECS, DebounceType.kRising);
+
+  private boolean homingSatisfied = false;
+
+  public IntakeRack(IntakeRackIO io) {
+    this.io = io;
+  }
+
+  @Override
+  public void periodic() {
+    io.updateInputs(inputs);
+    Logger.processInputs("IntakeRack", inputs);
+
+    motorDisconnectedAlert.set(!inputs.motorConnected);
+
+    if (rackkP.hasChanged(hashCode())
+        || rackkI.hasChanged(hashCode())
+        || rackkD.hasChanged(hashCode())
+        || rackkS.hasChanged(hashCode())
+        || rackkV.hasChanged(hashCode())
+        || rackkG.hasChanged(hashCode())
+        || rackkA.hasChanged(hashCode())) {
+      io.setGains(
+          new Gains(
+              rackkP.get(),
+              rackkI.get(),
+              rackkD.get(),
+              rackkS.get(),
+              rackkV.get(),
+              rackkG.get(),
+              rackkA.get()));
+    }
+
+    if (rackMaxVelocity.hasChanged(hashCode()) || rackMaxAcceleration.hasChanged(hashCode())) {
+      io.setConstraints(new Constraints(rackMaxVelocity.get(), rackMaxAcceleration.get()));
+    }
+
+    LoggedTracer.record("IntakeRack");
+  }
+
+  public Command setExtensionMeters(DoubleSupplier extensionSupplier) {
+    return run(() -> {
+          double requestedMeters =
+              MathUtil.clamp(
+                  extensionSupplier.getAsDouble(), MIN_EXTENSION_METERS, MAX_EXTENSION_METERS);
+          targetExtensionMeters = requestedMeters;
+          io.setPosition(metersToMotorRotations(requestedMeters));
+        })
+        .withName("IntakeRack.SetExtension");
+  }
+
+  public Command setExtensionMeters(double extensionMeters) {
+    return setExtensionMeters(() -> extensionMeters);
+  }
+
+  public Command setVoltage(DoubleSupplier voltageSupplier) {
+    return runEnd(() -> io.setVoltage(voltageSupplier.getAsDouble()), () -> io.setVoltage(0.0))
+        .withName("IntakeRack.SetVoltage");
+  }
+
+  public Command setVoltage(double volts) {
+    return setVoltage(() -> volts);
+  }
+
+  public Command stop() {
+    return runOnce(() -> io.setVoltage(0.0)).withName("IntakeRack.Stop");
+  }
+
+  public double getExtensionMeters() {
+    return inputs.positionMeters;
+  }
+
+  public Trigger atSetpoint() {
+    return atSetpoint;
+  }
+
+  public void setBrakeMode(boolean enabled) {
+    io.setBrakeMode(enabled);
+  }
+
+  public Command home() {
+    return new FunctionalCommand(
+            () -> {
+              homingSatisfied = false;
+              isHomed = false;
+              homeCurrentDebouncer = new Debouncer(HOMING_DEBOUNCE_TIME_SECS, DebounceType.kRising);
+              homeVelocityDebouncer =
+                  new Debouncer(HOMING_DEBOUNCE_TIME_SECS, DebounceType.kRising);
+            },
+            () -> {
+              io.setVoltage(HOMING_VOLTAGE_VOLTS);
+              boolean currentReady =
+                  homeCurrentDebouncer.calculate(
+                      inputs.supplyCurrentAmps >= HOMING_CURRENT_THRESHOLD_AMPS);
+              boolean velocityReady =
+                  homeVelocityDebouncer.calculate(
+                      Math.abs(inputs.velocityRps) <= HOMING_VELOCITY_THRESHOLD_RPS);
+              homingSatisfied = currentReady && velocityReady;
+            },
+            interrupted -> io.setVoltage(0.0),
+            () -> homingSatisfied,
+            this)
+        .andThen(
+            runOnce(
+                () -> {
+                  io.setMotorPosition(0.0);
+                  targetExtensionMeters = MIN_EXTENSION_METERS;
+                  io.setPosition(metersToMotorRotations(targetExtensionMeters));
+                  isHomed = true;
+                }))
+        .withName("IntakeRack.Home");
+  }
+}
