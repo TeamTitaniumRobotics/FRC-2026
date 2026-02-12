@@ -21,4 +21,6 @@ public interface GyroIO {
       double rollVelocityRadPerSec) {}
 
   public default void updateInputs(GyroIOInputs inputs) {}
+
+  public default void reset() {}
 }
