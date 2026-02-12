@@ -1,5 +1,11 @@
 package org.teamtitanium.subsystems.vision;
 
-public class VisionIOSim {
-    
+import java.util.Optional;
+import org.photonvision.EstimatedRobotPose;
+
+public class VisionIOSim implements VisionIO {
+  @Override
+  public Optional<EstimatedRobotPose> getEstimatedGlobalPose() {
+    return Optional.empty();
+  }
 }

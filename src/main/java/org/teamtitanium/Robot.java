@@ -49,6 +49,10 @@ import org.teamtitanium.subsystems.swerve.Swerve;
 import org.teamtitanium.subsystems.swerve.SwerveModuleIO;
 import org.teamtitanium.subsystems.swerve.SwerveModuleIOSim;
 import org.teamtitanium.subsystems.swerve.SwerveModuleIOTalonFX;
+import org.teamtitanium.subsystems.vision.Vision;
+import org.teamtitanium.subsystems.vision.VisionIO;
+import org.teamtitanium.subsystems.vision.VisionIOPhoton;
+import org.teamtitanium.subsystems.vision.VisionIOSim;
 import org.teamtitanium.utils.CanivoreReader;
 import org.teamtitanium.utils.Constants;
 import org.teamtitanium.utils.Constants.Mode;
@@ -73,6 +77,9 @@ public class Robot extends LoggedRobot {
   private final Flywheel flywheel;
   private final Hood hood;
   private final Turret turret;
+
+  @SuppressWarnings("unused")
+  private final Vision vision;
 
   private final CommandXboxController driver = new CommandXboxController(0);
 
@@ -224,6 +231,13 @@ public class Robot extends LoggedRobot {
         turret = new Turret(new TurretIO() {});
       }
     }
+
+    VisionIO visionIO =
+        switch (Constants.getMode()) {
+          case SIM -> new VisionIOSim();
+          default -> new VisionIOPhoton();
+        };
+    vision = new Vision(visionIO, RobotState.getInstance());
 
     configureButtonBindings();
   }

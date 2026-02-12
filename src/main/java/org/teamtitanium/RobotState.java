@@ -4,6 +4,9 @@ import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
+import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -12,6 +15,8 @@ import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import java.util.Optional;
@@ -36,13 +41,14 @@ public class RobotState {
 
   // Poses
   @Getter @Setter @AutoLogOutput private Pose2d odometryPose = Pose2d.kZero;
-  @Getter @Setter @AutoLogOutput private Pose2d estimatedPose = Pose2d.kZero;
+  @Getter @AutoLogOutput private Pose2d estimatedPose = Pose2d.kZero;
 
   private final TimeInterpolatableBuffer<Pose2d> poseBuffer =
       TimeInterpolatableBuffer.createBuffer(poseBufferSizeSeconds);
 
   // Odometry
   private final SwerveDriveKinematics kinematics;
+  private final SwerveDrivePoseEstimator poseEstimator;
   private SwerveModulePosition[] lastWheelPositions =
       new SwerveModulePosition[] {
         new SwerveModulePosition(),
@@ -61,12 +67,19 @@ public class RobotState {
 
   private RobotState() {
     kinematics = new SwerveDriveKinematics(Swerve.getModuleTranslations());
+    poseEstimator =
+        new SwerveDrivePoseEstimator(
+            kinematics,
+            Rotation2d.kZero,
+            lastWheelPositions,
+            Pose2d.kZero,
+            VecBuilder.fill(0.05, 0.05, Math.toRadians(5.0)),
+            VecBuilder.fill(0.5, 0.5, Math.toRadians(30.0)));
   }
 
   public void addOdometryObservation(OdometryObservation observation) {
     Twist2d twist2d = kinematics.toTwist2d(lastWheelPositions, observation.wheelPositions());
     lastWheelPositions = observation.wheelPositions();
-    Pose2d lastOdometryPose = odometryPose;
     odometryPose = odometryPose.exp(twist2d);
     // Use gyro angle if connected
     observation
@@ -79,9 +92,21 @@ public class RobotState {
             });
     // Add pose to buffer at timestamp
     poseBuffer.addSample(observation.timestamp(), odometryPose);
-    // Update estimated pose from difference from last pose
-    Twist2d finalTwist = lastOdometryPose.log(odometryPose);
-    estimatedPose = estimatedPose.exp(finalTwist);
+    // Update estimated pose from estimator
+    Rotation2d gyroAngle = observation.gyroAngle().orElse(estimatedPose.getRotation());
+    poseEstimator.update(gyroAngle, observation.wheelPositions());
+    estimatedPose = poseEstimator.getEstimatedPosition();
+  }
+
+  public void addVisionMeasurement(
+      Pose2d visionPoseMeters, double timestampSeconds, Matrix<N3, N1> visionStdDevs) {
+    poseEstimator.addVisionMeasurement(visionPoseMeters, timestampSeconds, visionStdDevs);
+    estimatedPose = poseEstimator.getEstimatedPosition();
+  }
+
+  public void setEstimatedPose(Pose2d pose) {
+    estimatedPose = pose;
+    poseEstimator.resetPosition(Rotation2d.kZero, lastWheelPositions, pose);
   }
 
   public Rotation2d getRotation() {
