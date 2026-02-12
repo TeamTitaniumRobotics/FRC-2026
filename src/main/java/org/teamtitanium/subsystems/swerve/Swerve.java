@@ -377,6 +377,10 @@ public class Swerve extends SubsystemBase {
     }
   }
 
+  public void resetPigeon() {
+    gyroIO.reset();
+  }
+
   private void setBrakeMode(boolean enabled) {
     if (brakeModeEnabled != enabled) {
       Arrays.stream(swerveModules).forEach(module -> module.setBrakeMode(enabled));
