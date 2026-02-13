@@ -1,10 +1,14 @@
 package org.teamtitanium.subsystems.genericroller;
 
+import static edu.wpi.first.units.Units.RotationsPerSecond;
+
 import com.ctre.phoenix6.CANBus;
 import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 import org.teamtitanium.utils.Constants.Constraints;
 import org.teamtitanium.utils.Constants.Gains;
@@ -12,15 +16,15 @@ import org.teamtitanium.utils.LoggedTracer;
 import org.teamtitanium.utils.LoggedTunableNumber;
 
 public class GenericRoller extends SubsystemBase {
-  private final LoggedTunableNumber kP;
-  private final LoggedTunableNumber kI;
-  private final LoggedTunableNumber kD;
-  private final LoggedTunableNumber kS;
-  private final LoggedTunableNumber kV;
-  private final LoggedTunableNumber kA;
+  private final LoggedTunableNumber rollerkP;
+  private final LoggedTunableNumber rollerkI;
+  private final LoggedTunableNumber rollerkD;
+  private final LoggedTunableNumber rollerkS;
+  private final LoggedTunableNumber rollerkV;
+  private final LoggedTunableNumber rollerkA;
 
-  private final LoggedTunableNumber maxVelocity;
-  private final LoggedTunableNumber maxAcceleration;
+  private final LoggedTunableNumber rollerMaxVelocity;
+  private final LoggedTunableNumber rollerMaxAcceleration;
 
   private final String name;
 
@@ -35,15 +39,15 @@ public class GenericRoller extends SubsystemBase {
     this.name = name;
     this.io = io;
 
-    kP = new LoggedTunableNumber(name + "/Roller/kP", 0.0);
-    kI = new LoggedTunableNumber(name + "/Roller/kI", 0.0);
-    kD = new LoggedTunableNumber(name + "/Roller/kD", 0.0);
-    kS = new LoggedTunableNumber(name + "/Roller/kS", 0.0);
-    kV = new LoggedTunableNumber(name + "/Roller/kV", 0.0);
-    kA = new LoggedTunableNumber(name + "/Roller/kA", 0.0);
+    rollerkP = new LoggedTunableNumber(name + "/Roller/kP", 0.0);
+    rollerkI = new LoggedTunableNumber(name + "/Roller/kI", 0.0);
+    rollerkD = new LoggedTunableNumber(name + "/Roller/kD", 0.0);
+    rollerkS = new LoggedTunableNumber(name + "/Roller/kS", 0.0);
+    rollerkV = new LoggedTunableNumber(name + "/Roller/kV", 0.0);
+    rollerkA = new LoggedTunableNumber(name + "/Roller/kA", 0.0);
 
-    maxVelocity = new LoggedTunableNumber(name + "/Roller/Max Velocity", 0.0);
-    maxAcceleration = new LoggedTunableNumber(name + "/Roller/Max Acceleration", 0.0);
+    rollerMaxVelocity = new LoggedTunableNumber(name + "/Roller/Max Velocity", 0.0);
+    rollerMaxAcceleration = new LoggedTunableNumber(name + "/Roller/Max Acceleration", 0.0);
 
     motorDisconnected = new Alert(name + " Roller Motor Disconnected", Alert.AlertType.kWarning);
   }
@@ -55,28 +59,44 @@ public class GenericRoller extends SubsystemBase {
 
     motorDisconnected.set(!motorConnectedDebouncer.calculate(inputs.motorConnected));
 
-    if (kP.hasChanged(hashCode())
-        || kI.hasChanged(hashCode())
-        || kD.hasChanged(hashCode())
-        || kS.hasChanged(hashCode())
-        || kV.hasChanged(hashCode())
-        || kA.hasChanged(hashCode())) {
-      setGains(new Gains(kP.get(), kI.get(), kD.get(), kS.get(), kV.get(), 0.0, kA.get()));
+    if (rollerkP.hasChanged(hashCode())
+        || rollerkI.hasChanged(hashCode())
+        || rollerkD.hasChanged(hashCode())
+        || rollerkS.hasChanged(hashCode())
+        || rollerkV.hasChanged(hashCode())
+        || rollerkA.hasChanged(hashCode())) {
+      setGains(
+          new Gains(
+              rollerkP.get(),
+              rollerkI.get(),
+              rollerkD.get(),
+              rollerkS.get(),
+              rollerkV.get(),
+              0.0,
+              rollerkA.get()));
     }
 
-    if (maxVelocity.hasChanged(hashCode()) || maxAcceleration.hasChanged(hashCode())) {
-      setConstraints(new Constraints(maxVelocity.get(), maxAcceleration.get()));
+    if (rollerMaxVelocity.hasChanged(hashCode()) || rollerMaxAcceleration.hasChanged(hashCode())) {
+      setConstraints(new Constraints(rollerMaxVelocity.get(), rollerMaxAcceleration.get()));
     }
 
     LoggedTracer.record(name + "/Roller");
   }
 
-  public Command setVelocity(double velocityRps) {
-    return run(() -> io.setVelocity(velocityRps));
+  public Command setVelocity(Supplier<AngularVelocity> velocitySupplier) {
+    return run(() -> io.setVelocity(velocitySupplier.get().in(RotationsPerSecond)));
+  }
+
+  public Command setVelocity(AngularVelocity velocity) {
+    return setVelocity(() -> velocity);
+  }
+
+  public Command setVoltage(Supplier<Double> voltageSupplier) {
+    return run(() -> io.setVoltage(voltageSupplier.get()));
   }
 
   public Command setVoltage(double voltage) {
-    return run(() -> io.setVoltage(voltage));
+    return setVoltage(() -> voltage);
   }
 
   public Command stop() {

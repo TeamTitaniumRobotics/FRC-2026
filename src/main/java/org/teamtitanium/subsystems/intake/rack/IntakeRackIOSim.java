@@ -1,8 +1,8 @@
 package org.teamtitanium.subsystems.intake.rack;
 
-import static org.teamtitanium.subsystems.intake.rack.IntakeRackConstants.RACK_GEARBOX;
-import static org.teamtitanium.subsystems.intake.rack.IntakeRackConstants.RACK_GEAR_RATIO;
-import static org.teamtitanium.subsystems.intake.rack.IntakeRackConstants.RACK_MOMENT_OF_INERTIA;
+import static org.teamtitanium.subsystems.intake.IntakeConstants.RackConstants.RACK_GEARBOX;
+import static org.teamtitanium.subsystems.intake.IntakeConstants.RackConstants.RACK_GEAR_RATIO;
+import static org.teamtitanium.subsystems.intake.IntakeConstants.RackConstants.RACK_MOMENT_OF_INERTIA;
 
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.RobotController;

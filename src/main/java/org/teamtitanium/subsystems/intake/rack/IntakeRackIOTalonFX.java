@@ -1,6 +1,7 @@
 package org.teamtitanium.subsystems.intake.rack;
 
-import static org.teamtitanium.subsystems.intake.rack.IntakeRackConstants.*;
+import static edu.wpi.first.units.Units.Meters;
+import static org.teamtitanium.subsystems.intake.IntakeConstants.RackConstants.*;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
@@ -15,7 +16,6 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
-import org.teamtitanium.utils.Constants;
 import org.teamtitanium.utils.Constants.Constraints;
 import org.teamtitanium.utils.Constants.Gains;
 import org.teamtitanium.utils.PhoenixUtil;
@@ -24,6 +24,7 @@ public class IntakeRackIOTalonFX implements IntakeRackIO {
   protected final TalonFX rackMotor;
 
   private final TalonFXConfiguration motorConfig = new TalonFXConfiguration();
+
   private final MotionMagicVoltage motionMagicVoltage = new MotionMagicVoltage(0.0);
   private final VoltageOut voltageOut = new VoltageOut(0.0);
 
@@ -36,9 +37,10 @@ public class IntakeRackIOTalonFX implements IntakeRackIO {
   protected final StatusSignal<Double> targetSetpoint;
 
   public IntakeRackIOTalonFX() {
-    rackMotor = new TalonFX(RACK_MOTOR_ID, Constants.RIO_CAN_BUS);
+    rackMotor = new TalonFX(RACK_MOTOR_ID, RACK_CAN_BUS);
 
-    motorConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+    motorConfig.MotorOutput.Inverted =
+        RACK_INVERTED ? InvertedValue.Clockwise_Positive : InvertedValue.CounterClockwise_Positive;
     motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
     motorConfig.CurrentLimits.StatorCurrentLimit = STATOR_CURRENT_LIMIT;
@@ -62,10 +64,10 @@ public class IntakeRackIOTalonFX implements IntakeRackIO {
 
     motorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
     motorConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold =
-        metersToMotorRotations(MAX_EXTENSION_METERS);
+        metersToMotorRotations(MAX_EXTENSION.in(Meters));
     motorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
     motorConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold =
-        metersToMotorRotations(MIN_EXTENSION_METERS);
+        metersToMotorRotations(MIN_EXTENSION.in(Meters));
 
     motorConfig.Voltage.PeakForwardVoltage = 12.0;
     motorConfig.Voltage.PeakReverseVoltage = -12.0;
@@ -85,7 +87,7 @@ public class IntakeRackIOTalonFX implements IntakeRackIO {
     BaseStatusSignal.setUpdateFrequencyForAll(50, targetSetpoint);
 
     PhoenixUtil.registerSignals(
-        Constants.RIO_CAN_BUS,
+        RACK_CAN_BUS,
         position,
         velocity,
         appliedVoltage,

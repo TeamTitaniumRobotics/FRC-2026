@@ -1,16 +1,19 @@
 package org.teamtitanium.subsystems.intake.rack;
 
-import static org.teamtitanium.subsystems.intake.rack.IntakeRackConstants.*;
+import static edu.wpi.first.units.Units.Meters;
+import static org.teamtitanium.subsystems.intake.IntakeConstants.RackConstants.*;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
+import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.teamtitanium.utils.Constants.Constraints;
@@ -43,22 +46,24 @@ public class IntakeRack extends SubsystemBase {
   private final IntakeRackIOInputsAutoLogged inputs = new IntakeRackIOInputsAutoLogged();
 
   @AutoLogOutput(key = "IntakeRack/TargetExtensionMeters")
-  private double targetExtensionMeters = STOW_EXTENSION_METERS;
+  private double targetExtensionMeters = STOW_EXTENSION.in(Meters);
 
   @AutoLogOutput(key = "IntakeRack/IsHomed")
   private boolean isHomed = false;
 
   private final Alert motorDisconnectedAlert =
       new Alert("Intake Rack Motor Disconnected", Alert.AlertType.kWarning);
+  private final Debouncer disconnectedDebouncer = new Debouncer(0.5, DebounceType.kFalling);
 
   private final Trigger atSetpoint =
       new Trigger(
           () ->
-              Math.abs(inputs.positionMeters - targetExtensionMeters) < EXTENSION_TOLERANCE_METERS);
+              Math.abs(inputs.positionMeters - targetExtensionMeters)
+                  < EXTENSION_TOLERANCE.in(Meters));
 
-  private Debouncer homeCurrentDebouncer =
+  private final Debouncer homeCurrentDebouncer =
       new Debouncer(HOMING_DEBOUNCE_TIME_SECS, DebounceType.kRising);
-  private Debouncer homeVelocityDebouncer =
+  private final Debouncer homeVelocityDebouncer =
       new Debouncer(HOMING_DEBOUNCE_TIME_SECS, DebounceType.kRising);
 
   private boolean homingSatisfied = false;
@@ -70,9 +75,9 @@ public class IntakeRack extends SubsystemBase {
   @Override
   public void periodic() {
     io.updateInputs(inputs);
-    Logger.processInputs("IntakeRack", inputs);
+    Logger.processInputs("Intake/Rack", inputs);
 
-    motorDisconnectedAlert.set(!inputs.motorConnected);
+    motorDisconnectedAlert.set(disconnectedDebouncer.calculate(inputs.motorConnected));
 
     if (rackkP.hasChanged(hashCode())
         || rackkI.hasChanged(hashCode())
@@ -96,22 +101,24 @@ public class IntakeRack extends SubsystemBase {
       io.setConstraints(new Constraints(rackMaxVelocity.get(), rackMaxAcceleration.get()));
     }
 
-    LoggedTracer.record("IntakeRack");
+    LoggedTracer.record("Intake/Rack");
   }
 
-  public Command setExtensionMeters(DoubleSupplier extensionSupplier) {
+  public Command setExtension(Supplier<Distance> positionSupplier) {
     return run(() -> {
           double requestedMeters =
               MathUtil.clamp(
-                  extensionSupplier.getAsDouble(), MIN_EXTENSION_METERS, MAX_EXTENSION_METERS);
+                  positionSupplier.get().in(Meters),
+                  MIN_EXTENSION.in(Meters),
+                  MAX_EXTENSION.in(Meters));
           targetExtensionMeters = requestedMeters;
           io.setPosition(metersToMotorRotations(requestedMeters));
         })
         .withName("IntakeRack.SetExtension");
   }
 
-  public Command setExtensionMeters(double extensionMeters) {
-    return setExtensionMeters(() -> extensionMeters);
+  public Command setExtension(Distance position) {
+    return setExtension(() -> position);
   }
 
   public Command setVoltage(DoubleSupplier voltageSupplier) {
@@ -144,9 +151,6 @@ public class IntakeRack extends SubsystemBase {
             () -> {
               homingSatisfied = false;
               isHomed = false;
-              homeCurrentDebouncer = new Debouncer(HOMING_DEBOUNCE_TIME_SECS, DebounceType.kRising);
-              homeVelocityDebouncer =
-                  new Debouncer(HOMING_DEBOUNCE_TIME_SECS, DebounceType.kRising);
             },
             () -> {
               io.setVoltage(HOMING_VOLTAGE_VOLTS);
@@ -165,8 +169,8 @@ public class IntakeRack extends SubsystemBase {
             runOnce(
                 () -> {
                   io.setMotorPosition(0.0);
-                  targetExtensionMeters = MIN_EXTENSION_METERS;
-                  io.setPosition(metersToMotorRotations(targetExtensionMeters));
+                  targetExtensionMeters = MIN_EXTENSION.in(Meters);
+                  setExtension(MIN_EXTENSION);
                   isHomed = true;
                 }))
         .withName("IntakeRack.Home");

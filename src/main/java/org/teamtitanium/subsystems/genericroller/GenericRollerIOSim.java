@@ -5,6 +5,7 @@ import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import org.teamtitanium.subsystems.genericroller.GenericRoller.GenericRollerConstants;
+import org.teamtitanium.utils.Constants;
 
 public class GenericRollerIOSim extends GenericRollerIOTalonFX {
   private final DCMotorSim rollerSim;
@@ -26,7 +27,7 @@ public class GenericRollerIOSim extends GenericRollerIOTalonFX {
     motorSimState.setSupplyVoltage(RobotController.getBatteryVoltage());
 
     rollerSim.setInputVoltage(motorSimState.getMotorVoltage());
-    rollerSim.update(0.02);
+    rollerSim.update(Constants.loopPeriodSecs);
 
     motorSimState.setRawRotorPosition(
         rollerSim.getAngularPositionRotations() * constants.reduction());

@@ -35,6 +35,12 @@ import org.teamtitanium.subsystems.Leds;
 import org.teamtitanium.subsystems.genericroller.GenericRollerIO;
 import org.teamtitanium.subsystems.genericroller.GenericRollerIOSim;
 import org.teamtitanium.subsystems.genericroller.GenericRollerIOTalonFX;
+import org.teamtitanium.subsystems.intake.Intake;
+import org.teamtitanium.subsystems.intake.IntakeConstants;
+import org.teamtitanium.subsystems.intake.rack.IntakeRack;
+import org.teamtitanium.subsystems.intake.rack.IntakeRackIO;
+import org.teamtitanium.subsystems.intake.rack.IntakeRackIOSim;
+import org.teamtitanium.subsystems.intake.rack.IntakeRackIOTalonFX;
 import org.teamtitanium.subsystems.intake.roller.IntakeRoller;
 import org.teamtitanium.subsystems.shooter.flywheel.Flywheel;
 import org.teamtitanium.subsystems.shooter.flywheel.FlywheelIO;
@@ -78,6 +84,8 @@ public class Robot extends LoggedRobot {
   private final Flywheel flywheel;
   private final Hood hood;
   private final Turret turret;
+  private final Intake intake;
+  private final IntakeRack intakeRack;
   private final IntakeRoller intakeRoller;
 
   private final CommandXboxController driver = new CommandXboxController(0);
@@ -204,7 +212,9 @@ public class Robot extends LoggedRobot {
         flywheel = new Flywheel(new FlywheelIOTalonFX());
         hood = new Hood(new HoodIOTalonFX());
         turret = new Turret(new TurretIOTalonFX());
-        intakeRoller = new IntakeRoller(new GenericRollerIOTalonFX(IntakeRoller.constants));
+        intakeRack = new IntakeRack(new IntakeRackIOTalonFX());
+        intakeRoller =
+            new IntakeRoller(new GenericRollerIOTalonFX(IntakeConstants.RollerConstants.CONSTANTS));
       }
       case SIM -> {
         swerve =
@@ -217,9 +227,11 @@ public class Robot extends LoggedRobot {
         flywheel = new Flywheel(new FlywheelIOSim());
         hood = new Hood(new HoodIOSim());
         turret = new Turret(new TurretIOSim());
+        intakeRack = new IntakeRack(new IntakeRackIOSim());
         intakeRoller =
             new IntakeRoller(
-                new GenericRollerIOSim(IntakeRoller.constants, DCMotor.getKrakenX44(1), 0.01));
+                new GenericRollerIOSim(
+                    IntakeConstants.RollerConstants.CONSTANTS, DCMotor.getKrakenX44(1), 0.01));
       }
       default -> {
         swerve =
@@ -232,13 +244,14 @@ public class Robot extends LoggedRobot {
         flywheel = new Flywheel(new FlywheelIO() {});
         hood = new Hood(new HoodIO() {});
         turret = new Turret(new TurretIO() {});
+        intakeRack = new IntakeRack(new IntakeRackIO() {});
         intakeRoller = new IntakeRoller(new GenericRollerIO() {});
       }
     }
 
-    configureButtonBindings();
+    intake = new Intake(intakeRack, intakeRoller);
 
-    intakeRoller.setDefaultCommand(intakeRoller.intake());
+    configureButtonBindings();
   }
 
   @Override
@@ -334,56 +347,12 @@ public class Robot extends LoggedRobot {
             () -> -driver.getRightX(),
             () -> false));
 
-    // turret.setDefaultCommand(turret.track());
-
     driver.rightTrigger().whileTrue(turret.setPosition(() -> Degrees.of(90.0)));
     driver.leftTrigger().whileTrue(turret.setPosition(() -> Degrees.of(-90.0)));
     driver.a().whileTrue(turret.setPosition(() -> Degrees.of(0.0)));
 
     driver.rightBumper().whileTrue(turret.setVoltage(6.0));
     driver.leftBumper().whileTrue(turret.setVoltage(-6.0));
-
-    // driver
-    //     .rightBumper()
-    //     .onTrue(
-    //         Commands.runOnce(
-    //             () ->
-    //                 MechanismVisualizer.getInstance()
-    //                     .setTurretAngle(
-    //                         MechanismVisualizer.getInstance()
-    //                             .getTurretAngle()
-    //                             .plus(Rotation2d.fromDegrees(15)))));
-    // driver
-    //     .leftBumper()
-    //     .onTrue(
-    //         Commands.runOnce(
-    //             () ->
-    //                 MechanismVisualizer.getInstance()
-    //                     .setTurretAngle(
-    //                         MechanismVisualizer.getInstance()
-    //                             .getTurretAngle()
-    //                             .minus(Rotation2d.fromDegrees(15)))));
-
-    // driver
-    //     .rightTrigger()
-    //     .onTrue(
-    //         Commands.runOnce(
-    //             () ->
-    //                 MechanismVisualizer.getInstance()
-    //                     .setHoodAngle(
-    //                         MechanismVisualizer.getInstance()
-    //                             .getHoodAngle()
-    //                             .plus(Rotation2d.fromDegrees(15)))));
-    // driver
-    //     .leftTrigger()
-    //     .onTrue(
-    //         Commands.runOnce(
-    //             () ->
-    //                 MechanismVisualizer.getInstance()
-    //                     .setHoodAngle(
-    //                         MechanismVisualizer.getInstance()
-    //                             .getHoodAngle()
-    //                             .minus(Rotation2d.fromDegrees(15)))));
   }
 
   private void updateAlerts() {}
