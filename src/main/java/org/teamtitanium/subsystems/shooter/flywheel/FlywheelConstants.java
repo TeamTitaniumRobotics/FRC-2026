@@ -10,8 +10,7 @@ public class FlywheelConstants {
   public static final String FLYWHEEL_CANBUS = "";
 
   // Physical Constants
-  public static final double FLYWHEEL_GEAR_RATIO =
-      0.5; // 1:2 reduction (motor spins twice for each flywheel rotation)
+  public static final double FLYWHEEL_GEAR_RATIO = 0.5; // 1:2 reduction
   public static final double FLYWHEEL_MOMENT_OF_INERTIA = 0.008; // kg*m^2
 
   // Tolerance
