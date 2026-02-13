@@ -14,7 +14,7 @@ import org.teamtitanium.utils.Constants.Constraints;
 import org.teamtitanium.utils.Constants.Gains;
 
 public class IntakeConstants {
-  public class RollerConstants {
+  public static class RollerConstants {
     public static final int ROLLER_MOTOR_ID = 30;
     public static final CANBus ROLLER_CAN_BUS = Constants.RIO_CAN_BUS;
 
@@ -44,7 +44,7 @@ public class IntakeConstants {
             true);
   }
 
-  public class RackConstants {
+  public static class RackConstants {
     // CAN IDs
     public static final int RACK_MOTOR_ID = 31;
     public static final CANBus RACK_CAN_BUS = Constants.RIO_CAN_BUS;

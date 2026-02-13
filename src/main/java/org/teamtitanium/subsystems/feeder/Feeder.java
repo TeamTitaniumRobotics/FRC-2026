@@ -44,6 +44,7 @@ public class Feeder extends GenericRoller {
     super("Feeder", io);
   }
 
+  @Override
   public Command idle() {
     return setVelocity(IDLE_VELOCITY);
   }
