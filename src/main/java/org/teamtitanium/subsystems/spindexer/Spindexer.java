@@ -44,6 +44,7 @@ public class Spindexer extends GenericRoller {
     super("Spindexer", io);
   }
 
+  @Override
   public Command idle() {
     return setVelocity(IDLE_VELOCITY);
   }

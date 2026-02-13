@@ -353,6 +353,8 @@ public class Robot extends LoggedRobot {
 
     driver.rightBumper().whileTrue(turret.setVoltage(6.0));
     driver.leftBumper().whileTrue(turret.setVoltage(-6.0));
+
+    driver.start().onTrue(Commands.runOnce(() -> swerve.resetPigeon()));
   }
 
   private void updateAlerts() {}
