@@ -170,9 +170,9 @@ public class IntakeRack extends SubsystemBase {
                 () -> {
                   io.setMotorPosition(0.0);
                   targetExtensionMeters = MIN_EXTENSION.in(Meters);
-                  setExtension(MIN_EXTENSION);
                   isHomed = true;
                 }))
+        .andThen(setExtension(MIN_EXTENSION))
         .withName("IntakeRack.Home");
   }
 }
