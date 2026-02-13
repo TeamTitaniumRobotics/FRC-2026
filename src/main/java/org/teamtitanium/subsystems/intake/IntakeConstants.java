@@ -28,7 +28,7 @@ public class IntakeConstants {
 
     public static final double ROLLER_GEAR_RATIO = 1.0;
 
-    public static final Gains ROLLER_GAINS = new Gains(0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.05);
+    public static final Gains ROLLER_GAINS = new Gains(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     public static final Constraints ROLLER_CONSTRAINTS = new Constraints(0.0, 0.0);
 
     public static final GenericRollerConstants CONSTANTS =
