@@ -56,5 +56,5 @@ public class TurretConstants {
   // Simulation
   public static final DCMotor TURRET_GEARBOX = DCMotor.getKrakenX44(1);
   public static final Transform3d TURRET_TO_ROBOT =
-      new Transform3d(new Translation3d(-0.119063, 0.169863, 0.403377), Rotation3d.kZero);
+      new Transform3d(new Translation3d(-0.119063, -0.169863, 0.403377), Rotation3d.kZero);
 }

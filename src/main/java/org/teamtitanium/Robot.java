@@ -363,6 +363,10 @@ public class Robot extends LoggedRobot {
             () -> -driver.getRightX(),
             () -> false));
 
+    driver.y().onTrue(turret.track());
+
+    driver.rightTrigger().onTrue(intakeRack.setVoltage(3.0)).onFalse(intakeRack.stop());
+
     driver
         .leftTrigger()
         .onTrue(intakeRoller.setVelocity(RotationsPerSecond.of(15.0)))
