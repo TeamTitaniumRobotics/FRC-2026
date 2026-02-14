@@ -31,6 +31,9 @@ public class IntakeConstants {
     public static final Gains ROLLER_GAINS = new Gains(8.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     public static final Constraints ROLLER_CONSTRAINTS = new Constraints(24.0, 32.0);
 
+    public static final DCMotor ROLLER_GEARBOX = DCMotor.getKrakenX44(1);
+    public static final double ROLLER_MOI = 0.004;
+
     public static final GenericRollerConstants CONSTANTS =
         new GenericRollerConstants(
             ROLLER_MOTOR_ID,
@@ -57,7 +60,8 @@ public class IntakeConstants {
     public static final double SUPPLY_CURRENT_LIMIT = 40.0;
 
     // Gearbox + mechanism geometry
-    public static final double RACK_GEAR_RATIO = 15.0; // ratio from motor to rack
+    public static final double RACK_GEAR_RATIO =
+        (24.0 / 18.0) * (38.0 / 12.0); // ratio from motor to rack
     public static final double GEAR_DIAMETER_METERS = Units.inchesToMeters(1.0);
     public static final double GEAR_CIRCUMFERENCE_METERS = Math.PI * GEAR_DIAMETER_METERS;
     public static final double METERS_PER_MOTOR_ROTATION =
@@ -88,7 +92,7 @@ public class IntakeConstants {
     public static final double HOMING_DEBOUNCE_TIME_SECS = 0.2;
 
     // Simulation
-    public static final DCMotor RACK_GEARBOX = DCMotor.getKrakenX44(1);
+    public static final DCMotor RACK_GEARBOX = DCMotor.getKrakenX44Foc(1);
     public static final double RACK_MOMENT_OF_INERTIA = 0.025;
 
     public static double metersToMotorRotations(double extensionMeters) {

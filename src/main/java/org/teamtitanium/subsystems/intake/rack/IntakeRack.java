@@ -23,32 +23,32 @@ import org.teamtitanium.utils.LoggedTunableNumber;
 
 public class IntakeRack extends SubsystemBase {
   private final LoggedTunableNumber rackkP =
-      new LoggedTunableNumber("IntakeRack/kP", RACK_GAINS.kP());
+      new LoggedTunableNumber("Intake/Rack/kP", RACK_GAINS.kP());
   private final LoggedTunableNumber rackkI =
-      new LoggedTunableNumber("IntakeRack/kI", RACK_GAINS.kI());
+      new LoggedTunableNumber("Intake/Rack/kI", RACK_GAINS.kI());
   private final LoggedTunableNumber rackkD =
-      new LoggedTunableNumber("IntakeRack/kD", RACK_GAINS.kD());
+      new LoggedTunableNumber("Intake/Rack/kD", RACK_GAINS.kD());
   private final LoggedTunableNumber rackkS =
-      new LoggedTunableNumber("IntakeRack/kS", RACK_GAINS.kS());
+      new LoggedTunableNumber("Intake/Rack/kS", RACK_GAINS.kS());
   private final LoggedTunableNumber rackkV =
-      new LoggedTunableNumber("IntakeRack/kV", RACK_GAINS.kV());
+      new LoggedTunableNumber("Intake/Rack/kV", RACK_GAINS.kV());
   private final LoggedTunableNumber rackkG =
-      new LoggedTunableNumber("IntakeRack/kG", RACK_GAINS.kG());
+      new LoggedTunableNumber("Intake/Rack/kG", RACK_GAINS.kG());
   private final LoggedTunableNumber rackkA =
-      new LoggedTunableNumber("IntakeRack/kA", RACK_GAINS.kA());
+      new LoggedTunableNumber("Intake/Rack/kA", RACK_GAINS.kA());
 
   private final LoggedTunableNumber rackMaxVelocity =
-      new LoggedTunableNumber("IntakeRack/MaxVelocity", RACK_CONSTRAINTS.maxVelocity());
+      new LoggedTunableNumber("Intake/Rack/MaxVelocity", RACK_CONSTRAINTS.maxVelocity());
   private final LoggedTunableNumber rackMaxAcceleration =
-      new LoggedTunableNumber("IntakeRack/MaxAcceleration", RACK_CONSTRAINTS.maxAcceleration());
+      new LoggedTunableNumber("Intake/Rack/MaxAcceleration", RACK_CONSTRAINTS.maxAcceleration());
 
   private final IntakeRackIO io;
   private final IntakeRackIOInputsAutoLogged inputs = new IntakeRackIOInputsAutoLogged();
 
-  @AutoLogOutput(key = "IntakeRack/TargetExtensionMeters")
+  @AutoLogOutput(key = "Intake/Rack/TargetExtensionMeters")
   private double targetExtensionMeters = STOW_EXTENSION.in(Meters);
 
-  @AutoLogOutput(key = "IntakeRack/IsHomed")
+  @AutoLogOutput(key = "Intake/Rack/IsHomed")
   private boolean isHomed = false;
 
   private final Alert motorDisconnectedAlert =

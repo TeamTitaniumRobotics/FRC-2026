@@ -39,6 +39,7 @@ import org.teamtitanium.subsystems.genericroller.GenericRollerIOSim;
 import org.teamtitanium.subsystems.genericroller.GenericRollerIOTalonFX;
 import org.teamtitanium.subsystems.intake.Intake;
 import org.teamtitanium.subsystems.intake.IntakeConstants;
+import org.teamtitanium.subsystems.intake.IntakeConstants.RollerConstants;
 import org.teamtitanium.subsystems.intake.rack.IntakeRack;
 import org.teamtitanium.subsystems.intake.rack.IntakeRackIO;
 import org.teamtitanium.subsystems.intake.rack.IntakeRackIOSim;
@@ -244,7 +245,9 @@ public class Robot extends LoggedRobot {
         intakeRoller =
             new IntakeRoller(
                 new GenericRollerIOSim(
-                    IntakeConstants.RollerConstants.CONSTANTS, DCMotor.getKrakenX44(1), 0.01));
+                    IntakeConstants.RollerConstants.CONSTANTS,
+                    RollerConstants.ROLLER_GEARBOX,
+                    RollerConstants.ROLLER_MOI));
       }
       default -> {
         swerve =
@@ -365,17 +368,20 @@ public class Robot extends LoggedRobot {
 
     driver.y().onTrue(turret.track());
 
-    driver.rightTrigger().onTrue(intakeRack.setVoltage(3.0)).onFalse(intakeRack.stop());
+    // driver
+    //     .leftTrigger()
+    //     .onTrue(intakeRack.setExtension(IntakeConstants.RackConstants.DEPLOY_EXTENSION))
+    //     .onFalse(intakeRack.setExtension(IntakeConstants.RackConstants.STOW_EXTENSION));
 
     driver
         .leftTrigger()
         .onTrue(intakeRoller.setVelocity(RotationsPerSecond.of(15.0)))
         .onFalse(intakeRoller.stop());
 
-    driver
-        .leftBumper()
-        .onTrue(intakeRoller.setVoltage(() -> intakeRoller.configurableNumber.get()))
-        .onFalse(intakeRoller.stop());
+    // driver
+    //     .leftBumper()
+    //     .onTrue(intakeRoller.setVoltage(() -> intakeRoller.configurableNumber.get()))
+    //     .onFalse(intakeRoller.stop());
 
     driver.start().onTrue(Commands.runOnce(() -> swerve.resetPigeon()));
   }
