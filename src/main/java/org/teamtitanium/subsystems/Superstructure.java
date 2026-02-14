@@ -8,9 +8,12 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import lombok.Getter;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
+import org.teamtitanium.subsystems.feeder.Feeder;
+import org.teamtitanium.subsystems.intake.Intake;
 import org.teamtitanium.subsystems.shooter.flywheel.Flywheel;
 import org.teamtitanium.subsystems.shooter.hood.Hood;
 import org.teamtitanium.subsystems.shooter.turret.Turret;
+import org.teamtitanium.subsystems.spindexer.Spindexer;
 
 public class Superstructure {
   public enum SuperstructureState {
@@ -51,22 +54,36 @@ public class Superstructure {
   private final Turret turret;
   private final Hood hood;
   private final Flywheel flywheel;
+  private final Feeder feeder;
+  private final Spindexer spindexer;
+  private final Intake intake;
 
   private final Trigger intakeReq;
   private final Trigger scoreReq;
   private final Trigger spitReq;
   private Trigger hasFuel = new Trigger(() -> true); // TODO: Replace with spindexer fuel sensor
 
-  public Superstructure(Turret turret, Hood hood, Flywheel flywheel, CommandXboxController driver) {
+  public Superstructure(
+      Turret turret,
+      Hood hood,
+      Flywheel flywheel,
+      Feeder feeder,
+      Spindexer spindexer,
+      Intake intake,
+      CommandXboxController driver) {
     this.turret = turret;
     this.hood = hood;
     this.flywheel = flywheel;
+    this.feeder = feeder;
+    this.spindexer = spindexer;
+    this.intake = intake;
 
     intakeReq = driver.leftTrigger();
     scoreReq = driver.rightTrigger();
     spitReq = driver.back();
 
     bindTransitions();
+    // bindStates();
   }
 
   private void bindTransitions() {
@@ -120,7 +137,10 @@ public class Superstructure {
   }
 
   private void bindStates() {
-    bindCommands(SuperstructureState.IDLE, turret.stow());
+    bindCommands(
+        SuperstructureState.IDLE, turret.stow(), feeder.idle(), spindexer.idle(), intake.stow());
+
+    bindCommands(SuperstructureState.INTAKE, intake.intake());
 
     bindCommands(SuperstructureState.SCORE, turret.track());
   }

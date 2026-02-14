@@ -26,6 +26,8 @@ public class GenericRoller extends SubsystemBase {
   private final LoggedTunableNumber rollerMaxVelocity;
   private final LoggedTunableNumber rollerMaxAcceleration;
 
+  public final LoggedTunableNumber configurableNumber;
+
   private final String name;
 
   private final GenericRollerIO io;
@@ -48,6 +50,8 @@ public class GenericRoller extends SubsystemBase {
 
     rollerMaxVelocity = new LoggedTunableNumber(name + "/Roller/Max Velocity", 0.0);
     rollerMaxAcceleration = new LoggedTunableNumber(name + "/Roller/Max Acceleration", 0.0);
+
+    configurableNumber = new LoggedTunableNumber(name + "/Roller/ConfigurableNumber", 0.0);
 
     motorDisconnected = new Alert(name + " Roller Motor Disconnected", Alert.AlertType.kWarning);
   }

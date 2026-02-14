@@ -24,7 +24,6 @@ public class Intake {
 
   public Command intake() {
     return Commands.parallel(
-        rack.setExtension(RackConstants.DEPLOY_EXTENSION),
-        roller.setVelocity(RollerConstants.INTAKE_VELOCITY));
+        rack.setExtension(RackConstants.DEPLOY_EXTENSION), roller.setVoltage(6.0));
   }
 }

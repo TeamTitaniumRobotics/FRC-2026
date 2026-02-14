@@ -4,7 +4,7 @@
 
 package org.teamtitanium;
 
-import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.hal.AllianceStationID;
@@ -32,6 +32,8 @@ import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 import org.teamtitanium.commands.DriveCommands;
 import org.teamtitanium.subsystems.Leds;
+import org.teamtitanium.subsystems.Superstructure;
+import org.teamtitanium.subsystems.feeder.Feeder;
 import org.teamtitanium.subsystems.genericroller.GenericRollerIO;
 import org.teamtitanium.subsystems.genericroller.GenericRollerIOSim;
 import org.teamtitanium.subsystems.genericroller.GenericRollerIOTalonFX;
@@ -54,6 +56,7 @@ import org.teamtitanium.subsystems.shooter.turret.Turret;
 import org.teamtitanium.subsystems.shooter.turret.TurretIO;
 import org.teamtitanium.subsystems.shooter.turret.TurretIOSim;
 import org.teamtitanium.subsystems.shooter.turret.TurretIOTalonFX;
+import org.teamtitanium.subsystems.spindexer.Spindexer;
 import org.teamtitanium.subsystems.swerve.GyroIO;
 import org.teamtitanium.subsystems.swerve.GyroIOPigeon2;
 import org.teamtitanium.subsystems.swerve.Swerve;
@@ -84,9 +87,12 @@ public class Robot extends LoggedRobot {
   private final Flywheel flywheel;
   private final Hood hood;
   private final Turret turret;
+  private final Feeder feeder;
+  private final Spindexer spindexer;
   private final Intake intake;
   private final IntakeRack intakeRack;
   private final IntakeRoller intakeRoller;
+  private final Superstructure superstructure;
 
   private final CommandXboxController driver = new CommandXboxController(0);
 
@@ -212,6 +218,8 @@ public class Robot extends LoggedRobot {
         flywheel = new Flywheel(new FlywheelIOTalonFX());
         hood = new Hood(new HoodIOTalonFX());
         turret = new Turret(new TurretIOTalonFX());
+        feeder = new Feeder(new GenericRollerIOTalonFX(Feeder.CONSTANTS));
+        spindexer = new Spindexer(new GenericRollerIOTalonFX(Spindexer.CONSTANTS));
         intakeRack = new IntakeRack(new IntakeRackIOTalonFX());
         intakeRoller =
             new IntakeRoller(new GenericRollerIOTalonFX(IntakeConstants.RollerConstants.CONSTANTS));
@@ -227,6 +235,11 @@ public class Robot extends LoggedRobot {
         flywheel = new Flywheel(new FlywheelIOSim());
         hood = new Hood(new HoodIOSim());
         turret = new Turret(new TurretIOSim());
+        feeder =
+            new Feeder(new GenericRollerIOSim(Feeder.CONSTANTS, DCMotor.getKrakenX44(1), 0.01));
+        spindexer =
+            new Spindexer(
+                new GenericRollerIOSim(Spindexer.CONSTANTS, DCMotor.getKrakenX44(1), 0.01));
         intakeRack = new IntakeRack(new IntakeRackIOSim());
         intakeRoller =
             new IntakeRoller(
@@ -244,12 +257,15 @@ public class Robot extends LoggedRobot {
         flywheel = new Flywheel(new FlywheelIO() {});
         hood = new Hood(new HoodIO() {});
         turret = new Turret(new TurretIO() {});
+        feeder = new Feeder(new GenericRollerIO() {});
+        spindexer = new Spindexer(new GenericRollerIO() {});
         intakeRack = new IntakeRack(new IntakeRackIO() {});
         intakeRoller = new IntakeRoller(new GenericRollerIO() {});
       }
     }
 
     intake = new Intake(intakeRack, intakeRoller);
+    superstructure = new Superstructure(turret, hood, flywheel, feeder, spindexer, intake, driver);
 
     configureButtonBindings();
   }
@@ -347,12 +363,15 @@ public class Robot extends LoggedRobot {
             () -> -driver.getRightX(),
             () -> false));
 
-    driver.rightTrigger().whileTrue(turret.setPosition(() -> Degrees.of(90.0)));
-    driver.leftTrigger().whileTrue(turret.setPosition(() -> Degrees.of(-90.0)));
-    driver.a().whileTrue(turret.setPosition(() -> Degrees.of(0.0)));
+    driver
+        .leftTrigger()
+        .onTrue(intakeRoller.setVelocity(RotationsPerSecond.of(15.0)))
+        .onFalse(intakeRoller.stop());
 
-    driver.rightBumper().whileTrue(turret.setVoltage(6.0));
-    driver.leftBumper().whileTrue(turret.setVoltage(-6.0));
+    driver
+        .leftBumper()
+        .onTrue(intakeRoller.setVoltage(() -> intakeRoller.configurableNumber.get()))
+        .onFalse(intakeRoller.stop());
 
     driver.start().onTrue(Commands.runOnce(() -> swerve.resetPigeon()));
   }

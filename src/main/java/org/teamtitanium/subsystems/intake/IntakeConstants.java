@@ -21,15 +21,15 @@ public class IntakeConstants {
     public static final boolean ROLLER_INVERTED = false;
 
     public static final AngularVelocity IDLE_VELOCITY = RotationsPerSecond.of(0.0);
-    public static final AngularVelocity INTAKE_VELOCITY = RotationsPerSecond.of(24.0);
+    public static final AngularVelocity INTAKE_VELOCITY = RotationsPerSecond.of(16.0);
 
-    public static final double STATOR_CURRENT_LIMIT = 40.0;
-    public static final double SUPPLY_CURRENT_LIMIT = 30.0;
+    public static final double STATOR_CURRENT_LIMIT = 60.0;
+    public static final double SUPPLY_CURRENT_LIMIT = 40.0;
 
     public static final double ROLLER_GEAR_RATIO = 1.0;
 
-    public static final Gains ROLLER_GAINS = new Gains(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-    public static final Constraints ROLLER_CONSTRAINTS = new Constraints(0.0, 0.0);
+    public static final Gains ROLLER_GAINS = new Gains(8.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    public static final Constraints ROLLER_CONSTRAINTS = new Constraints(24.0, 32.0);
 
     public static final GenericRollerConstants CONSTANTS =
         new GenericRollerConstants(
@@ -53,7 +53,7 @@ public class IntakeConstants {
     public static final boolean RACK_INVERTED = false;
 
     // Current limits
-    public static final double STATOR_CURRENT_LIMIT = 50.0;
+    public static final double STATOR_CURRENT_LIMIT = 60.0;
     public static final double SUPPLY_CURRENT_LIMIT = 40.0;
 
     // Gearbox + mechanism geometry
@@ -71,7 +71,7 @@ public class IntakeConstants {
     public static final Distance EXTENSION_TOLERANCE = Inches.of(0.1);
 
     // Gains
-    public static final Gains RACK_GAINS = new Gains(8.0, 0.0, 0.1, 0.35, 0.0, 0.0, 0.05);
+    public static final Gains RACK_GAINS = new Gains(8.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 
     // Motion constraints (converted to motor rotations per second)
     private static final double MAX_LINEAR_VELOCITY_MPS = 0.75;
