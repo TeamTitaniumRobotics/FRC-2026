@@ -28,10 +28,10 @@ public class IntakeConstants {
 
     public static final double ROLLER_GEAR_RATIO = 1.0;
 
-    public static final Gains ROLLER_GAINS = new Gains(8.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    public static final Gains ROLLER_GAINS = new Gains(4.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     public static final Constraints ROLLER_CONSTRAINTS = new Constraints(24.0, 32.0);
 
-    public static final DCMotor ROLLER_GEARBOX = DCMotor.getKrakenX44(1);
+    public static final DCMotor ROLLER_MOTOR_GEARBOX = DCMotor.getKrakenX44(1);
     public static final double ROLLER_MOI = 0.004;
 
     public static final GenericRollerConstants CONSTANTS =

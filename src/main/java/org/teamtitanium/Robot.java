@@ -8,7 +8,6 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.hal.AllianceStationID;
-import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.IterativeRobotBase;
@@ -39,12 +38,12 @@ import org.teamtitanium.subsystems.genericroller.GenericRollerIOSim;
 import org.teamtitanium.subsystems.genericroller.GenericRollerIOTalonFX;
 import org.teamtitanium.subsystems.intake.Intake;
 import org.teamtitanium.subsystems.intake.IntakeConstants;
-import org.teamtitanium.subsystems.intake.IntakeConstants.RollerConstants;
 import org.teamtitanium.subsystems.intake.rack.IntakeRack;
 import org.teamtitanium.subsystems.intake.rack.IntakeRackIO;
 import org.teamtitanium.subsystems.intake.rack.IntakeRackIOSim;
 import org.teamtitanium.subsystems.intake.rack.IntakeRackIOTalonFX;
 import org.teamtitanium.subsystems.intake.roller.IntakeRoller;
+import org.teamtitanium.subsystems.shooter.Shooter;
 import org.teamtitanium.subsystems.shooter.flywheel.Flywheel;
 import org.teamtitanium.subsystems.shooter.flywheel.FlywheelIO;
 import org.teamtitanium.subsystems.shooter.flywheel.FlywheelIOSim;
@@ -85,6 +84,7 @@ public class Robot extends LoggedRobot {
   private Command autonomousCommand;
 
   private final Swerve swerve;
+  private final Shooter shooter;
   private final Flywheel flywheel;
   private final Hood hood;
   private final Turret turret;
@@ -237,17 +237,22 @@ public class Robot extends LoggedRobot {
         hood = new Hood(new HoodIOSim());
         turret = new Turret(new TurretIOSim());
         feeder =
-            new Feeder(new GenericRollerIOSim(Feeder.CONSTANTS, DCMotor.getKrakenX44(1), 0.01));
+            new Feeder(
+                new GenericRollerIOSim(
+                    Feeder.CONSTANTS, Feeder.FEEDER_MOTOR_GEARBOX, Feeder.FEEDER_MOI));
         spindexer =
             new Spindexer(
-                new GenericRollerIOSim(Spindexer.CONSTANTS, DCMotor.getKrakenX44(1), 0.01));
+                new GenericRollerIOSim(
+                    Spindexer.CONSTANTS,
+                    Spindexer.SPINDEXER_MOTOR_GEARBOX,
+                    Spindexer.SPINDEXER_MOI));
         intakeRack = new IntakeRack(new IntakeRackIOSim());
         intakeRoller =
             new IntakeRoller(
                 new GenericRollerIOSim(
                     IntakeConstants.RollerConstants.CONSTANTS,
-                    RollerConstants.ROLLER_GEARBOX,
-                    RollerConstants.ROLLER_MOI));
+                    IntakeConstants.RollerConstants.ROLLER_MOTOR_GEARBOX,
+                    IntakeConstants.RollerConstants.ROLLER_MOI));
       }
       default -> {
         swerve =
@@ -268,7 +273,8 @@ public class Robot extends LoggedRobot {
     }
 
     intake = new Intake(intakeRack, intakeRoller);
-    superstructure = new Superstructure(turret, hood, flywheel, feeder, spindexer, intake, driver);
+    shooter = new Shooter(turret, hood, flywheel);
+    superstructure = new Superstructure(shooter, feeder, spindexer, intake, driver);
 
     configureButtonBindings();
   }

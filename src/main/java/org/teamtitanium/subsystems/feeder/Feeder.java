@@ -3,6 +3,7 @@ package org.teamtitanium.subsystems.feeder;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import com.ctre.phoenix6.CANBus;
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import org.teamtitanium.subsystems.genericroller.GenericRoller;
@@ -25,8 +26,11 @@ public class Feeder extends GenericRoller {
 
   public static final double FEEDER_GEAR_RATIO = 1.0;
 
-  public static final Gains FEEDER_GAINS = new Gains(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-  public static final Constraints FEEDER_CONSTRAINTS = new Constraints(0.0, 0.0);
+  public static final Gains FEEDER_GAINS = new Gains(8.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+  public static final Constraints FEEDER_CONSTRAINTS = new Constraints(24.0, 36.0);
+
+  public static final DCMotor FEEDER_MOTOR_GEARBOX = DCMotor.getKrakenX44(1);
+  public static final double FEEDER_MOI = 0.08;
 
   public static final GenericRollerConstants CONSTANTS =
       new GenericRollerConstants(

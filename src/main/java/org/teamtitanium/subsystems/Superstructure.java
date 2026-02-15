@@ -10,9 +10,7 @@ import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.teamtitanium.subsystems.feeder.Feeder;
 import org.teamtitanium.subsystems.intake.Intake;
-import org.teamtitanium.subsystems.shooter.flywheel.Flywheel;
-import org.teamtitanium.subsystems.shooter.hood.Hood;
-import org.teamtitanium.subsystems.shooter.turret.Turret;
+import org.teamtitanium.subsystems.shooter.Shooter;
 import org.teamtitanium.subsystems.spindexer.Spindexer;
 
 public class Superstructure {
@@ -51,9 +49,7 @@ public class Superstructure {
 
   private final Timer stateTimer = new Timer();
 
-  private final Turret turret;
-  private final Hood hood;
-  private final Flywheel flywheel;
+  private final Shooter shooter;
   private final Feeder feeder;
   private final Spindexer spindexer;
   private final Intake intake;
@@ -64,16 +60,12 @@ public class Superstructure {
   private Trigger hasFuel = new Trigger(() -> true); // TODO: Replace with spindexer fuel sensor
 
   public Superstructure(
-      Turret turret,
-      Hood hood,
-      Flywheel flywheel,
+      Shooter shooter,
       Feeder feeder,
       Spindexer spindexer,
       Intake intake,
       CommandXboxController driver) {
-    this.turret = turret;
-    this.hood = hood;
-    this.flywheel = flywheel;
+    this.shooter = shooter;
     this.feeder = feeder;
     this.spindexer = spindexer;
     this.intake = intake;
@@ -83,7 +75,7 @@ public class Superstructure {
     spitReq = driver.back();
 
     bindTransitions();
-    // bindStates();
+    bindStates();
   }
 
   private void bindTransitions() {
@@ -104,17 +96,14 @@ public class Superstructure {
     bindTransition(
         SuperstructureState.SPIN_UP_SCORE,
         SuperstructureState.SCORE,
-        flywheel.atSetpoint().and(hood.atSetpoint()).and(turret.atSetpoint()).and(scoreReq));
-    bindTransition(
-        SuperstructureState.SCORE,
-        SuperstructureState.PREPPED,
-        scoreReq.negate().and(() -> stateTimer.hasElapsed(0.5)));
+        shooter.atSetpoint().and(scoreReq));
+    bindTransition(SuperstructureState.SCORE, SuperstructureState.PREPPED, scoreReq.negate());
 
     bindTransition(SuperstructureState.PREPPED, SuperstructureState.SPIN_UP_PASS, spitReq);
     bindTransition(
         SuperstructureState.SPIN_UP_PASS,
         SuperstructureState.PASS,
-        flywheel.atSetpoint().and(hood.atSetpoint()).and(turret.atSetpoint()).and(spitReq));
+        shooter.atSetpoint().and(spitReq));
     bindTransition(
         SuperstructureState.PASS,
         SuperstructureState.PREPPED,
@@ -138,11 +127,13 @@ public class Superstructure {
 
   private void bindStates() {
     bindCommands(
-        SuperstructureState.IDLE, turret.stow(), feeder.idle(), spindexer.idle(), intake.stow());
+        SuperstructureState.IDLE, shooter.stow(), feeder.idle(), spindexer.idle(), intake.stow());
 
-    bindCommands(SuperstructureState.INTAKE, intake.intake());
+    bindCommands(SuperstructureState.INTAKE, intake.intake(), shooter.aim());
 
-    bindCommands(SuperstructureState.SCORE, turret.track());
+    bindCommands(SuperstructureState.SPIN_UP_SCORE, shooter.aim());
+
+    bindCommands(SuperstructureState.SCORE, shooter.aim());
   }
 
   private void bindCommands(SuperstructureState state, Command... commands) {

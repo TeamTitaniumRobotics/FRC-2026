@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.teamtitanium.utils.Constants.Gains;
@@ -68,16 +69,24 @@ public class Flywheel extends SubsystemBase {
     LoggedTracer.record("Flywheel");
   }
 
+  public Command idle() {
+    return setVelocity(IDLE_VELOCITY);
+  }
+
+  public Command shoot() {
+    return setVelocity(SHOOT_VELOCITY);
+  }
+
   /**
-   * Sets the flywheel to a velocity supplier
+   * Sets the flywheel to a supplied velocity.
    *
-   * @param velocityRps target supplier velocity for the flywheel
+   * @param velocitySupplier target velocity supplier for the flywheel
    * @return A command that repeatedly sets the flywheel to a velocity
    */
-  public Command setVelocity(DoubleSupplier velocityRps) {
+  public Command setVelocity(Supplier<AngularVelocity> velocitySupplier) {
     return run(() -> {
-          targetVelocityRps = velocityRps.getAsDouble();
-          io.setVelocity(velocityRps.getAsDouble());
+          targetVelocityRps = velocitySupplier.get().in(RotationsPerSecond);
+          io.setVelocity(targetVelocityRps);
         })
         .withName("Flywheel.SetVelocity");
   }
@@ -88,8 +97,8 @@ public class Flywheel extends SubsystemBase {
    * @param velocityRps target velocity for the flywheel
    * @return A command that repeatedly sets the flywheel to a velocity
    */
-  public Command setVelocity(double velocityRps) {
-    return setVelocity(() -> velocityRps);
+  public Command setVelocity(AngularVelocity velocity) {
+    return setVelocity(() -> velocity);
   }
 
   /**
