@@ -31,9 +31,10 @@ jobs:
     # Install a newer GCC/libstdc++ to provide GLIBCXX_3.4.32 for PhotonVision JNI
     - name: Install newer libstdc++
       run: |
-        sudo rm -f /etc/apt/sources.list.d/kitware.list
-        sudo rm -f /etc/apt/trusted.gpg.d/kitware*
-        sudo apt-key del 65ADECD7A7039392 2>/dev/null || true
+        sudo apt-get install -y gnupg ca-certificates
+        sudo mkdir -p /etc/apt/keyrings
+        curl -fsSL https://apt.kitware.com/keys/kitware-archive-latest.asc | sudo gpg --dearmor -o /etc/apt/keyrings/kitware-archive-keyring.gpg
+        echo "deb [signed-by=/etc/apt/keyrings/kitware-archive-keyring.gpg] https://apt.kitware.com/ubuntu jammy main" | sudo tee /etc/apt/sources.list.d/kitware.list
         sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
         sudo apt-get update
         sudo apt-get install -y gcc-13 g++-13 libstdc++6
