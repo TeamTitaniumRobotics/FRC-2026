@@ -6,6 +6,7 @@ package org.teamtitanium;
 
 import static edu.wpi.first.units.Units.Degrees;
 
+import choreo.auto.AutoChooser;
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.hal.AllianceStationID;
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -16,6 +17,7 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.Watchdog;
 import edu.wpi.first.wpilibj.simulation.DriverStationSim;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -30,6 +32,7 @@ import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
+import org.teamtitanium.autos.*;
 import org.teamtitanium.commands.DriveCommands;
 import org.teamtitanium.subsystems.Leds;
 import org.teamtitanium.subsystems.genericroller.GenericRollerIO;
@@ -105,6 +108,9 @@ public class Robot extends LoggedRobot {
       new Alert("Low Battery Voltage Detected", Alert.AlertType.kWarning);
   private final Alert initializationAlert =
       new Alert("Please wait to enable, robot is initializing", Alert.AlertType.kWarning);
+
+  private final AutoChooser autoChooser = new AutoChooser();
+  private final AutoRoutines autos;
 
   public Robot() {
     Leds.getInstance(); // Initialize LED subsystem early
@@ -248,6 +254,16 @@ public class Robot extends LoggedRobot {
         intakeRoller = new IntakeRoller(new GenericRollerIO() {});
       }
     }
+    if (swerve != null) {
+      autos = new AutoRoutines(swerve, (sample, isStart) -> {});
+
+      // Create an AutoChooser
+      autoChooser.addRoutine("NewAuto", () -> autos.exampleAutoRoutine());
+      // Put the auto chooser on the dashboard
+      SmartDashboard.putData("autos", autoChooser);
+    } else {
+      autos = null;
+    }
 
     intake = new Intake(intakeRack, intakeRoller);
 
@@ -377,7 +393,7 @@ public class Robot extends LoggedRobot {
   @Override
   public void autonomousInit() {
     autoStartTime = Timer.getTimestamp();
-    autonomousCommand = Commands.none(); // TODO: Add autonomous command here
+    autonomousCommand = autoChooser.selectedCommandScheduler();
 
     if (autonomousCommand != null) {
       CommandScheduler.getInstance().schedule(autonomousCommand);
