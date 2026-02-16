@@ -6,8 +6,10 @@ package org.teamtitanium;
 
 import static edu.wpi.first.units.Units.Degrees;
 
+import choreo.auto.AutoChooser;
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.hal.AllianceStationID;
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.IterativeRobotBase;
@@ -15,6 +17,7 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.Watchdog;
 import edu.wpi.first.wpilibj.simulation.DriverStationSim;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -29,8 +32,19 @@ import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
+import org.teamtitanium.autos.*;
 import org.teamtitanium.commands.DriveCommands;
 import org.teamtitanium.subsystems.Leds;
+import org.teamtitanium.subsystems.genericroller.GenericRollerIO;
+import org.teamtitanium.subsystems.genericroller.GenericRollerIOSim;
+import org.teamtitanium.subsystems.genericroller.GenericRollerIOTalonFX;
+import org.teamtitanium.subsystems.intake.Intake;
+import org.teamtitanium.subsystems.intake.IntakeConstants;
+import org.teamtitanium.subsystems.intake.rack.IntakeRack;
+import org.teamtitanium.subsystems.intake.rack.IntakeRackIO;
+import org.teamtitanium.subsystems.intake.rack.IntakeRackIOSim;
+import org.teamtitanium.subsystems.intake.rack.IntakeRackIOTalonFX;
+import org.teamtitanium.subsystems.intake.roller.IntakeRoller;
 import org.teamtitanium.subsystems.shooter.flywheel.Flywheel;
 import org.teamtitanium.subsystems.shooter.flywheel.FlywheelIO;
 import org.teamtitanium.subsystems.shooter.flywheel.FlywheelIOSim;
@@ -77,6 +91,9 @@ public class Robot extends LoggedRobot {
   private final Flywheel flywheel;
   private final Hood hood;
   private final Turret turret;
+  private final Intake intake;
+  private final IntakeRack intakeRack;
+  private final IntakeRoller intakeRoller;
 
   @SuppressWarnings("unused")
   private final Vision vision;
@@ -98,6 +115,9 @@ public class Robot extends LoggedRobot {
       new Alert("Low Battery Voltage Detected", Alert.AlertType.kWarning);
   private final Alert initializationAlert =
       new Alert("Please wait to enable, robot is initializing", Alert.AlertType.kWarning);
+
+  private final AutoChooser autoChooser = new AutoChooser();
+  private final AutoRoutines autos;
 
   public Robot() {
     Leds.getInstance(); // Initialize LED subsystem early
@@ -205,6 +225,9 @@ public class Robot extends LoggedRobot {
         flywheel = new Flywheel(new FlywheelIOTalonFX());
         hood = new Hood(new HoodIOTalonFX());
         turret = new Turret(new TurretIOTalonFX());
+        intakeRack = new IntakeRack(new IntakeRackIOTalonFX());
+        intakeRoller =
+            new IntakeRoller(new GenericRollerIOTalonFX(IntakeConstants.RollerConstants.CONSTANTS));
       }
       case SIM -> {
         swerve =
@@ -217,6 +240,11 @@ public class Robot extends LoggedRobot {
         flywheel = new Flywheel(new FlywheelIOSim());
         hood = new Hood(new HoodIOSim());
         turret = new Turret(new TurretIOSim());
+        intakeRack = new IntakeRack(new IntakeRackIOSim());
+        intakeRoller =
+            new IntakeRoller(
+                new GenericRollerIOSim(
+                    IntakeConstants.RollerConstants.CONSTANTS, DCMotor.getKrakenX44(1), 0.01));
       }
       default -> {
         swerve =
@@ -229,8 +257,22 @@ public class Robot extends LoggedRobot {
         flywheel = new Flywheel(new FlywheelIO() {});
         hood = new Hood(new HoodIO() {});
         turret = new Turret(new TurretIO() {});
+        intakeRack = new IntakeRack(new IntakeRackIO() {});
+        intakeRoller = new IntakeRoller(new GenericRollerIO() {});
       }
     }
+    if (swerve != null) {
+      autos = new AutoRoutines(swerve, (sample, isStart) -> {});
+
+      // Create an AutoChooser
+      autoChooser.addRoutine("NewAuto", () -> autos.exampleAutoRoutine());
+      // Put the auto chooser on the dashboard
+      SmartDashboard.putData("autos", autoChooser);
+    } else {
+      autos = null;
+    }
+
+    intake = new Intake(intakeRack, intakeRoller);
 
     VisionIO visionIO =
         switch (Constants.getMode()) {
@@ -365,7 +407,7 @@ public class Robot extends LoggedRobot {
   @Override
   public void autonomousInit() {
     autoStartTime = Timer.getTimestamp();
-    autonomousCommand = Commands.none(); // TODO: Add autonomous command here
+    autonomousCommand = autoChooser.selectedCommandScheduler();
 
     if (autonomousCommand != null) {
       CommandScheduler.getInstance().schedule(autonomousCommand);
