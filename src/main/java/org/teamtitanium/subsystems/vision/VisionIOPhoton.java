@@ -4,19 +4,33 @@ import java.util.Optional;
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
-import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 
 public class VisionIOPhoton implements VisionIO {
-  private final PhotonCamera camera = new PhotonCamera(VisionConstants.cameraName);
+  private final PhotonCamera camera =
+      new PhotonCamera(
+          VisionConstants
+              .cameraName); // Create a new camera with the name specified in VisionConstants
   private final PhotonPoseEstimator poseEstimator =
       new PhotonPoseEstimator(
-          VisionConstants.tagLayout,
-          PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
-          VisionConstants.robotToCamera);
+          VisionConstants
+              .tagLayout, // The layout of the AprilTags on the field, specified in VisionConstants
+          VisionConstants
+              .robotToCamera); // The transformation from the robot's coordinate system to the
 
+  // camera's coordinate system, specified in VisionConstants
+
+  /*
+   * This method gets the latest result from the camera and tries to estimate the robot's pose using the PhotonPoseEstimator.
+   * If no targets are detected, it returns an empty Optional. If the coprocessor estimate is not available, it gets the estimate with the lowest ambiguity.
+   */
   @Override
   public Optional<EstimatedRobotPose> getEstimatedGlobalPose() {
-    var result = camera.getLatestResult();
+    var results = camera.getAllUnreadResults();
+    if (results.isEmpty()) {
+      return Optional.empty();
+    }
+
+    var result = results.get(results.size() - 1);
     if (!result.hasTargets()) {
       return Optional.empty();
     }

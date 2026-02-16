@@ -2,6 +2,7 @@ package org.teamtitanium.subsystems.vision;
 
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import java.util.Optional;
@@ -25,6 +26,10 @@ public class Vision extends VirtualSubsystem {
         est ->
             robotState.addVisionMeasurement(
                 est.estimatedPose.toPose2d(), est.timestampSeconds, getVisionStdDevs()));
+  }
+
+  public void simulationPeriodic(Pose2d robotPose) {
+    io.simulationPeriodic(robotPose);
   }
 
   private Matrix<N3, N1> getVisionStdDevs() {

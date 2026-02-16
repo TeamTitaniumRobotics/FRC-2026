@@ -392,7 +392,9 @@ public class Robot extends LoggedRobot {
   public void teleopExit() {}
 
   @Override
-  public void simulationPeriodic() {}
+  public void simulationPeriodic() {
+    vision.simulationPeriodic(RobotState.getInstance().getEstimatedPose());
+  }
 
   @Override
   public void testInit() {
