@@ -27,6 +27,8 @@ jobs:
     - name: Install newer libstdc++
       run: |
         sudo rm -f /etc/apt/sources.list.d/kitware.list
+        sudo rm -f /etc/apt/trusted.gpg.d/kitware*
+        sudo apt-key del 65ADECD7A7039392 2>/dev/null || true
         sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
         sudo apt-get update
         sudo apt-get install -y gcc-13 g++-13 libstdc++6
