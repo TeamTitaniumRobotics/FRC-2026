@@ -6,13 +6,16 @@ import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Pounds;
 import static edu.wpi.first.units.Units.Volts;
 
+import choreo.trajectory.SwerveSample;
 import com.ctre.phoenix6.CANBus;
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.Vector;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -131,6 +134,13 @@ public class Swerve extends SubsystemBase {
 
   @Setter @AutoLogOutput private CoastRequest coastRequest = CoastRequest.ALWAYS_BRAKE;
 
+  private final PIDController xPosController =
+      new PIDController(3.0, 0.0, 0.0); // TODO: Tune these PID values
+  private final PIDController yPosController =
+      new PIDController(3.0, 0.0, 0.0); // TODO: Tune these PID values
+  private final PIDController headingController =
+      new PIDController(3.0, 0.0, 0.0); // TODO: Tune these PID values
+
   public Swerve(
       GyroIO gyroIO,
       SwerveModuleIO flModuleIO,
@@ -160,6 +170,7 @@ public class Swerve extends SubsystemBase {
             new SysIdRoutine.Mechanism(
                 (voltage) -> runCharacterization(voltage.in(Volts)), null, this));
 
+    headingController.enableContinuousInput(-Math.PI, Math.PI);
     PhoenixOdometryThread.getInstance().start();
   }
 
@@ -375,6 +386,23 @@ public class Swerve extends SubsystemBase {
       Arrays.stream(swerveModules).forEach(module -> module.setBrakeMode(enabled));
     }
     brakeModeEnabled = enabled;
+  }
+
+  public void followChoreoTrajectory(SwerveSample sample) {
+    Pose2d pose =
+        RobotState.getInstance()
+            .getEstimatedPose(); // Ensure odometry is up to date by getting pose
+
+    // Generate the desired speeds to follow that trajectory
+    ChassisSpeeds speeds =
+        new ChassisSpeeds(
+            sample.vx + xPosController.calculate(pose.getX(), sample.x),
+            sample.vy + yPosController.calculate(pose.getY(), sample.y),
+            sample.omega
+                + headingController.calculate(pose.getRotation().getRadians(), sample.heading));
+
+    // Apply those calculated speeds.
+    runVelocity(speeds);
   }
 
   @AutoLogOutput(key = "Swerve/SwerveStates/Measured")
