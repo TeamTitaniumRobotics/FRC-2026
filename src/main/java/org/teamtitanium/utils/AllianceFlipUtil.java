@@ -33,6 +33,11 @@ public class AllianceFlipUtil {
         : pose;
   }
 
+  public static Rectangle2d apply(Rectangle2d rectangle) {
+    return new Rectangle2d(
+        apply(rectangle.getCenter()), rectangle.getXWidth(), rectangle.getYWidth());
+  }
+
   public static Translation3d apply(Translation3d translation) {
     return new Translation3d(
         applyX(translation.getX()), applyY(translation.getY()), translation.getZ());

@@ -21,6 +21,7 @@ import lombok.Setter;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.teamtitanium.subsystems.swerve.Swerve;
+import org.teamtitanium.utils.AllianceFlipUtil;
 import org.teamtitanium.utils.FieldConstants;
 
 public class RobotState {
@@ -85,6 +86,19 @@ public class RobotState {
     estimatedPose = estimatedPose.exp(finalTwist);
   }
 
+  public Trigger inAllianceZone =
+      new Trigger(
+          () ->
+              AllianceFlipUtil.apply(FieldConstants.Zones.allianceZone)
+                  .contains(getEstimatedPose().getTranslation()));
+
+  public Trigger inNeutralZone =
+      new Trigger(
+          () -> FieldConstants.Zones.neutralZone.contains(getEstimatedPose().getTranslation()));
+
+  // TODO: Add a check for if robot is driving towards trench at speed and if so, stow hood and
+  // align drivetrain with the trench. Also add an override on driver's controller to override the
+  // function. Also add drivetrain auto rotate for bump with same override
   public Trigger underTrench =
       new Trigger(() -> true); // TODO: Replace with actual logic to determine if under trench
 
