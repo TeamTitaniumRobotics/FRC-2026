@@ -14,6 +14,7 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.util.Optional;
 import lombok.Getter;
 import lombok.Setter;
@@ -83,6 +84,9 @@ public class RobotState {
     Twist2d finalTwist = lastOdometryPose.log(odometryPose);
     estimatedPose = estimatedPose.exp(finalTwist);
   }
+
+  public Trigger underTrench =
+      new Trigger(() -> true); // TODO: Replace with actual logic to determine if under trench
 
   public Rotation2d getRotation() {
     return estimatedPose.getRotation();

@@ -27,4 +27,18 @@ public class Intake {
         rack.setExtension(RackConstants.DEPLOY_EXTENSION),
         roller.setVelocity(RollerConstants.INTAKE_VELOCITY));
   }
+
+  public Command agitate() {
+    return Commands.parallel(
+        roller.setVelocity(RollerConstants.INTAKE_VELOCITY),
+        Commands.repeatingSequence(
+            rack.setExtension(RackConstants.AGITATE_EXTENSION).until(rack.atSetpoint()),
+            rack.setExtension(RackConstants.STOW_EXTENSION).until(rack.atSetpoint())));
+  }
+
+  public Command eject() {
+    return Commands.parallel(
+        rack.setExtension(RackConstants.DEPLOY_EXTENSION),
+        roller.setVelocity(RollerConstants.INTAKE_VELOCITY.times(-1.0)));
+  }
 }

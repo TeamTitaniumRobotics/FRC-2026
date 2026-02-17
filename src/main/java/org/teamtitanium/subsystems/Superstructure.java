@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import lombok.Getter;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
+import org.teamtitanium.RobotState;
 import org.teamtitanium.subsystems.feeder.Feeder;
 import org.teamtitanium.subsystems.intake.Intake;
 import org.teamtitanium.subsystems.shooter.Shooter;
@@ -24,20 +25,22 @@ public class Superstructure {
     SPIN_UP_PASS,
     PASS,
     PASS_THROUGH,
+    EJECT,
     PREP_HUB,
     SCORE_HUB,
     PREP_OUTPOST,
     SCORE_OUTPOST,
-    EJECT,
     PREP_CLIMB,
     CLIMB,
     CLIMB_L1,
     DE_CLIMB_L1;
 
-    @Getter private final Trigger trigger;
+    private final Trigger trigger;
+    private final Trigger trenchStowTrigger;
 
     private SuperstructureState() {
       trigger = new Trigger(() -> state == this);
+      trenchStowTrigger = RobotState.getInstance().underTrench;
     }
   }
 
@@ -57,7 +60,7 @@ public class Superstructure {
   private final Trigger intakeReq;
   private final Trigger scoreReq;
   private final Trigger spitReq;
-  private Trigger hasFuel = new Trigger(() -> true); // TODO: Replace with spindexer fuel sensor
+  private final Trigger hasFuel;
 
   public Superstructure(
       Shooter shooter,
@@ -74,25 +77,27 @@ public class Superstructure {
     scoreReq = driver.rightTrigger();
     spitReq = driver.back();
 
+    hasFuel = spindexer.hasFuel.or(feeder.hasFuel);
+
     bindTransitions();
     bindStates();
   }
 
   private void bindTransitions() {
     bindTransition(SuperstructureState.IDLE, SuperstructureState.INTAKE, intakeReq);
-    bindTransition(SuperstructureState.INTAKE, SuperstructureState.IDLE, intakeReq.negate());
-
     bindTransition(
-        hasFuel.and(intakeReq.negate()),
-        SuperstructureState.PREPPED,
-        SuperstructureState.IDLE,
-        SuperstructureState.INTAKE);
+        SuperstructureState.IDLE, SuperstructureState.PREPPED, hasFuel.and(intakeReq.negate()));
+
+    bindTransition(SuperstructureState.INTAKE, SuperstructureState.IDLE, intakeReq.negate());
+    bindTransition(
+        SuperstructureState.INTAKE, SuperstructureState.PREPPED, hasFuel.and(intakeReq.negate()));
+
     bindTransition(
         SuperstructureState.PREPPED,
         SuperstructureState.IDLE,
         hasFuel.negate().and(() -> stateTimer.hasElapsed(0.5)));
-
     bindTransition(SuperstructureState.PREPPED, SuperstructureState.SPIN_UP_SCORE, scoreReq);
+
     bindTransition(
         SuperstructureState.SPIN_UP_SCORE,
         SuperstructureState.SCORE,
@@ -109,35 +114,78 @@ public class Superstructure {
         SuperstructureState.PREPPED,
         spitReq.negate().and(() -> stateTimer.hasElapsed(0.5)));
 
-    bindTransition(
-        spitReq, SuperstructureState.EJECT, SuperstructureState.IDLE, SuperstructureState.PREPPED);
+    bindTransition(SuperstructureState.IDLE, SuperstructureState.EJECT, spitReq);
+    bindTransition(SuperstructureState.PREPPED, SuperstructureState.EJECT, spitReq);
+    bindTransition(SuperstructureState.EJECT, previousState, spitReq.negate());
   }
 
   private void bindTransition(
       SuperstructureState from, SuperstructureState to, Trigger transitionTrigger) {
-    from.getTrigger().and(transitionTrigger).onTrue(setState(to));
-  }
-
-  private void bindTransition(
-      Trigger transitionTrigger, SuperstructureState to, SuperstructureState... from) {
-    for (SuperstructureState state : from) {
-      state.getTrigger().and(transitionTrigger).onTrue(setState(to));
-    }
+    from.trigger.and(transitionTrigger).onTrue(setState(to));
   }
 
   private void bindStates() {
     bindCommands(
         SuperstructureState.IDLE, shooter.stow(), feeder.idle(), spindexer.idle(), intake.stow());
 
-    bindCommands(SuperstructureState.INTAKE, intake.intake(), shooter.aim());
+    bindCommands(
+        SuperstructureState.INTAKE,
+        shooter.aim(),
+        intake.intake(),
+        spindexer.agitate(),
+        feeder.idle());
 
-    bindCommands(SuperstructureState.SPIN_UP_SCORE, shooter.aim());
+    bindCommands(
+        SuperstructureState.PREPPED, shooter.aim(), intake.stow(), spindexer.idle(), feeder.idle());
 
-    bindCommands(SuperstructureState.SCORE, shooter.aim());
+    bindCommands(
+        SuperstructureState.SPIN_UP_SCORE,
+        shooter.aim(),
+        intake.agitate(),
+        spindexer.agitate(),
+        feeder.idle());
+
+    bindCommands(
+        SuperstructureState.SCORE, shooter.aim(), feeder.feed(), spindexer.feed(), intake.stow());
+
+    bindCommands(
+        SuperstructureState.SCORE_THROUGH,
+        shooter.aim(),
+        feeder.feed(),
+        spindexer.feed(),
+        intake.intake());
+
+    bindCommands(
+        SuperstructureState.SPIN_UP_PASS,
+        shooter.aim(),
+        intake.agitate(),
+        spindexer.agitate(),
+        feeder.idle());
+
+    bindCommands(
+        SuperstructureState.PASS, shooter.aim(), feeder.feed(), spindexer.feed(), intake.stow());
+
+    bindCommands(
+        SuperstructureState.PASS_THROUGH,
+        shooter.aim(),
+        feeder.feed(),
+        spindexer.feed(),
+        intake.intake());
+
+    bindCommands(
+        SuperstructureState.EJECT,
+        shooter.eject(),
+        feeder.feed(),
+        spindexer.feed(),
+        intake.eject());
   }
 
   private void bindCommands(SuperstructureState state, Command... commands) {
-    state.getTrigger().whileTrue(Commands.parallel(commands));
+    state.trigger.whileTrue(
+        Commands.either(
+            Commands.parallel(commands),
+            shooter.stow().alongWith(commands),
+            state.trenchStowTrigger));
   }
 
   private Command setState(SuperstructureState newState) {

@@ -6,6 +6,7 @@ import com.ctre.phoenix6.CANBus;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import org.teamtitanium.subsystems.genericroller.GenericRoller;
 import org.teamtitanium.subsystems.genericroller.GenericRollerIO;
 import org.teamtitanium.utils.Constants;
@@ -53,7 +54,14 @@ public class Spindexer extends GenericRoller {
     return setVelocity(IDLE_VELOCITY);
   }
 
+  public Command agitate() {
+    return setVelocity(FEED_VELOCITY);
+  }
+
   public Command feed() {
     return setVelocity(FEED_VELOCITY);
   }
+
+  public Trigger hasFuel =
+      new Trigger(() -> true); // TODO: Replace with actual logic to determine if spindexer has fuel
 }

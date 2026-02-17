@@ -77,6 +77,10 @@ public class Flywheel extends SubsystemBase {
     return setVelocity(SHOOT_VELOCITY);
   }
 
+  public Command eject() {
+    return setVelocity(EJECT_VELOCITY);
+  }
+
   /**
    * Sets the flywheel to a supplied velocity.
    *

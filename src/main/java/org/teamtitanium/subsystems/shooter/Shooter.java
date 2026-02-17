@@ -26,6 +26,10 @@ public class Shooter {
     return Commands.parallel(turret.track(), hood.aim(), flywheel.shoot());
   }
 
+  public Command eject() {
+    return Commands.parallel(turret.stow(), hood.stow(), flywheel.eject());
+  }
+
   public Trigger atSetpoint() {
     return turret.atSetpoint().and(hood.atSetpoint()).and(flywheel.atSetpoint());
   }
