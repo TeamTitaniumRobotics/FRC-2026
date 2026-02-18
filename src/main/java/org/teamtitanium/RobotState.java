@@ -106,7 +106,7 @@ public class RobotState {
 
   public void setEstimatedPose(Pose2d pose) {
     estimatedPose = pose;
-    poseEstimator.resetPosition(Rotation2d.kZero, lastWheelPositions, pose);
+    poseEstimator.resetPosition(pose.getRotation(), lastWheelPositions, pose);
   }
 
   public Rotation2d getRotation() {

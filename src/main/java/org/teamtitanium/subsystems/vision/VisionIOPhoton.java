@@ -4,20 +4,29 @@ import java.util.Optional;
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
+import org.teamtitanium.utils.FieldConstants;
 
 public class VisionIOPhoton implements VisionIO {
-  private final PhotonCamera camera =
-      new PhotonCamera(
-          VisionConstants
-              .cameraName); // Create a new camera with the name specified in VisionConstants
+  private final PhotonCamera camera = VisionConstants.camera; // Get camera from VisionConstants
   private final PhotonPoseEstimator poseEstimator =
       new PhotonPoseEstimator(
+          FieldConstants.defaultAprilTagType
+              .getLayout(), // The layout of the AprilTags on the field, specified in FieldConstants
           VisionConstants
-              .tagLayout, // The layout of the AprilTags on the field, specified in VisionConstants
-          VisionConstants
-              .robotToCamera); // The transformation from the robot's coordinate system to the
+              .robotToCamera); // The transformation from the robot's center(?) to the camera,
 
-  // camera's coordinate system, specified in VisionConstants
+  // specified in VisionConstants
+
+  @Override
+  public void updateInputs(VisionIOInputs inputs) {
+    inputs.connected = camera.isConnected();
+
+    inputs.targetCount = camera.getLatestResult().getTargets().size();
+
+    inputs.timestampSeconds = camera.getLatestResult().getTimestampSeconds();
+
+    inputs.estimatedGlobalPose = getEstimatedGlobalPose().get().estimatedPose;
+  }
 
   /*
    * This method gets the latest result from the camera and tries to estimate the robot's pose using the PhotonPoseEstimator.

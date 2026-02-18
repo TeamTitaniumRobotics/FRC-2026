@@ -9,11 +9,13 @@ import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.SimCameraProperties;
 import org.photonvision.simulation.VisionSystemSim;
+import org.teamtitanium.utils.FieldConstants;
 
 public class VisionIOSim implements VisionIO {
-  private final PhotonCamera camera = new PhotonCamera(VisionConstants.cameraName);
+  private final PhotonCamera camera = VisionConstants.camera;
   private final PhotonPoseEstimator poseEstimator =
-      new PhotonPoseEstimator(VisionConstants.tagLayout, VisionConstants.robotToCamera);
+      new PhotonPoseEstimator(
+          FieldConstants.defaultAprilTagType.getLayout(), VisionConstants.robotToCamera);
   private final VisionSystemSim visionSim = new VisionSystemSim("Vision");
   private final PhotonCameraSim cameraSim;
 
@@ -23,12 +25,13 @@ public class VisionIOSim implements VisionIO {
     cameraProps.setAvgLatencyMs(50);
     cameraProps.setLatencyStdDevMs(10);
 
-    cameraSim = new PhotonCameraSim(camera, cameraProps, VisionConstants.tagLayout);
+    cameraSim =
+        new PhotonCameraSim(camera, cameraProps, FieldConstants.defaultAprilTagType.getLayout());
     cameraSim.enableDrawWireframe(false);
     cameraSim.enableRawStream(false);
     cameraSim.enableProcessedStream(false);
 
-    visionSim.addAprilTags(VisionConstants.tagLayout);
+    visionSim.addAprilTags(FieldConstants.defaultAprilTagType.getLayout());
     visionSim.addCamera(cameraSim, VisionConstants.robotToCamera);
     visionSim.resetRobotPose(Pose2d.kZero);
   }
