@@ -55,9 +55,28 @@ public class VisionIOSim implements VisionIO {
     return estimate;
   }
 
+  // @Override
+  // public void simulationPeriodic(Pose2d robotPose) {
+  //   visionSim.update(robotPose);
+  //   poseEstimator.addHeadingData(Timer.getTimestamp(), robotPose.getRotation());
+  // }
+
   @Override
-  public void simulationPeriodic(Pose2d robotPose) {
-    visionSim.update(robotPose);
-    poseEstimator.addHeadingData(Timer.getTimestamp(), robotPose.getRotation());
+  public void updateInputs(VisionIOInputs inputs) {
+    inputs.connected = camera.isConnected();
+
+    var latest = camera.getLatestResult();
+    inputs.targetCount = latest.getTargets().size();
+
+    inputs.timestampSeconds = latest.getTimestampSeconds();
+
+    // Safely handle absent pose estimate to avoid NoSuchElementException
+    Optional<EstimatedRobotPose> optEstimate = getEstimatedGlobalPose();
+    if (optEstimate.isPresent()) {
+      inputs.estimatedGlobalPose = optEstimate.get().estimatedPose;
+    } else {
+      // No estimate available — clear or leave null (depends on VisionIOInputs expectations)
+      inputs.estimatedGlobalPose = null;
+    }
   }
 }
