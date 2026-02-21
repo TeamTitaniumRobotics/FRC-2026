@@ -6,7 +6,7 @@ import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
-import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -29,7 +29,8 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 
   private final TalonFXConfiguration config = new TalonFXConfiguration();
 
-  private final VelocityVoltage velocityControl = new VelocityVoltage(0.0);
+  private final MotionMagicVelocityVoltage motionMagicVelocityVoltage =
+      new MotionMagicVelocityVoltage(0.0);
   private final VoltageOut voltageOut = new VoltageOut(0.0);
 
   private final StatusSignal<Angle> position;
@@ -44,7 +45,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
     rightMotor = new TalonFX(FLYWHEEL_RIGHT_MOTOR_ID, Constants.RIO_CAN_BUS);
 
     // Configure motors
-    config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+    config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     config.MotorOutput.NeutralMode = NeutralModeValue.Coast; // Coast for flywheels
 
     // Current limits
@@ -147,7 +148,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 
   @Override
   public void setVelocity(double velocityRps) {
-    leftMotor.setControl(velocityControl.withVelocity(velocityRps));
+    leftMotor.setControl(motionMagicVelocityVoltage.withVelocity(velocityRps));
   }
 
   @Override

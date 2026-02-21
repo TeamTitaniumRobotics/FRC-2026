@@ -2,8 +2,10 @@ package org.teamtitanium.subsystems.shooter.hood;
 
 import static edu.wpi.first.units.Units.Rotations;
 
+import com.ctre.phoenix6.CANBus;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Angle;
+import org.teamtitanium.utils.Constants;
 import org.teamtitanium.utils.Constants.Constraints;
 import org.teamtitanium.utils.Constants.Gains;
 
@@ -13,6 +15,7 @@ public class HoodConstants {
 
   // CAN IDs
   public static final int HOOD_MOTOR_ID = 18;
+  public static final CANBus HOOD_CANBUS = Constants.RIO_CAN_BUS;
 
   // Physical Constants
   public static final double HOOD_GEAR_RATIO = 100.0; // 100:1 reduction
@@ -30,11 +33,11 @@ public class HoodConstants {
       new Constraints(1.5, 3.0); // Max velocity (rps), accel (rps^2)
 
   // PID Gains
-  public static final Gains HOOD_GAINS = new Gains(20.0, 0.0, 0.15, 0.0, 0.0, 0.3, 0.0);
+  public static final Gains HOOD_GAINS = new Gains(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 
   // Current Limits
-  public static final double STATOR_CURRENT_LIMIT = 40.0;
-  public static final double SUPPLY_CURRENT_LIMIT = 30.0;
+  public static final double STATOR_CURRENT_LIMIT = 60.0;
+  public static final double SUPPLY_CURRENT_LIMIT = 40.0;
 
   // Simulation
   public static final DCMotor HOOD_GEARBOX = DCMotor.getFalcon500(1);

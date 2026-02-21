@@ -80,7 +80,7 @@ public class Superstructure {
     hasFuel = spindexer.hasFuel.or(feeder.hasFuel);
 
     bindTransitions();
-    bindStates();
+    // bindStates();
   }
 
   private void bindTransitions() {

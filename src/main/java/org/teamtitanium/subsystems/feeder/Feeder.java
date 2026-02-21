@@ -9,15 +9,15 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import org.teamtitanium.subsystems.genericroller.GenericRoller;
 import org.teamtitanium.subsystems.genericroller.GenericRollerIO;
-import org.teamtitanium.utils.Constants;
 import org.teamtitanium.utils.Constants.Constraints;
 import org.teamtitanium.utils.Constants.Gains;
+import org.teamtitanium.utils.TunerConstants;
 
 public class Feeder extends GenericRoller {
   public static final int FEEDER_MOTOR_ID = 40;
-  public static final CANBus FEEDER_CAN_BUS = Constants.RIO_CAN_BUS;
+  public static final CANBus FEEDER_CAN_BUS = TunerConstants.kCANBus;
 
-  public static final boolean FEEDER_INVERTED = false;
+  public static final boolean FEEDER_INVERTED = true;
 
   public static final AngularVelocity IDLE_VELOCITY = RotationsPerSecond.of(0.0);
   public static final AngularVelocity FEED_VELOCITY = RotationsPerSecond.of(24.0);
@@ -25,9 +25,9 @@ public class Feeder extends GenericRoller {
   public static final double STATOR_CURRENT_LIMIT = 40.0;
   public static final double SUPPLY_CURRENT_LIMIT = 30.0;
 
-  public static final double FEEDER_GEAR_RATIO = 1.0;
+  public static final double FEEDER_GEAR_RATIO = 2.0;
 
-  public static final Gains FEEDER_GAINS = new Gains(8.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+  public static final Gains FEEDER_GAINS = new Gains(0.0, 0.0, 0.0, 0.19, 0.0, 0.0, 0.0);
   public static final Constraints FEEDER_CONSTRAINTS = new Constraints(24.0, 36.0);
 
   public static final DCMotor FEEDER_MOTOR_GEARBOX = DCMotor.getKrakenX44(1);

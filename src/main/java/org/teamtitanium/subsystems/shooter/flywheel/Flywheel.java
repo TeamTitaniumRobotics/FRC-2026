@@ -30,6 +30,11 @@ public class Flywheel extends SubsystemBase {
   private final LoggedTunableNumber flywheelkA =
       new LoggedTunableNumber("Flywheel/kA", FLYWHEEL_GAINS.kA());
 
+  public final LoggedTunableNumber flywheelConfigNumber1 =
+      new LoggedTunableNumber("Flywheel/ConfigNumber1", 0.0);
+  public final LoggedTunableNumber flywheelConfigNumber2 =
+      new LoggedTunableNumber("Flywheel/ConfigNumber2", 0.0);
+
   private final FlywheelIO io;
   private final FlywheelIOInputsAutoLogged inputs = new FlywheelIOInputsAutoLogged();
 

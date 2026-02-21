@@ -42,6 +42,9 @@ public class IntakeRack extends SubsystemBase {
   private final LoggedTunableNumber rackMaxAcceleration =
       new LoggedTunableNumber("Intake/Rack/MaxAcceleration", RACK_CONSTRAINTS.maxAcceleration());
 
+  public final LoggedTunableNumber configRackNumber =
+      new LoggedTunableNumber("Intake/Rack/ConfigNumber", 0.0);
+
   private final IntakeRackIO io;
   private final IntakeRackIOInputsAutoLogged inputs = new IntakeRackIOInputsAutoLogged();
 
@@ -104,6 +107,10 @@ public class IntakeRack extends SubsystemBase {
     LoggedTracer.record("Intake/Rack");
   }
 
+  public Command setPosition(Supplier<Double> positionRots) {
+    return runEnd(() -> io.setPosition(positionRots.get()), () -> io.setVoltage(0.0));
+  }
+
   public Command setExtension(Supplier<Distance> positionSupplier) {
     return run(() -> {
           double requestedMeters =
@@ -131,7 +138,7 @@ public class IntakeRack extends SubsystemBase {
   }
 
   public Command stop() {
-    return runOnce(() -> io.setVoltage(0.0)).withName("IntakeRack.Stop");
+    return setVoltage(0.0).withName("IntakeRack.Stop");
   }
 
   public double getExtensionMeters() {
@@ -144,6 +151,10 @@ public class IntakeRack extends SubsystemBase {
 
   public void setBrakeMode(boolean enabled) {
     io.setBrakeMode(enabled);
+  }
+
+  public void zero() {
+    io.setMotorPosition(0.0);
   }
 
   public Command home() {

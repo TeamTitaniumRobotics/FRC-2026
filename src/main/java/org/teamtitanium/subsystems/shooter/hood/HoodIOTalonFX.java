@@ -54,9 +54,9 @@ public class HoodIOTalonFX implements HoodIO {
 
     // Soft limits
     config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = MAX_ANGLE_ROTS;
-    config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+    config.SoftwareLimitSwitch.ForwardSoftLimitEnable = false;
     config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = MIN_ANGLE_ROTS;
-    config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+    config.SoftwareLimitSwitch.ReverseSoftLimitEnable = false;
 
     // PID configuration
     config.Slot0.kP = HOOD_GAINS.kP();

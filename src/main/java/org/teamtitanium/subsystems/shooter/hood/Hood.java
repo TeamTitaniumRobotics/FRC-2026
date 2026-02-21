@@ -33,6 +33,11 @@ public class Hood extends SubsystemBase {
   private final LoggedTunableNumber hoodMaxAcceleration =
       new LoggedTunableNumber("Hood/MaxAcceleration", HOOD_MOTION_CONSTRAINTS.maxAcceleration());
 
+  public final LoggedTunableNumber hoodConfigNumber1 =
+      new LoggedTunableNumber("Hood/ConfigNumber1", 0.0);
+  public final LoggedTunableNumber hoodConfigNumber2 =
+      new LoggedTunableNumber("Hood/ConfigNumber2", 0.0);
+
   private final HoodIO io;
   private final HoodIOInputsAutoLogged inputs = new HoodIOInputsAutoLogged();
 
@@ -137,9 +142,13 @@ public class Hood extends SubsystemBase {
     return setVoltage(() -> voltage);
   }
 
-  public Command zeroHood() {
-    return setVoltage(0.0); // TODO: Implement current & velocity zeroing
+  public void zeroHood() {
+    io.setMotorPosition(0.0);
   }
+
+  // public Command zeroHood() {
+  //   return setVoltage(0.0); // TODO: Implement current & velocity zeroing
+  // }
 
   /**
    * Gets the current position of the hood.
