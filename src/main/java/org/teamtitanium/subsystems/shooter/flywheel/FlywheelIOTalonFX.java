@@ -35,6 +35,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 
   private final StatusSignal<Angle> position;
   private final StatusSignal<AngularVelocity> velocity;
+  private final StatusSignal<Double> velocitySetpoint;
   private final List<StatusSignal<Voltage>> appliedVolts;
   private final List<StatusSignal<Current>> supplyCurrent;
   private final List<StatusSignal<Current>> torqueCurrent;
@@ -80,6 +81,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
     // Get status signals
     position = leftMotor.getPosition();
     velocity = leftMotor.getVelocity();
+    velocitySetpoint = leftMotor.getClosedLoopReference();
     appliedVolts = List.of(leftMotor.getMotorVoltage(), rightMotor.getMotorVoltage());
     supplyCurrent = List.of(leftMotor.getSupplyCurrent(), rightMotor.getSupplyCurrent());
     torqueCurrent = List.of(leftMotor.getTorqueCurrent(), rightMotor.getTorqueCurrent());
@@ -90,6 +92,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
         100,
         position,
         velocity,
+        velocitySetpoint,
         appliedVolts.get(0),
         appliedVolts.get(1),
         supplyCurrent.get(0),
@@ -103,9 +106,10 @@ public class FlywheelIOTalonFX implements FlywheelIO {
         5, () -> ParentDevice.optimizeBusUtilizationForAll(leftMotor, rightMotor));
 
     PhoenixUtil.registerSignals(
-        Constants.RIO_CAN_BUS,
+        FlywheelConstants.FLYWHEEL_CANBUS,
         position,
         velocity,
+        velocitySetpoint,
         appliedVolts.get(0),
         appliedVolts.get(1),
         supplyCurrent.get(0),
@@ -122,6 +126,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
         BaseStatusSignal.isAllGood(
             position,
             velocity,
+            velocitySetpoint,
             appliedVolts.get(0),
             supplyCurrent.get(0),
             torqueCurrent.get(0),
@@ -137,6 +142,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 
     inputs.positionRots = position.getValueAsDouble();
     inputs.velocityRps = velocity.getValueAsDouble();
+    inputs.velocitySetpoint = velocitySetpoint.getValueAsDouble();
     inputs.appliedVolts = appliedVolts.stream().mapToDouble(s -> s.getValueAsDouble()).toArray();
     inputs.supplyCurrentAmps =
         supplyCurrent.stream().mapToDouble(s -> s.getValueAsDouble()).toArray();

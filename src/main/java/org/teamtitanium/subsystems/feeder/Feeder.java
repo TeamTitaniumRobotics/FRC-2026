@@ -7,6 +7,10 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import lombok.Getter;
+import lombok.Setter;
+import org.littletonrobotics.junction.AutoLogOutput;
+import org.littletonrobotics.junction.Logger;
 import org.teamtitanium.subsystems.genericroller.GenericRoller;
 import org.teamtitanium.subsystems.genericroller.GenericRollerIO;
 import org.teamtitanium.utils.Constants.Constraints;
@@ -14,6 +18,12 @@ import org.teamtitanium.utils.Constants.Gains;
 import org.teamtitanium.utils.TunerConstants;
 
 public class Feeder extends GenericRoller {
+  /** Independent states for the feeder. */
+  public enum FeederState {
+    IDLE,
+    FEED
+  }
+
   public static final int FEEDER_MOTOR_ID = 40;
   public static final CANBus FEEDER_CAN_BUS = TunerConstants.kCANBus;
 
@@ -45,8 +55,29 @@ public class Feeder extends GenericRoller {
           FEEDER_INVERTED,
           true);
 
+  @Getter
+  @Setter
+  @AutoLogOutput(key = "Feeder/State")
+  private FeederState state = FeederState.IDLE;
+
   public Feeder(GenericRollerIO io) {
     super("Feeder", io);
+  }
+
+  /**
+   * Returns a command that continuously resolves the current {@link FeederState} into the
+   * appropriate roller velocity. This should be run as a long-lived command.
+   */
+  public Command applySubStates() {
+    return run(() -> {
+          Logger.recordOutput("Feeder/State", state.name());
+          switch (state) {
+            case IDLE -> applyVelocity(IDLE_VELOCITY);
+            case FEED -> applyVelocity(FEED_VELOCITY);
+          }
+        })
+        .ignoringDisable(true)
+        .withName("Feeder.ApplySubStates");
   }
 
   @Override

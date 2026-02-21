@@ -8,39 +8,45 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import lombok.Getter;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
-import org.teamtitanium.RobotState;
 import org.teamtitanium.subsystems.feeder.Feeder;
+import org.teamtitanium.subsystems.feeder.Feeder.FeederState;
 import org.teamtitanium.subsystems.intake.Intake;
+import org.teamtitanium.subsystems.intake.Intake.IntakeState;
 import org.teamtitanium.subsystems.shooter.Shooter;
+import org.teamtitanium.subsystems.shooter.Shooter.ShooterState;
 import org.teamtitanium.subsystems.spindexer.Spindexer;
+import org.teamtitanium.subsystems.spindexer.Spindexer.SpindexerState;
 
+/**
+ * Coordinates all subsystem groups via a lean game-intent state machine. Each subsystem has its own
+ * state enum; this class translates (game state + modifiers) into subsystem states through a single
+ * {@link #applySubStates()} resolution function.
+ */
 public class Superstructure {
+  // ───────────────────────────── Game-level state ─────────────────────────────
+
+  /**
+   * Represents the high-level game intent of the robot. Subsystem-specific behaviors are resolved
+   * independently — this enum should NOT encode per-subsystem combinations.
+   */
   public enum SuperstructureState {
     IDLE,
     INTAKE,
     PREPPED,
     SPIN_UP_SCORE,
     SCORE,
-    SCORE_THROUGH,
     SPIN_UP_PASS,
     PASS,
-    PASS_THROUGH,
     EJECT,
-    PREP_HUB,
-    SCORE_HUB,
-    PREP_OUTPOST,
-    SCORE_OUTPOST,
     PREP_CLIMB,
     CLIMB,
     CLIMB_L1,
     DE_CLIMB_L1;
 
-    private final Trigger trigger;
-    private final Trigger trenchStowTrigger;
+    @Getter private final Trigger trigger;
 
     private SuperstructureState() {
       trigger = new Trigger(() -> state == this);
-      trenchStowTrigger = RobotState.getInstance().underTrench;
     }
   }
 
@@ -52,21 +58,45 @@ public class Superstructure {
 
   private final Timer stateTimer = new Timer();
 
+  // ───────────────────────────── Subsystems ───────────────────────────────────
+
   private final Shooter shooter;
   private final Feeder feeder;
   private final Spindexer spindexer;
   private final Intake intake;
+
+  // ───────────────────────────── Driver inputs ────────────────────────────────
 
   private final Trigger intakeReq;
   private final Trigger scoreReq;
   private final Trigger spitReq;
   private final Trigger hasFuel;
 
+  // ───────────────────────────── Modifier triggers ────────────────────────────
+  //
+  // These are orthogonal to the game state and persist across state transitions
+  // unless explicitly reset inside setState().
+
+  /** When active, the intake rack stays deployed regardless of game state. */
+  @AutoLogOutput(key = "Superstructure/IntakeDeployed")
+  @Getter
+  private final Trigger intakeDeployed;
+
+  private boolean intakeDeployedValue = false;
+
+  /** When active, the hood will auto-stow (e.g. going under the trench). */
+  @AutoLogOutput(key = "Superstructure/TrenchStowOverride")
+  @Getter
+  private final Trigger trenchStowOverride;
+
+  // ───────────────────────────── Construction ─────────────────────────────────
+
   public Superstructure(
       Shooter shooter,
       Feeder feeder,
       Spindexer spindexer,
       Intake intake,
+      Trigger trenchStowOverride,
       CommandXboxController driver) {
     this.shooter = shooter;
     this.feeder = feeder;
@@ -79,31 +109,45 @@ public class Superstructure {
 
     hasFuel = spindexer.hasFuel.or(feeder.hasFuel);
 
+    // Modifier triggers — backed by simple booleans toggled via commands
+    intakeDeployed = new Trigger(() -> intakeDeployedValue);
+    this.trenchStowOverride = trenchStowOverride;
+
+    // Pass the hood-stow override trigger into Shooter so it can respect it
+    shooter.setHoodStowOverride(this.trenchStowOverride);
+
     bindTransitions();
-    // bindStates();
+    bindModifierToggles(driver);
   }
 
+  // ───────────────────────────── State transitions ────────────────────────────
+
   private void bindTransitions() {
+    // IDLE ↔ INTAKE
     bindTransition(SuperstructureState.IDLE, SuperstructureState.INTAKE, intakeReq);
+    bindTransition(SuperstructureState.INTAKE, SuperstructureState.IDLE, intakeReq.negate());
+
+    // IDLE / INTAKE → PREPPED (fuel acquired)
     bindTransition(
         SuperstructureState.IDLE, SuperstructureState.PREPPED, hasFuel.and(intakeReq.negate()));
-
-    bindTransition(SuperstructureState.INTAKE, SuperstructureState.IDLE, intakeReq.negate());
     bindTransition(
         SuperstructureState.INTAKE, SuperstructureState.PREPPED, hasFuel.and(intakeReq.negate()));
 
+    // PREPPED → IDLE (fuel lost after grace period)
     bindTransition(
         SuperstructureState.PREPPED,
         SuperstructureState.IDLE,
         hasFuel.negate().and(() -> stateTimer.hasElapsed(0.5)));
-    bindTransition(SuperstructureState.PREPPED, SuperstructureState.SPIN_UP_SCORE, scoreReq);
 
+    // PREPPED → SPIN_UP_SCORE → SCORE
+    bindTransition(SuperstructureState.PREPPED, SuperstructureState.SPIN_UP_SCORE, scoreReq);
     bindTransition(
         SuperstructureState.SPIN_UP_SCORE,
         SuperstructureState.SCORE,
         shooter.atSetpoint().and(scoreReq));
     bindTransition(SuperstructureState.SCORE, SuperstructureState.PREPPED, scoreReq.negate());
 
+    // PREPPED → SPIN_UP_PASS → PASS
     bindTransition(SuperstructureState.PREPPED, SuperstructureState.SPIN_UP_PASS, spitReq);
     bindTransition(
         SuperstructureState.SPIN_UP_PASS,
@@ -114,89 +158,122 @@ public class Superstructure {
         SuperstructureState.PREPPED,
         spitReq.negate().and(() -> stateTimer.hasElapsed(0.5)));
 
+    // EJECT (from IDLE or PREPPED)
     bindTransition(SuperstructureState.IDLE, SuperstructureState.EJECT, spitReq);
     bindTransition(SuperstructureState.PREPPED, SuperstructureState.EJECT, spitReq);
-    bindTransition(SuperstructureState.EJECT, previousState, spitReq.negate());
+    // Return to the state we were in before ejecting
+    SuperstructureState.EJECT
+        .getTrigger()
+        .and(spitReq.negate())
+        .onTrue(
+            Commands.runOnce(
+                    () -> {
+                      setState(previousState);
+                    })
+                .ignoringDisable(true)
+                .withName("ReturnFromEject"));
   }
 
   private void bindTransition(
       SuperstructureState from, SuperstructureState to, Trigger transitionTrigger) {
-    from.trigger.and(transitionTrigger).onTrue(setState(to));
+    from.getTrigger().and(transitionTrigger).onTrue(setStateCommand(to));
   }
 
-  private void bindStates() {
-    bindCommands(
-        SuperstructureState.IDLE, shooter.stow(), feeder.idle(), spindexer.idle(), intake.stow());
+  // ───────────────────────────── Modifier toggle bindings ─────────────────────
 
-    bindCommands(
-        SuperstructureState.INTAKE,
-        shooter.aim(),
-        intake.intake(),
-        spindexer.agitate(),
-        feeder.idle());
-
-    bindCommands(
-        SuperstructureState.PREPPED, shooter.aim(), intake.stow(), spindexer.idle(), feeder.idle());
-
-    bindCommands(
-        SuperstructureState.SPIN_UP_SCORE,
-        shooter.aim(),
-        intake.agitate(),
-        spindexer.agitate(),
-        feeder.idle());
-
-    bindCommands(
-        SuperstructureState.SCORE, shooter.aim(), feeder.feed(), spindexer.feed(), intake.stow());
-
-    bindCommands(
-        SuperstructureState.SCORE_THROUGH,
-        shooter.aim(),
-        feeder.feed(),
-        spindexer.feed(),
-        intake.intake());
-
-    bindCommands(
-        SuperstructureState.SPIN_UP_PASS,
-        shooter.aim(),
-        intake.agitate(),
-        spindexer.agitate(),
-        feeder.idle());
-
-    bindCommands(
-        SuperstructureState.PASS, shooter.aim(), feeder.feed(), spindexer.feed(), intake.stow());
-
-    bindCommands(
-        SuperstructureState.PASS_THROUGH,
-        shooter.aim(),
-        feeder.feed(),
-        spindexer.feed(),
-        intake.intake());
-
-    bindCommands(
-        SuperstructureState.EJECT,
-        shooter.eject(),
-        feeder.feed(),
-        spindexer.feed(),
-        intake.eject());
+  private void bindModifierToggles(CommandXboxController driver) {
+    // Toggle intake deployed on left bumper press
+    driver
+        .leftBumper()
+        .onTrue(
+            Commands.runOnce(() -> intakeDeployedValue = !intakeDeployedValue)
+                .ignoringDisable(true)
+                .withName("ToggleIntakeDeployed"));
   }
 
-  private void bindCommands(SuperstructureState state, Command... commands) {
-    state.trigger.whileTrue(
-        Commands.either(
-            Commands.parallel(commands),
-            shooter.stow().alongWith(commands),
-            state.trenchStowTrigger));
-  }
+  // ──────────────── Central resolution: (game state + modifiers) → sub states ─
 
-  private Command setState(SuperstructureState newState) {
-    return Commands.runOnce(
+  /**
+   * Returns a command that should be scheduled once and kept running for the lifetime of
+   * teleop/auto. Every loop iteration it reads the current {@link SuperstructureState} plus
+   * modifier triggers and pushes the resolved sub-state into each subsystem.
+   */
+  public Command applySubStates() {
+    return Commands.run(
             () -> {
-              Logger.recordOutput(
-                  "Superstructure/StateTransition", state.name() + " -> " + newState.name());
-              this.previousState = Superstructure.state;
-              Superstructure.state = newState;
-              stateTimer.restart();
+              // --- Resolve Shooter state ---
+              switch (state) {
+                case IDLE -> shooter.setState(ShooterState.STOW);
+                case EJECT -> shooter.setState(ShooterState.EJECT);
+                default -> shooter.setState(ShooterState.AIM);
+              }
+
+              // --- Resolve Intake state ---
+              switch (state) {
+                case INTAKE -> intake.setState(IntakeState.INTAKE);
+                case EJECT -> intake.setState(IntakeState.EJECT);
+                case SPIN_UP_SCORE, SPIN_UP_PASS -> {
+                  // If intake deployed override is active, keep intaking; else agitate
+                  intake.setState(
+                      intakeDeployed.getAsBoolean() ? IntakeState.INTAKE : IntakeState.AGITATE);
+                }
+                case SCORE, PASS -> {
+                  // If intake deployed override is active, keep intaking; else stow
+                  intake.setState(
+                      intakeDeployed.getAsBoolean() ? IntakeState.INTAKE : IntakeState.STOW);
+                }
+                default -> {
+                  // IDLE / PREPPED / CLIMB states
+                  intake.setState(
+                      intakeDeployed.getAsBoolean() ? IntakeState.INTAKE : IntakeState.STOW);
+                }
+              }
+
+              // --- Resolve Feeder state ---
+              switch (state) {
+                case SCORE, PASS, EJECT -> feeder.setState(FeederState.FEED);
+                default -> feeder.setState(FeederState.IDLE);
+              }
+
+              // --- Resolve Spindexer state ---
+              switch (state) {
+                case INTAKE, SPIN_UP_SCORE, SPIN_UP_PASS -> spindexer.setState(
+                    SpindexerState.AGITATE);
+                case SCORE, PASS, EJECT -> spindexer.setState(SpindexerState.FEED);
+                default -> spindexer.setState(SpindexerState.IDLE);
+              }
             })
+        .ignoringDisable(true)
+        .withName("Superstructure.ApplySubStates");
+  }
+
+  // ───────────────────────────── setState helpers ─────────────────────────────
+
+  /**
+   * Sets the game state and optionally resets modifiers atomically.
+   *
+   * @param newState the new game state
+   * @param modifierResets optional runnables that reset modifier values on this transition
+   */
+  private void setState(SuperstructureState newState, Runnable... modifierResets) {
+    Logger.recordOutput("Superstructure/StateTransition", state.name() + " -> " + newState.name());
+    this.previousState = Superstructure.state;
+    Superstructure.state = newState;
+    stateTimer.restart();
+
+    for (Runnable reset : modifierResets) {
+      reset.run();
+    }
+  }
+
+  /**
+   * Returns a command that performs a state transition, for use with Trigger.onTrue().
+   *
+   * @param newState the new game state
+   * @param modifierResets optional runnables that reset modifier values on this transition
+   */
+  private Command setStateCommand(SuperstructureState newState, Runnable... modifierResets) {
+    return Commands.runOnce(() -> setState(newState, modifierResets))
         .ignoringDisable(true)
         .withName("SetSuperstructureState(" + newState + ")");
   }

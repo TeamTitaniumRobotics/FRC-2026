@@ -95,6 +95,14 @@ public class GenericRoller extends SubsystemBase {
     return setVelocity(() -> velocity);
   }
 
+  /**
+   * Directly applies a velocity to the roller IO without creating a command. Intended for use
+   * inside an already-running command (e.g. applySubStates).
+   */
+  protected void applyVelocity(AngularVelocity velocity) {
+    io.setVelocity(velocity.in(RotationsPerSecond));
+  }
+
   public Command setVoltage(Supplier<Double> voltageSupplier) {
     return run(() -> io.setVoltage(voltageSupplier.get()));
   }

@@ -11,6 +11,7 @@ public interface FlywheelIO {
 
     public double positionRots = 0.0;
     public double velocityRps = 0.0;
+    public double velocitySetpoint = 0.0;
     public double[] appliedVolts = new double[] {};
     public double[] supplyCurrentAmps = new double[] {};
     public double[] torqueCurrentAmps = new double[] {};

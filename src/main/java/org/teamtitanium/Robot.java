@@ -23,6 +23,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
@@ -293,9 +294,17 @@ public class Robot extends LoggedRobot {
 
     intake = new Intake(intakeRack, intakeRoller);
     shooter = new Shooter(turret, hood, flywheel);
-    superstructure = new Superstructure(shooter, feeder, spindexer, intake, driver);
+    superstructure =
+        new Superstructure(
+            shooter,
+            feeder,
+            spindexer,
+            intake,
+            org.teamtitanium.RobotState.getInstance().underTrench,
+            driver);
 
     configureButtonBindings();
+    scheduleSubStateMachines();
   }
 
   @Override
@@ -507,6 +516,26 @@ public class Robot extends LoggedRobot {
         .pov(180)
         .onTrue(flywheel.setVoltage(() -> -flywheel.flywheelConfigNumber2.get()))
         .onFalse(flywheel.setVoltage(0.0));
+  }
+
+  /**
+   * Schedules the always-running sub-state resolution commands. The superstructure's applySubStates
+   * command reads the current game state + modifiers each loop and pushes the resolved states into
+   * each subsystem. Each subsystem's applySubStates command then translates its state into hardware
+   * actions.
+   */
+  private void scheduleSubStateMachines() {
+    // Always-true trigger to keep these running whenever the robot is enabled
+    Trigger alwaysTrue = new Trigger(() -> true);
+
+    // Central resolution: (game state + modifiers) → subsystem states
+    alwaysTrue.whileTrue(superstructure.applySubStates());
+
+    // Per-subsystem resolution: subsystem state → hardware commands
+    alwaysTrue.whileTrue(shooter.applySubStates());
+    alwaysTrue.whileTrue(intake.applySubStates());
+    alwaysTrue.whileTrue(feeder.applySubStates());
+    alwaysTrue.whileTrue(spindexer.applySubStates());
   }
 
   private void updateAlerts() {}

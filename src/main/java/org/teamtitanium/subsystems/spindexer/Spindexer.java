@@ -7,6 +7,10 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import lombok.Getter;
+import lombok.Setter;
+import org.littletonrobotics.junction.AutoLogOutput;
+import org.littletonrobotics.junction.Logger;
 import org.teamtitanium.subsystems.genericroller.GenericRoller;
 import org.teamtitanium.subsystems.genericroller.GenericRollerIO;
 import org.teamtitanium.utils.Constants;
@@ -14,12 +18,20 @@ import org.teamtitanium.utils.Constants.Constraints;
 import org.teamtitanium.utils.Constants.Gains;
 
 public class Spindexer extends GenericRoller {
+  /** Independent states for the spindexer. */
+  public enum SpindexerState {
+    IDLE,
+    AGITATE,
+    FEED
+  }
+
   public static final int SPINDEXER_MOTOR_ID = 35;
   public static final CANBus SPINDEXER_CAN_BUS = Constants.RIO_CAN_BUS;
 
   public static final boolean SPINDEXER_INVERTED = false;
 
   public static final AngularVelocity IDLE_VELOCITY = RotationsPerSecond.of(0.0);
+  public static final AngularVelocity AGITATE_VELOCITY = RotationsPerSecond.of(12.0);
   public static final AngularVelocity FEED_VELOCITY = RotationsPerSecond.of(24.0);
 
   public static final double STATOR_CURRENT_LIMIT = 40.0;
@@ -45,8 +57,30 @@ public class Spindexer extends GenericRoller {
           SPINDEXER_INVERTED,
           true);
 
+  @Getter
+  @Setter
+  @AutoLogOutput(key = "Spindexer/State")
+  private SpindexerState state = SpindexerState.IDLE;
+
   public Spindexer(GenericRollerIO io) {
     super("Spindexer", io);
+  }
+
+  /**
+   * Returns a command that continuously resolves the current {@link SpindexerState} into the
+   * appropriate roller velocity. This should be run as a long-lived command.
+   */
+  public Command applySubStates() {
+    return run(() -> {
+          Logger.recordOutput("Spindexer/State", state.name());
+          switch (state) {
+            case IDLE -> applyVelocity(IDLE_VELOCITY);
+            case AGITATE -> applyVelocity(AGITATE_VELOCITY);
+            case FEED -> applyVelocity(FEED_VELOCITY);
+          }
+        })
+        .ignoringDisable(true)
+        .withName("Spindexer.ApplySubStates");
   }
 
   @Override
@@ -55,7 +89,7 @@ public class Spindexer extends GenericRoller {
   }
 
   public Command agitate() {
-    return setVelocity(FEED_VELOCITY);
+    return setVelocity(AGITATE_VELOCITY);
   }
 
   public Command feed() {
