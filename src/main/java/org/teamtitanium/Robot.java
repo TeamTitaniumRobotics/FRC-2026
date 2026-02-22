@@ -63,6 +63,10 @@ import org.teamtitanium.subsystems.swerve.Swerve;
 import org.teamtitanium.subsystems.swerve.SwerveModuleIO;
 import org.teamtitanium.subsystems.swerve.SwerveModuleIOSim;
 import org.teamtitanium.subsystems.swerve.SwerveModuleIOTalonFX;
+import org.teamtitanium.subsystems.vision.Vision;
+import org.teamtitanium.subsystems.vision.VisionIO;
+import org.teamtitanium.subsystems.vision.VisionIOPhoton;
+import org.teamtitanium.subsystems.vision.VisionIOSim;
 import org.teamtitanium.utils.CanivoreReader;
 import org.teamtitanium.utils.Constants;
 import org.teamtitanium.utils.Constants.Mode;
@@ -90,6 +94,8 @@ public class Robot extends LoggedRobot {
   private final Intake intake;
   private final IntakeRack intakeRack;
   private final IntakeRoller intakeRoller;
+
+  private final Vision vision;
 
   private final CommandXboxController driver = new CommandXboxController(0);
 
@@ -221,6 +227,7 @@ public class Robot extends LoggedRobot {
         intakeRack = new IntakeRack(new IntakeRackIOTalonFX());
         intakeRoller =
             new IntakeRoller(new GenericRollerIOTalonFX(IntakeConstants.RollerConstants.CONSTANTS));
+        vision = new Vision(new VisionIOPhoton(), RobotState.getInstance());
       }
       case SIM -> {
         swerve =
@@ -238,6 +245,7 @@ public class Robot extends LoggedRobot {
             new IntakeRoller(
                 new GenericRollerIOSim(
                     IntakeConstants.RollerConstants.CONSTANTS, DCMotor.getKrakenX44(1), 0.01));
+        vision = new Vision(new VisionIOSim(), RobotState.getInstance());
       }
       default -> {
         swerve =
@@ -252,6 +260,7 @@ public class Robot extends LoggedRobot {
         turret = new Turret(new TurretIO() {});
         intakeRack = new IntakeRack(new IntakeRackIO() {});
         intakeRoller = new IntakeRoller(new GenericRollerIO() {});
+        vision = new Vision(new VisionIO() {}, RobotState.getInstance());
       }
     }
     if (swerve != null) {
