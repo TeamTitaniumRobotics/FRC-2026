@@ -131,7 +131,7 @@ public class Turret extends SubsystemBase {
    * @return A command that sets the turret to the stowed position
    */
   public Command stow() {
-    return setPosition(TURRET_STOW_ANGLE);
+    return setPosition(STOW_ANGLE);
   }
 
   /**

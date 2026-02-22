@@ -83,7 +83,7 @@ public class Hood extends SubsystemBase {
   }
 
   public Command stow() {
-    return setPosition(HoodConstants.HOOD_STOW_ANGLE).withName("Hood.Stow");
+    return setPosition(HoodConstants.STOW_ANGLE).withName("Hood.Stow");
   }
 
   public Command aim() {
@@ -91,7 +91,7 @@ public class Hood extends SubsystemBase {
   }
 
   public Command eject() {
-    return setPosition(HoodConstants.HOOD_EJECT_ANGLE).withName("Hood.Eject");
+    return setPosition(HoodConstants.EJECT_ANGLE).withName("Hood.Eject");
   }
 
   /**

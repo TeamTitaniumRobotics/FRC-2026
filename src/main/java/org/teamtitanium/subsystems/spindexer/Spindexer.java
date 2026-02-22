@@ -5,12 +5,12 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 import com.ctre.phoenix6.CANBus;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import java.util.function.Supplier;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.littletonrobotics.junction.AutoLogOutput;
-import org.littletonrobotics.junction.Logger;
 import org.teamtitanium.subsystems.genericroller.GenericRoller;
 import org.teamtitanium.subsystems.genericroller.GenericRollerIO;
 import org.teamtitanium.utils.Constants;
@@ -19,10 +19,13 @@ import org.teamtitanium.utils.Constants.Gains;
 
 public class Spindexer extends GenericRoller {
   /** Independent states for the spindexer. */
+  @RequiredArgsConstructor
   public enum SpindexerState {
-    IDLE,
-    AGITATE,
-    FEED
+    IDLE(() -> IDLE_VELOCITY),
+    AGITATE(() -> AGITATE_VELOCITY),
+    FEED(() -> FEED_VELOCITY);
+
+    @Getter private final Supplier<AngularVelocity> spindexerVelocity;
   }
 
   public static final int SPINDEXER_MOTOR_ID = 35;
@@ -37,7 +40,7 @@ public class Spindexer extends GenericRoller {
   public static final double STATOR_CURRENT_LIMIT = 40.0;
   public static final double SUPPLY_CURRENT_LIMIT = 30.0;
 
-  public static final double SPINDEXER_GEAR_RATIO = 1.0;
+  public static final double SPINDEXER_GEAR_RATIO = 3.0;
 
   public static final Gains SPINDEXER_GAINS = new Gains(6.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
   public static final Constraints SPINDEXER_CONSTRAINTS = new Constraints(24.0, 36.0);
@@ -64,36 +67,7 @@ public class Spindexer extends GenericRoller {
 
   public Spindexer(GenericRollerIO io) {
     super("Spindexer", io);
-  }
-
-  /**
-   * Returns a command that continuously resolves the current {@link SpindexerState} into the
-   * appropriate roller velocity. This should be run as a long-lived command.
-   */
-  public Command applySubStates() {
-    return run(() -> {
-          Logger.recordOutput("Spindexer/State", state.name());
-          switch (state) {
-            case IDLE -> applyVelocity(IDLE_VELOCITY);
-            case AGITATE -> applyVelocity(AGITATE_VELOCITY);
-            case FEED -> applyVelocity(FEED_VELOCITY);
-          }
-        })
-        .ignoringDisable(true)
-        .withName("Spindexer.ApplySubStates");
-  }
-
-  @Override
-  public Command idle() {
-    return setVelocity(IDLE_VELOCITY);
-  }
-
-  public Command agitate() {
-    return setVelocity(AGITATE_VELOCITY);
-  }
-
-  public Command feed() {
-    return setVelocity(FEED_VELOCITY);
+    setDefaultCommand(setVelocity(state.getSpindexerVelocity()));
   }
 
   public Trigger hasFuel =

@@ -1,27 +1,40 @@
 package org.teamtitanium.subsystems.shooter;
 
-import edu.wpi.first.wpilibj2.command.Command;
+import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.RPM;
+
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import java.util.function.Supplier;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.littletonrobotics.junction.AutoLogOutput;
-import org.littletonrobotics.junction.Logger;
 import org.teamtitanium.subsystems.shooter.flywheel.Flywheel;
 import org.teamtitanium.subsystems.shooter.hood.Hood;
+import org.teamtitanium.subsystems.shooter.hood.HoodConstants;
 import org.teamtitanium.subsystems.shooter.turret.Turret;
 
+/** Shooter subsystem for controlling the turret, hood, and flywheel. */
 public class Shooter {
-  /** Independent states for the shooter subsystem group. */
+  /** States for the shooter. */
+  @RequiredArgsConstructor
   public enum ShooterState {
-    STOW,
-    AIM,
-    EJECT
+    STOW(() -> RPM.of(0.0), () -> Degrees.of(0.0), () -> Degrees.of(0.0)),
+    // TODO: Set these up to get shooting setpoints
+    AIM(() -> RPM.of(0.0), () -> Degrees.of(0.0), () -> Degrees.of(0.0)),
+    EJECT(() -> RPM.of(0.0), () -> Degrees.of(0.0), () -> Degrees.of(0.0));
+
+    @Getter private final Supplier<AngularVelocity> flywheelVelocity;
+    @Getter private final Supplier<Angle> hoodAngle;
+    @Getter private final Supplier<Angle> turretAngle;
   }
 
-  private final Turret turret;
-  private final Hood hood;
   private final Flywheel flywheel;
+  private final Hood hood;
+  private final Turret turret;
 
   @Getter
   @Setter
@@ -32,54 +45,27 @@ public class Shooter {
    * Override trigger: when active, the hood will stow regardless of the current shooter state. Used
    * for auto-stow when going under the trench, etc.
    */
-  @Setter private Trigger hoodStowOverride = new Trigger(() -> false);
-
-  public Shooter(Turret turret, Hood hood, Flywheel flywheel) {
-    this.turret = turret;
-    this.hood = hood;
-    this.flywheel = flywheel;
-  }
+  @Setter private Trigger hoodStowOverride = new Trigger(() -> false); // TODO: Set this up
 
   /**
-   * Returns a command that continuously resolves the current {@link ShooterState} (plus any active
-   * overrides) into the appropriate turret / hood / flywheel commands. This should be run as a
-   * long-lived command.
+   * Creates a new Shooter subsystem with the given flywheel, hood, and turret.
+   *
+   * @param flywheel
+   * @param hood
+   * @param turret
    */
-  public Command applySubStates() {
-    return Commands.run(
-            () -> {
-              Logger.recordOutput("Shooter/State", state.name());
-            })
-        .alongWith(
-            Commands.select(
-                    java.util.Map.of(
-                        ShooterState.STOW, stow(),
-                        ShooterState.AIM,
-                            Commands.either(
-                                // When hoodStowOverride is active, stow the hood but keep
-                                // turret tracking and flywheel spinning
-                                Commands.parallel(turret.track(), hood.stow(), flywheel.shoot()),
-                                aim(),
-                                hoodStowOverride),
-                        ShooterState.EJECT, eject()),
-                    () -> state)
-                .repeatedly())
-        .ignoringDisable(true)
-        .withName("Shooter.ApplySubStates");
-  }
+  public Shooter(Flywheel flywheel, Hood hood, Turret turret) {
+    this.flywheel = flywheel;
+    this.hood = hood;
+    this.turret = turret;
 
-  // ---- Low-level command factories (package-visible for direct use in autos) ----
-
-  public Command stow() {
-    return Commands.parallel(turret.stow(), hood.stow(), flywheel.idle());
-  }
-
-  public Command aim() {
-    return Commands.parallel(turret.track(), hood.aim(), flywheel.shoot());
-  }
-
-  public Command eject() {
-    return Commands.parallel(turret.stow(), hood.stow(), flywheel.eject());
+    flywheel.setDefaultCommand(flywheel.setVelocity(state.getFlywheelVelocity()));
+    hood.setDefaultCommand(
+        Commands.either(
+            hood.setPosition(HoodConstants.STOW_ANGLE),
+            hood.setPosition(state.getHoodAngle()),
+            hoodStowOverride));
+    turret.setDefaultCommand(turret.setPosition(state.getTurretAngle()));
   }
 
   public Trigger atSetpoint() {

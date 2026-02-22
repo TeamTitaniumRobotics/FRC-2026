@@ -5,12 +5,12 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 import com.ctre.phoenix6.CANBus;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import java.util.function.Supplier;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.littletonrobotics.junction.AutoLogOutput;
-import org.littletonrobotics.junction.Logger;
 import org.teamtitanium.subsystems.genericroller.GenericRoller;
 import org.teamtitanium.subsystems.genericroller.GenericRollerIO;
 import org.teamtitanium.utils.Constants.Constraints;
@@ -19,18 +19,21 @@ import org.teamtitanium.utils.TunerConstants;
 
 public class Feeder extends GenericRoller {
   /** Independent states for the feeder. */
+  @RequiredArgsConstructor
   public enum FeederState {
-    IDLE,
-    FEED
+    IDLE(() -> IDLE_VELOCITY),
+    FEED(() -> FEED_VELOCITY);
+
+    @Getter private final Supplier<AngularVelocity> feederVelocity;
   }
+
+  public static final AngularVelocity IDLE_VELOCITY = RotationsPerSecond.of(0.0);
+  public static final AngularVelocity FEED_VELOCITY = RotationsPerSecond.of(24.0);
 
   public static final int FEEDER_MOTOR_ID = 40;
   public static final CANBus FEEDER_CAN_BUS = TunerConstants.kCANBus;
 
   public static final boolean FEEDER_INVERTED = true;
-
-  public static final AngularVelocity IDLE_VELOCITY = RotationsPerSecond.of(0.0);
-  public static final AngularVelocity FEED_VELOCITY = RotationsPerSecond.of(24.0);
 
   public static final double STATOR_CURRENT_LIMIT = 40.0;
   public static final double SUPPLY_CURRENT_LIMIT = 30.0;
@@ -62,31 +65,7 @@ public class Feeder extends GenericRoller {
 
   public Feeder(GenericRollerIO io) {
     super("Feeder", io);
-  }
-
-  /**
-   * Returns a command that continuously resolves the current {@link FeederState} into the
-   * appropriate roller velocity. This should be run as a long-lived command.
-   */
-  public Command applySubStates() {
-    return run(() -> {
-          Logger.recordOutput("Feeder/State", state.name());
-          switch (state) {
-            case IDLE -> applyVelocity(IDLE_VELOCITY);
-            case FEED -> applyVelocity(FEED_VELOCITY);
-          }
-        })
-        .ignoringDisable(true)
-        .withName("Feeder.ApplySubStates");
-  }
-
-  @Override
-  public Command idle() {
-    return setVelocity(IDLE_VELOCITY);
-  }
-
-  public Command feed() {
-    return setVelocity(FEED_VELOCITY);
+    setDefaultCommand(setVelocity(state.getFeederVelocity()));
   }
 
   public Trigger hasFuel =

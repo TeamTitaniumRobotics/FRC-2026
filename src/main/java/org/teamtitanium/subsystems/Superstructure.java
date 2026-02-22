@@ -16,13 +16,14 @@ import org.teamtitanium.subsystems.shooter.Shooter;
 import org.teamtitanium.subsystems.shooter.Shooter.ShooterState;
 import org.teamtitanium.subsystems.spindexer.Spindexer;
 import org.teamtitanium.subsystems.spindexer.Spindexer.SpindexerState;
+import org.teamtitanium.utils.VirtualSubsystem;
 
 /**
  * Coordinates all subsystem groups via a lean game-intent state machine. Each subsystem has its own
  * state enum; this class translates (game state + modifiers) into subsystem states through a single
  * {@link #applySubStates()} resolution function.
  */
-public class Superstructure {
+public class Superstructure extends VirtualSubsystem {
   // ───────────────────────────── Game-level state ─────────────────────────────
 
   /**
@@ -120,6 +121,11 @@ public class Superstructure {
     bindModifierToggles(driver);
   }
 
+  @Override
+  public void periodic() {
+    applySubStates();
+  }
+
   // ───────────────────────────── State transitions ────────────────────────────
 
   private void bindTransitions() {
@@ -198,53 +204,44 @@ public class Superstructure {
    * teleop/auto. Every loop iteration it reads the current {@link SuperstructureState} plus
    * modifier triggers and pushes the resolved sub-state into each subsystem.
    */
-  public Command applySubStates() {
-    return Commands.run(
-            () -> {
-              // --- Resolve Shooter state ---
-              switch (state) {
-                case IDLE -> shooter.setState(ShooterState.STOW);
-                case EJECT -> shooter.setState(ShooterState.EJECT);
-                default -> shooter.setState(ShooterState.AIM);
-              }
+  public void applySubStates() {
+    // --- Resolve Shooter state ---
+    switch (state) {
+      case IDLE -> shooter.setState(ShooterState.STOW);
+      case EJECT -> shooter.setState(ShooterState.EJECT);
+      default -> shooter.setState(ShooterState.AIM);
+    }
 
-              // --- Resolve Intake state ---
-              switch (state) {
-                case INTAKE -> intake.setState(IntakeState.INTAKE);
-                case EJECT -> intake.setState(IntakeState.EJECT);
-                case SPIN_UP_SCORE, SPIN_UP_PASS -> {
-                  // If intake deployed override is active, keep intaking; else agitate
-                  intake.setState(
-                      intakeDeployed.getAsBoolean() ? IntakeState.INTAKE : IntakeState.AGITATE);
-                }
-                case SCORE, PASS -> {
-                  // If intake deployed override is active, keep intaking; else stow
-                  intake.setState(
-                      intakeDeployed.getAsBoolean() ? IntakeState.INTAKE : IntakeState.STOW);
-                }
-                default -> {
-                  // IDLE / PREPPED / CLIMB states
-                  intake.setState(
-                      intakeDeployed.getAsBoolean() ? IntakeState.INTAKE : IntakeState.STOW);
-                }
-              }
+    // --- Resolve Intake state ---
+    switch (state) {
+      case INTAKE -> intake.setState(IntakeState.INTAKE);
+      case EJECT -> intake.setState(IntakeState.EJECT);
+      case SPIN_UP_SCORE, SPIN_UP_PASS -> {
+        // If intake deployed override is active, keep intaking; else agitate
+        intake.setState(intakeDeployed.getAsBoolean() ? IntakeState.INTAKE : IntakeState.AGITATE);
+      }
+      case SCORE, PASS -> {
+        // If intake deployed override is active, keep intaking; else stow
+        intake.setState(intakeDeployed.getAsBoolean() ? IntakeState.INTAKE : IntakeState.STOW);
+      }
+      default -> {
+        // IDLE / PREPPED / CLIMB states
+        intake.setState(intakeDeployed.getAsBoolean() ? IntakeState.INTAKE : IntakeState.STOW);
+      }
+    }
 
-              // --- Resolve Feeder state ---
-              switch (state) {
-                case SCORE, PASS, EJECT -> feeder.setState(FeederState.FEED);
-                default -> feeder.setState(FeederState.IDLE);
-              }
+    // --- Resolve Feeder state ---
+    switch (state) {
+      case SCORE, PASS, EJECT -> feeder.setState(FeederState.FEED);
+      default -> feeder.setState(FeederState.IDLE);
+    }
 
-              // --- Resolve Spindexer state ---
-              switch (state) {
-                case INTAKE, SPIN_UP_SCORE, SPIN_UP_PASS -> spindexer.setState(
-                    SpindexerState.AGITATE);
-                case SCORE, PASS, EJECT -> spindexer.setState(SpindexerState.FEED);
-                default -> spindexer.setState(SpindexerState.IDLE);
-              }
-            })
-        .ignoringDisable(true)
-        .withName("Superstructure.ApplySubStates");
+    // --- Resolve Spindexer state ---
+    switch (state) {
+      case INTAKE, SPIN_UP_SCORE, SPIN_UP_PASS -> spindexer.setState(SpindexerState.AGITATE);
+      case SCORE, PASS, EJECT -> spindexer.setState(SpindexerState.FEED);
+      default -> spindexer.setState(SpindexerState.IDLE);
+    }
   }
 
   // ───────────────────────────── setState helpers ─────────────────────────────

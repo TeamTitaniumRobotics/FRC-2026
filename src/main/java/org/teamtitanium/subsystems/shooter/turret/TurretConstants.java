@@ -14,7 +14,7 @@ import org.teamtitanium.utils.Constants.Constraints;
 import org.teamtitanium.utils.Constants.Gains;
 
 public class TurretConstants {
-  public static final Angle TURRET_STOW_ANGLE = Rotations.of(0.0);
+  public static final Angle STOW_ANGLE = Rotations.of(0.0);
 
   // CAN IDs
   public static final int TURRET_MOTOR_ID = 15;
