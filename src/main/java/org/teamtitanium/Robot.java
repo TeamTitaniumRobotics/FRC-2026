@@ -35,6 +35,7 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 import org.teamtitanium.autos.*;
 import org.teamtitanium.commands.DriveCommands;
 import org.teamtitanium.subsystems.Leds;
+import org.teamtitanium.subsystems.feeder.Feeder;
 import org.teamtitanium.subsystems.genericroller.GenericRollerIO;
 import org.teamtitanium.subsystems.genericroller.GenericRollerIOSim;
 import org.teamtitanium.subsystems.genericroller.GenericRollerIOTalonFX;
@@ -57,6 +58,7 @@ import org.teamtitanium.subsystems.shooter.turret.Turret;
 import org.teamtitanium.subsystems.shooter.turret.TurretIO;
 import org.teamtitanium.subsystems.shooter.turret.TurretIOSim;
 import org.teamtitanium.subsystems.shooter.turret.TurretIOTalonFX;
+import org.teamtitanium.subsystems.spindexer.Spindexer;
 import org.teamtitanium.subsystems.swerve.GyroIO;
 import org.teamtitanium.subsystems.swerve.GyroIOPigeon2;
 import org.teamtitanium.subsystems.swerve.Swerve;
@@ -94,6 +96,8 @@ public class Robot extends LoggedRobot {
   private final Intake intake;
   private final IntakeRack intakeRack;
   private final IntakeRoller intakeRoller;
+  private final Feeder feeder;
+  private final Spindexer spindexer;
 
   private final Vision vision;
 
@@ -228,6 +232,10 @@ public class Robot extends LoggedRobot {
         intakeRoller =
             new IntakeRoller(new GenericRollerIOTalonFX(IntakeConstants.RollerConstants.CONSTANTS));
         vision = new Vision(new VisionIOPhoton(), RobotState.getInstance());
+        intake = new Intake(intakeRack, intakeRoller);
+        feeder = new Feeder(new GenericRollerIOTalonFX(IntakeConstants.RollerConstants.CONSTANTS));
+        spindexer =
+            new Spindexer(new GenericRollerIOTalonFX(IntakeConstants.RollerConstants.CONSTANTS));
       }
       case SIM -> {
         swerve =
@@ -246,6 +254,15 @@ public class Robot extends LoggedRobot {
                 new GenericRollerIOSim(
                     IntakeConstants.RollerConstants.CONSTANTS, DCMotor.getKrakenX44(1), 0.01));
         vision = new Vision(new VisionIOSim(), RobotState.getInstance());
+        intake = new Intake(intakeRack, intakeRoller);
+        feeder =
+            new Feeder(
+                new GenericRollerIOSim(
+                    IntakeConstants.RollerConstants.CONSTANTS, DCMotor.getKrakenX44(1), 0.01));
+        spindexer =
+            new Spindexer(
+                new GenericRollerIOSim(
+                    IntakeConstants.RollerConstants.CONSTANTS, DCMotor.getKrakenX44(1), 0.01));
       }
       default -> {
         swerve =
@@ -261,20 +278,24 @@ public class Robot extends LoggedRobot {
         intakeRack = new IntakeRack(new IntakeRackIO() {});
         intakeRoller = new IntakeRoller(new GenericRollerIO() {});
         vision = new Vision(new VisionIO() {}, RobotState.getInstance());
+        intake = new Intake(intakeRack, intakeRoller);
+        feeder = new Feeder(new GenericRollerIO() {});
+        spindexer = new Spindexer(new GenericRollerIO() {});
       }
     }
     if (swerve != null) {
-      autos = new AutoRoutines(swerve, (sample, isStart) -> {});
+      autos =
+          new AutoRoutines(
+              swerve, (sample, isStart) -> {}, turret, hood, flywheel, intake, feeder, spindexer);
 
       // Create an AutoChooser
-      autoChooser.addRoutine("NewAuto", () -> autos.exampleAutoRoutine());
+      // autoChooser.addRoutine("NewAuto", () -> autos.exampleAutoRoutine());
+      autoChooser.addRoutine("Ideal Auto", () -> autos.idealRoutine());
       // Put the auto chooser on the dashboard
       SmartDashboard.putData("autos", autoChooser);
     } else {
       autos = null;
     }
-
-    intake = new Intake(intakeRack, intakeRoller);
 
     configureButtonBindings();
   }

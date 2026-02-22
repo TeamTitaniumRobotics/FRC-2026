@@ -20,6 +20,12 @@ public class DriveCommands {
 
   public static Translation2d getLinearVelocityFromJoysticks(double x, double y) {
     double linearMagnitude = MathUtil.applyDeadband(Math.hypot(x, y), DEADBAND);
+
+    // Prevent Rotation2d(0, 0) exception when stick is centered / in deadband
+    if (linearMagnitude <= 1e-6) {
+      return Translation2d.kZero;
+    }
+
     Rotation2d linearDirection = new Rotation2d(x, y);
 
     linearMagnitude = linearMagnitude * linearMagnitude;
