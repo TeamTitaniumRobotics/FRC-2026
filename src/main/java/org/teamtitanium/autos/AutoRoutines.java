@@ -78,7 +78,8 @@ public class AutoRoutines {
                 idealPaths.resetOdometry(),
                 Commands.print("This is the start of the routine."),
                 idealPaths.cmd()));
-    idealPaths.atTime("Intake").onTrue(intake.intake());
+    idealPaths.atTime("Intake").onTrue(intake.intake().andThen(Commands.print("Intake starting")));
+    idealPaths.atTime("Stow").onTrue(intake.stow().andThen(Commands.print("Intake stopping")));
     // // long-running command: start intake repeatedly, stow on end
     // WrapperCommand intakeBetweenMarkers =
     //     Commands.sequence(
