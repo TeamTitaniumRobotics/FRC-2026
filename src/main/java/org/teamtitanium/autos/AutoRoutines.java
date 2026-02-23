@@ -5,9 +5,7 @@ import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
 import choreo.trajectory.SwerveSample;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.WrapperCommand;
 import lombok.Getter;
 import org.teamtitanium.RobotState;
 import org.teamtitanium.subsystems.feeder.Feeder;
@@ -73,9 +71,14 @@ public class AutoRoutines {
   public AutoRoutine idealRoutine() {
     AutoRoutine routine = factory.newRoutine("idealRoutine");
     AutoTrajectory idealPaths = routine.trajectory("Ideal");
-    factory.bind("Intake", intake.intake());
-    factory.bind("", spindexer.feed());
-    factory.bind("storw", intake.stow());
+    routine
+        .active()
+        .onTrue(
+            Commands.sequence(
+                idealPaths.resetOdometry(),
+                Commands.print("This is the start of the routine."),
+                idealPaths.cmd()));
+    idealPaths.atTime("Intake").onTrue(intake.intake());
     // // long-running command: start intake repeatedly, stow on end
     // WrapperCommand intakeBetweenMarkers =
     //     Commands.sequence(

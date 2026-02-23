@@ -393,16 +393,20 @@ public class Swerve extends SubsystemBase {
         RobotState.getInstance()
             .getEstimatedPose(); // Ensure odometry is up to date by getting pose
 
-    // Generate the desired speeds to follow that trajectory
-    ChassisSpeeds speeds =
+    // Generate desired FIELD-relative speeds from trajectory + feedback.
+    ChassisSpeeds fieldRelativeSpeeds =
         new ChassisSpeeds(
             sample.vx + xPosController.calculate(pose.getX(), sample.x),
             sample.vy + yPosController.calculate(pose.getY(), sample.y),
             sample.omega
                 + headingController.calculate(pose.getRotation().getRadians(), sample.heading));
 
+    // Convert field-relative -> robot-relative before module kinematics.
+    ChassisSpeeds robotRelativeSpeeds =
+        ChassisSpeeds.fromFieldRelativeSpeeds(fieldRelativeSpeeds, pose.getRotation());
+
     // Apply those calculated speeds.
-    runVelocity(speeds);
+    runVelocity(robotRelativeSpeeds);
   }
 
   @AutoLogOutput(key = "Swerve/SwerveStates/Measured")
