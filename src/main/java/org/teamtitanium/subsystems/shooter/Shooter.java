@@ -59,13 +59,13 @@ public class Shooter {
     this.hood = hood;
     this.turret = turret;
 
-    flywheel.setDefaultCommand(flywheel.setVelocity(state.getFlywheelVelocity()));
+    flywheel.setDefaultCommand(flywheel.setVelocity(() -> state.getFlywheelVelocity().get()));
     hood.setDefaultCommand(
         Commands.either(
             hood.setPosition(HoodConstants.STOW_ANGLE),
-            hood.setPosition(state.getHoodAngle()),
+            hood.setPosition(() -> state.getHoodAngle().get()),
             hoodStowOverride));
-    turret.setDefaultCommand(turret.setPosition(state.getTurretAngle()));
+    turret.setDefaultCommand(turret.setPosition(() -> state.getTurretAngle().get()));
   }
 
   public Trigger atSetpoint() {

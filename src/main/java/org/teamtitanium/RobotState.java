@@ -100,7 +100,7 @@ public class RobotState {
   // align drivetrain with the trench. Also add an override on driver's controller to override the
   // function. Also add drivetrain auto rotate for bump with same override
   public Trigger underTrench =
-      new Trigger(() -> true); // TODO: Replace with actual logic to determine if under trench
+      new Trigger(() -> false); // TODO: Replace with actual logic to determine if under trench
 
   public Rotation2d getRotation() {
     return estimatedPose.getRotation();

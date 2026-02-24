@@ -44,9 +44,9 @@ public class Intake {
             Commands.repeatingSequence(
                 rack.setExtension(RackConstants.AGITATE_EXTENSION).until(rack.atSetpoint()),
                 rack.setExtension(RackConstants.STOW_EXTENSION).until(rack.atSetpoint())),
-            rack.setExtension(state.getRackDistance()),
+            rack.setExtension(() -> state.getRackDistance().get()),
             () -> state == IntakeState.AGITATE));
-    roller.setDefaultCommand(roller.setVelocity(state.getIntakeVelocity()));
+    roller.setDefaultCommand(roller.setVelocity(() -> state.getIntakeVelocity().get()));
   }
 
   public Trigger atSetpoint() {

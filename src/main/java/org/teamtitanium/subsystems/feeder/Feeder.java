@@ -66,7 +66,7 @@ public class Feeder extends GenericRoller {
 
   public Feeder(GenericRollerIO io) {
     super("Feeder", io);
-    setDefaultCommand(setVelocity(state.getFeederVelocity()));
+    setDefaultCommand(setVelocity(() -> state.getFeederVelocity().get()));
   }
 
   public Trigger hasFuel =
