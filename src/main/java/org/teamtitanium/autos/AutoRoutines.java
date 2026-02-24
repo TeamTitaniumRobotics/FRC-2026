@@ -111,4 +111,30 @@ public class AutoRoutines {
     //         Commands.runOnce(() -> CommandScheduler.getInstance().cancel(intakeBetweenMarkers)));
     return routine;
   }
+
+  public AutoRoutine movementRoutine() {
+    AutoRoutine routine = factory.newRoutine("movementRoutine");
+    AutoTrajectory testPath = routine.trajectory("TestPath");
+    routine
+        .active()
+        .onTrue(
+            Commands.sequence(
+                testPath.resetOdometry(),
+                Commands.print("This is the start of the routine."),
+                testPath.cmd()));
+    return routine;
+  }
+
+  public AutoRoutine rotateRoutine() {
+    AutoRoutine routine = factory.newRoutine("rotateRoutine");
+    AutoTrajectory rotateInPlace = routine.trajectory("RotateInPlace");
+    routine
+        .active()
+        .onTrue(
+            Commands.sequence(
+                rotateInPlace.resetOdometry(),
+                Commands.print("This is the start of the routine."),
+                rotateInPlace.cmd()));
+    return routine;
+  }
 }

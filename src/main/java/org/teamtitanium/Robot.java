@@ -291,6 +291,8 @@ public class Robot extends LoggedRobot {
       // Create an AutoChooser
       // autoChooser.addRoutine("NewAuto", () -> autos.exampleAutoRoutine());
       autoChooser.addRoutine("Ideal Auto", () -> autos.idealRoutine());
+      autoChooser.addRoutine("MoveTest", () -> autos.movementRoutine());
+      autoChooser.addRoutine("RotateTest", ()-> autos.rotateRoutine());
       // Put the auto chooser on the dashboard
       SmartDashboard.putData("autos", autoChooser);
     } else {
