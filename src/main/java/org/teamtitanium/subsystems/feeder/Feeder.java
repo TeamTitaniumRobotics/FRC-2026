@@ -13,9 +13,9 @@ import lombok.Setter;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.teamtitanium.subsystems.genericroller.GenericRoller;
 import org.teamtitanium.subsystems.genericroller.GenericRollerIO;
+import org.teamtitanium.utils.Constants;
 import org.teamtitanium.utils.Constants.Constraints;
 import org.teamtitanium.utils.Constants.Gains;
-import org.teamtitanium.utils.TunerConstants;
 
 public class Feeder extends GenericRoller {
   /** Independent states for the feeder. */
@@ -31,7 +31,8 @@ public class Feeder extends GenericRoller {
   public static final AngularVelocity FEED_VELOCITY = RotationsPerSecond.of(24.0);
 
   public static final int FEEDER_MOTOR_ID = 40;
-  public static final CANBus FEEDER_CAN_BUS = TunerConstants.kCANBus;
+  public static final CANBus FEEDER_CAN_BUS =
+      Constants.getMode() == Constants.Mode.REAL ? Constants.CANIVORE : Constants.RIO_CAN_BUS;
 
   public static final boolean FEEDER_INVERTED = true;
 

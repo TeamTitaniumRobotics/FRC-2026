@@ -22,6 +22,7 @@ public class Constants {
   }
 
   public static final CANBus RIO_CAN_BUS = CANBus.roboRIO();
+  public static final CANBus CANIVORE = TunerConstants.kCANBus;
 
   public record Gains(double kP, double kI, double kD, double kS, double kV, double kG, double kA) {
     public Gains(double kP, double kI, double kD) {

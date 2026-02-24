@@ -12,7 +12,6 @@ import org.teamtitanium.subsystems.genericroller.GenericRoller.GenericRollerCons
 import org.teamtitanium.utils.Constants;
 import org.teamtitanium.utils.Constants.Constraints;
 import org.teamtitanium.utils.Constants.Gains;
-import org.teamtitanium.utils.TunerConstants;
 
 public class IntakeConstants {
   public static class RollerConstants {
@@ -52,7 +51,8 @@ public class IntakeConstants {
   public static class RackConstants {
     // CAN IDs
     public static final int RACK_MOTOR_ID = 31;
-    public static final CANBus RACK_CAN_BUS = TunerConstants.kCANBus;
+    public static final CANBus RACK_CAN_BUS =
+        Constants.getMode() == Constants.Mode.REAL ? Constants.CANIVORE : Constants.RIO_CAN_BUS;
 
     // Clockwise (true) or counter-clockwise (false) positive
     public static final boolean RACK_INVERTED = true;
