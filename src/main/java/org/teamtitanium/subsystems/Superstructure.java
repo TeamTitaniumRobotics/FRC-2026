@@ -16,7 +16,7 @@ import org.teamtitanium.subsystems.shooter.Shooter;
 import org.teamtitanium.subsystems.shooter.Shooter.ShooterState;
 import org.teamtitanium.subsystems.spindexer.Spindexer;
 import org.teamtitanium.subsystems.spindexer.Spindexer.SpindexerState;
-import org.teamtitanium.utils.VirtualSubsystem;
+import org.teamtitanium.utils.virtualsubsystem.VirtualSubsystem;
 
 /**
  * Coordinates all subsystem groups via a lean game-intent state machine. Each subsystem has its own
@@ -124,6 +124,11 @@ public class Superstructure extends VirtualSubsystem {
   @Override
   public void periodic() {
     applySubStates();
+  }
+
+  @Override
+  public void simulationPeriodic() {
+    // TODO: Add subsystem visualization here
   }
 
   // ───────────────────────────── State transitions ────────────────────────────

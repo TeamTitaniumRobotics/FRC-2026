@@ -15,7 +15,6 @@ import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
-import org.teamtitanium.RobotState;
 import org.teamtitanium.utils.Constants.Constraints;
 import org.teamtitanium.utils.Constants.Gains;
 import org.teamtitanium.utils.LoggedTracer;
@@ -123,24 +122,6 @@ public class Turret extends SubsystemBase {
 
     // Log the turret loop time
     LoggedTracer.record("Turret");
-  }
-
-  /**
-   * Sets the turret to the stowed position
-   *
-   * @return A command that sets the turret to the stowed position
-   */
-  public Command stow() {
-    return setPosition(STOW_ANGLE);
-  }
-
-  /**
-   * Tracks the turret to the robot state turret setpoint
-   *
-   * @return A command that repeatedly sets the turret to the robot state turret setpoint
-   */
-  public Command track() {
-    return setPosition(() -> RobotState.getInstance().getTurretSetpoint());
   }
 
   public Angle getTargetAngle(Angle targetAngle, Angle currentAngle) {

@@ -71,7 +71,7 @@ import org.teamtitanium.utils.LoggedTracer;
 import org.teamtitanium.utils.NTClientLogger;
 import org.teamtitanium.utils.PhoenixUtil;
 import org.teamtitanium.utils.TunerConstants;
-import org.teamtitanium.utils.VirtualSubsystem;
+import org.teamtitanium.utils.virtualsubsystem.VirtualSubsystem;
 
 public class Robot extends LoggedRobot {
   private static final double loopOverrunWarningTimeout = 0.02;
@@ -564,7 +564,9 @@ public class Robot extends LoggedRobot {
   public void teleopExit() {}
 
   @Override
-  public void simulationPeriodic() {}
+  public void simulationPeriodic() {
+    VirtualSubsystem.simulationPeriodicAll();
+  }
 
   @Override
   public void testInit() {

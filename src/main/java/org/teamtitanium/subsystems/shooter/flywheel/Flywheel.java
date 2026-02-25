@@ -11,6 +11,7 @@ import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
+import org.teamtitanium.utils.Constants.Constraints;
 import org.teamtitanium.utils.Constants.Gains;
 import org.teamtitanium.utils.LoggedTracer;
 import org.teamtitanium.utils.LoggedTunableNumber;
@@ -29,6 +30,11 @@ public class Flywheel extends SubsystemBase {
       new LoggedTunableNumber("Flywheel/kV", FLYWHEEL_GAINS.kV());
   private final LoggedTunableNumber flywheelkA =
       new LoggedTunableNumber("Flywheel/kA", FLYWHEEL_GAINS.kA());
+
+  private final LoggedTunableNumber flywheelMaxVelocty =
+      new LoggedTunableNumber("Flywheel/MaxVelocity", FLYWHEEL_CONSTRAINTS.maxVelocity());
+  private final LoggedTunableNumber flywheelMaxAcceleration =
+      new LoggedTunableNumber("Flywheel/MaxAcceleration", FLYWHEEL_CONSTRAINTS.maxAcceleration());
 
   public final LoggedTunableNumber flywheelConfigNumber1 =
       new LoggedTunableNumber("Flywheel/ConfigNumber1", 0.0);
@@ -71,19 +77,12 @@ public class Flywheel extends SubsystemBase {
               flywheelkA.get()));
     }
 
+    if (flywheelMaxVelocty.hasChanged(hashCode())
+        || flywheelMaxAcceleration.hasChanged(hashCode())) {
+      io.setConstraints(new Constraints(flywheelMaxVelocty.get(), flywheelMaxAcceleration.get()));
+    }
+
     LoggedTracer.record("Flywheel");
-  }
-
-  public Command idle() {
-    return setVelocity(IDLE_VELOCITY);
-  }
-
-  public Command shoot() {
-    return setVelocity(SHOOT_VELOCITY);
-  }
-
-  public Command eject() {
-    return setVelocity(EJECT_VELOCITY);
   }
 
   /**

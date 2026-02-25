@@ -2,60 +2,60 @@ package org.teamtitanium.subsystems.shooter.flywheel;
 
 import static org.teamtitanium.subsystems.shooter.flywheel.FlywheelConstants.*;
 
+import com.ctre.phoenix6.Utils;
+import com.ctre.phoenix6.sim.TalonFXSimState.MotorType;
 import edu.wpi.first.math.system.plant.LinearSystemId;
-import edu.wpi.first.wpilibj.simulation.DCMotorSim;
+import edu.wpi.first.wpilibj.Notifier;
+import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.simulation.FlywheelSim;
+import org.teamtitanium.utils.Constants;
 
 public class FlywheelIOSim extends FlywheelIOTalonFX {
-  private final DCMotorSim flywheelSim;
-
-  private double appliedVolts = 0.0;
+  private final FlywheelSim flywheelSim;
+  private final Notifier simNotifier;
+  private double lastSimTime = 0.0;
 
   public FlywheelIOSim() {
     super();
 
     // Create simulation model (two motors combined)
     flywheelSim =
-        new DCMotorSim(
-            LinearSystemId.createDCMotorSystem(
+        new FlywheelSim(
+            LinearSystemId.createFlywheelSystem(
                 FLYWHEEL_GEARBOX, FLYWHEEL_MOMENT_OF_INERTIA, FLYWHEEL_GEAR_RATIO),
             FLYWHEEL_GEARBOX);
+
+    var motorSimState = leftMotor.getSimState();
+    motorSimState.setMotorType(MotorType.KrakenX60);
+
+    lastSimTime = Utils.getCurrentTimeSeconds();
+    simNotifier =
+        new Notifier(
+            () -> {
+              final double currentTime = Utils.getCurrentTimeSeconds();
+              final double deltaTime = currentTime - lastSimTime;
+              lastSimTime = currentTime;
+
+              motorSimState.setSupplyVoltage(RobotController.getBatteryVoltage());
+
+              flywheelSim.setInputVoltage(motorSimState.getMotorVoltage());
+              flywheelSim.update(deltaTime);
+
+              // motorSimState.setRawRotorPosition(
+              //     flywheelSim.getAngularPositionRotations() * constants.reduction());
+              motorSimState.setRotorVelocity(
+                  flywheelSim.getAngularVelocityRPM()
+                      / 60.0
+                      * FlywheelConstants.FLYWHEEL_GEAR_RATIO);
+            });
+    simNotifier.startPeriodic(Constants.simLoopPeriodSecs);
   }
 
   @Override
   public void updateInputs(FlywheelIOInputs inputs) {
-    // Update simulation
-    flywheelSim.setInputVoltage(appliedVolts);
-    flywheelSim.update(0.02); // 20ms loop time
-
-    // Get simulated values (both motors see same velocity)\
-    double positionRots = flywheelSim.getAngularPositionRotations();
-    double velocityRps = flywheelSim.getAngularVelocityRPM() / 60.0;
-    double currentAmps = flywheelSim.getCurrentDrawAmps() / 2.0; // Split between two motors
-
     inputs.leftMotorConnected = true;
     inputs.rightMotorConnected = true;
-    inputs.positionRots = positionRots;
-    inputs.velocityRps = velocityRps;
-    inputs.appliedVolts = new double[] {appliedVolts, appliedVolts};
-    inputs.supplyCurrentAmps = new double[] {currentAmps, currentAmps};
-    inputs.torqueCurrentAmps = new double[] {currentAmps, currentAmps};
-    inputs.tempCelsius = new double[] {25.0, 25.0}; // Assume constant temperature in sim
 
-    // Update the real motor velocities for velocity control
-    leftMotor.getSimState().setRotorVelocity(velocityRps * FLYWHEEL_GEAR_RATIO);
-    rightMotor.getSimState().setRotorVelocity(velocityRps * FLYWHEEL_GEAR_RATIO);
-  }
-
-  @Override
-  public void setVelocity(double velocityRps) {
-    super.setVelocity(velocityRps);
-    // Get the voltage output from the TalonFX controller
-    appliedVolts = leftMotor.getSimState().getMotorVoltage();
-  }
-
-  @Override
-  public void setVoltage(double volts) {
-    super.setVoltage(volts);
-    appliedVolts = volts;
+    super.updateInputs(inputs);
   }
 }

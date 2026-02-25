@@ -6,6 +6,7 @@ import com.ctre.phoenix6.CANBus;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.AngularVelocity;
 import org.teamtitanium.utils.Constants;
+import org.teamtitanium.utils.Constants.Constraints;
 import org.teamtitanium.utils.Constants.Gains;
 
 public class FlywheelConstants {
@@ -19,14 +20,15 @@ public class FlywheelConstants {
   public static final AngularVelocity EJECT_VELOCITY = RPM.of(1000);
 
   // Physical Constants
-  public static final double FLYWHEEL_GEAR_RATIO = 0.5; // 1:2 reduction
+  public static final double FLYWHEEL_GEAR_RATIO = (18.0 / 24.0); // 1:1.33 reduction
   public static final double FLYWHEEL_MOMENT_OF_INERTIA = 0.008; // kg*m^2
 
   // Tolerance
   public static final double VELOCITY_TOLERANCE_RPS = 1.0; // ~60 RPM tolerance
 
   // PID Gains (Velocity control)
-  public static final Gains FLYWHEEL_GAINS = new Gains(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+  public static final Gains FLYWHEEL_GAINS = new Gains(1.0, 0.0, 0.0, 0.0, 0.075, 0.0, 0.0);
+  public static final Constraints FLYWHEEL_CONSTRAINTS = new Constraints(50.0, 75.0);
 
   // Current Limits
   public static final double STATOR_CURRENT_LIMIT = 80.0; // High for flywheel spin-up

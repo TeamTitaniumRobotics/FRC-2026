@@ -1,9 +1,9 @@
-package org.teamtitanium.utils;
+package org.teamtitanium.utils.virtualsubsystem;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class VirtualSubsystem {
+public abstract class VirtualSubsystem implements IVirtualSubsystem {
   private static List<VirtualSubsystem> virtualSubsystems = new ArrayList<>();
 
   public VirtualSubsystem() {
@@ -16,5 +16,9 @@ public abstract class VirtualSubsystem {
     }
   }
 
-  public abstract void periodic();
+  public static void simulationPeriodicAll() {
+    for (VirtualSubsystem virtualSubsystem : virtualSubsystems) {
+      virtualSubsystem.simulationPeriodic();
+    }
+  }
 }

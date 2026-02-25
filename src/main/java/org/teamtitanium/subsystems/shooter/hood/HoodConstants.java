@@ -1,6 +1,6 @@
 package org.teamtitanium.subsystems.shooter.hood;
 
-import static edu.wpi.first.units.Units.Rotations;
+import static edu.wpi.first.units.Units.Degrees;
 
 import com.ctre.phoenix6.CANBus;
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -10,8 +10,8 @@ import org.teamtitanium.utils.Constants.Constraints;
 import org.teamtitanium.utils.Constants.Gains;
 
 public class HoodConstants {
-  public static final Angle STOW_ANGLE = Rotations.of(0.0);
-  public static final Angle EJECT_ANGLE = Rotations.of(0.05);
+  public static final Angle STOW_ANGLE = Degrees.of(0.0);
+  public static final Angle EJECT_ANGLE = Degrees.of(30.0);
 
   // CAN IDs
   public static final int HOOD_MOTOR_ID = 18;
@@ -33,7 +33,7 @@ public class HoodConstants {
       new Constraints(1.5, 3.0); // Max velocity (rps), accel (rps^2)
 
   // PID Gains
-  public static final Gains HOOD_GAINS = new Gains(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+  public static final Gains HOOD_GAINS = new Gains(5.0, 0.0, 0.0, 0.0, 9.5, 0.0, 0.0);
 
   // Current Limits
   public static final double STATOR_CURRENT_LIMIT = 60.0;

@@ -1,7 +1,6 @@
 package org.teamtitanium.subsystems.shooter;
 
 import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.RPM;
 
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -13,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.teamtitanium.subsystems.shooter.flywheel.Flywheel;
+import org.teamtitanium.subsystems.shooter.flywheel.FlywheelConstants;
 import org.teamtitanium.subsystems.shooter.hood.Hood;
 import org.teamtitanium.subsystems.shooter.hood.HoodConstants;
 import org.teamtitanium.subsystems.shooter.turret.Turret;
@@ -22,10 +22,16 @@ public class Shooter {
   /** States for the shooter. */
   @RequiredArgsConstructor
   public enum ShooterState {
-    STOW(() -> RPM.of(0.0), () -> Degrees.of(0.0), () -> Degrees.of(0.0)),
+    STOW(
+        () -> FlywheelConstants.IDLE_VELOCITY,
+        () -> HoodConstants.STOW_ANGLE,
+        () -> Degrees.of(0.0)),
     // TODO: Set these up to get shooting setpoints
-    AIM(() -> RPM.of(0.0), () -> Degrees.of(0.0), () -> Degrees.of(0.0)),
-    EJECT(() -> RPM.of(0.0), () -> Degrees.of(0.0), () -> Degrees.of(0.0));
+    AIM(() -> FlywheelConstants.SHOOT_VELOCITY, () -> Degrees.of(60.0), () -> Degrees.of(0.0)),
+    EJECT(
+        () -> FlywheelConstants.EJECT_VELOCITY,
+        () -> HoodConstants.EJECT_ANGLE,
+        () -> Degrees.of(0.0));
 
     @Getter private final Supplier<AngularVelocity> flywheelVelocity;
     @Getter private final Supplier<Angle> hoodAngle;
@@ -68,6 +74,7 @@ public class Shooter {
     turret.setDefaultCommand(turret.setPosition(() -> state.getTurretAngle().get()));
   }
 
+  @AutoLogOutput(key = "Shooter/AtSetpoint")
   public Trigger atSetpoint() {
     return turret.atSetpoint().and(hood.atSetpoint()).and(flywheel.atSetpoint());
   }

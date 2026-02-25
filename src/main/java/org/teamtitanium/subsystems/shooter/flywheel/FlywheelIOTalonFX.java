@@ -20,6 +20,7 @@ import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
 import java.util.List;
 import org.teamtitanium.utils.Constants;
+import org.teamtitanium.utils.Constants.Constraints;
 import org.teamtitanium.utils.Constants.Gains;
 import org.teamtitanium.utils.PhoenixUtil;
 
@@ -65,6 +66,10 @@ public class FlywheelIOTalonFX implements FlywheelIO {
     config.Slot0.kS = FLYWHEEL_GAINS.kS();
     config.Slot0.kV = FLYWHEEL_GAINS.kV();
     config.Slot0.kA = FLYWHEEL_GAINS.kA();
+
+    config.MotionMagic.MotionMagicCruiseVelocity = FLYWHEEL_CONSTRAINTS.maxVelocity();
+    config.MotionMagic.MotionMagicAcceleration = FLYWHEEL_CONSTRAINTS.maxAcceleration();
+    config.MotionMagic.MotionMagicJerk = FLYWHEEL_CONSTRAINTS.kJerk();
 
     // Voltage compensation
     config.Voltage.PeakForwardVoltage = 12.0;
@@ -172,6 +177,13 @@ public class FlywheelIOTalonFX implements FlywheelIO {
     config.Slot0.kA = gains.kA();
     PhoenixUtil.tryUntilOk(5, () -> leftMotor.getConfigurator().apply(config));
     PhoenixUtil.tryUntilOk(5, () -> rightMotor.getConfigurator().apply(config));
+  }
+
+  @Override
+  public void setConstraints(Constraints constraints) {
+    config.MotionMagic.MotionMagicCruiseVelocity = constraints.maxVelocity();
+    config.MotionMagic.MotionMagicAcceleration = constraints.maxAcceleration();
+    config.MotionMagic.MotionMagicJerk = constraints.kJerk();
   }
 
   @Override

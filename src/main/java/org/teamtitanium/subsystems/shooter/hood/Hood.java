@@ -82,18 +82,6 @@ public class Hood extends SubsystemBase {
     LoggedTracer.record("Hood");
   }
 
-  public Command stow() {
-    return setPosition(HoodConstants.STOW_ANGLE).withName("Hood.Stow");
-  }
-
-  public Command aim() {
-    return setPosition(Rotations.of(0.125));
-  }
-
-  public Command eject() {
-    return setPosition(HoodConstants.EJECT_ANGLE).withName("Hood.Eject");
-  }
-
   /**
    * Sets the hood to a position supplier
    *
