@@ -66,7 +66,7 @@ public class Spindexer extends GenericRoller {
   private SpindexerState state = SpindexerState.IDLE;
 
   public Spindexer(GenericRollerIO io) {
-    super("Spindexer", io);
+    super("Spindexer", io, CONSTANTS);
     setDefaultCommand(setVelocity(() -> state.getSpindexerVelocity().get()));
   }
 

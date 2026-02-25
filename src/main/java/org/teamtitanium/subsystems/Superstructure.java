@@ -33,7 +33,7 @@ public class Superstructure extends VirtualSubsystem {
   public enum SuperstructureState {
     IDLE,
     INTAKE,
-    PREPPED,
+    // PREPPED,
     SPIN_UP_SCORE,
     SCORE,
     SPIN_UP_PASS,
@@ -133,40 +133,41 @@ public class Superstructure extends VirtualSubsystem {
     bindTransition(SuperstructureState.IDLE, SuperstructureState.INTAKE, intakeReq);
     bindTransition(SuperstructureState.INTAKE, SuperstructureState.IDLE, intakeReq.negate());
 
-    // IDLE / INTAKE → PREPPED (fuel acquired)
-    bindTransition(
-        SuperstructureState.IDLE, SuperstructureState.PREPPED, hasFuel.and(intakeReq.negate()));
-    bindTransition(
-        SuperstructureState.INTAKE, SuperstructureState.PREPPED, hasFuel.and(intakeReq.negate()));
+    // // IDLE / INTAKE → PREPPED (fuel acquired)
+    // bindTransition(
+    //     SuperstructureState.IDLE, SuperstructureState.PREPPED, hasFuel.and(intakeReq.negate()));
+    // bindTransition(
+    //     SuperstructureState.INTAKE, SuperstructureState.PREPPED,
+    // hasFuel.and(intakeReq.negate()));
 
-    // PREPPED → IDLE (fuel lost after grace period)
-    bindTransition(
-        SuperstructureState.PREPPED,
-        SuperstructureState.IDLE,
-        hasFuel.negate().and(() -> stateTimer.hasElapsed(0.5)));
+    // // PREPPED → IDLE (fuel lost after grace period)
+    // bindTransition(
+    //     SuperstructureState.PREPPED,
+    //     SuperstructureState.IDLE,
+    //     hasFuel.negate().and(() -> stateTimer.hasElapsed(0.5)));
 
-    // PREPPED → SPIN_UP_SCORE → SCORE
-    bindTransition(SuperstructureState.PREPPED, SuperstructureState.SPIN_UP_SCORE, scoreReq);
+    // IDLE -> SPIN_UP_SCORE -> SCORE
+    bindTransition(SuperstructureState.IDLE, SuperstructureState.SPIN_UP_SCORE, scoreReq);
     bindTransition(
         SuperstructureState.SPIN_UP_SCORE,
         SuperstructureState.SCORE,
         shooter.atSetpoint().and(scoreReq));
-    bindTransition(SuperstructureState.SCORE, SuperstructureState.PREPPED, scoreReq.negate());
+    bindTransition(SuperstructureState.SCORE, SuperstructureState.IDLE, scoreReq.negate());
 
-    // PREPPED → SPIN_UP_PASS → PASS
-    bindTransition(SuperstructureState.PREPPED, SuperstructureState.SPIN_UP_PASS, spitReq);
+    // IDLE -> SPIN_UP_PASS -> PASS
+    bindTransition(SuperstructureState.IDLE, SuperstructureState.SPIN_UP_PASS, spitReq);
     bindTransition(
         SuperstructureState.SPIN_UP_PASS,
         SuperstructureState.PASS,
         shooter.atSetpoint().and(spitReq));
     bindTransition(
         SuperstructureState.PASS,
-        SuperstructureState.PREPPED,
+        SuperstructureState.IDLE,
         spitReq.negate().and(() -> stateTimer.hasElapsed(0.5)));
 
     // EJECT (from IDLE or PREPPED)
     bindTransition(SuperstructureState.IDLE, SuperstructureState.EJECT, spitReq);
-    bindTransition(SuperstructureState.PREPPED, SuperstructureState.EJECT, spitReq);
+    // bindTransition(SuperstructureState.PREPPED, SuperstructureState.EJECT, spitReq);
     // Return to the state we were in before ejecting
     SuperstructureState.EJECT
         .getTrigger()

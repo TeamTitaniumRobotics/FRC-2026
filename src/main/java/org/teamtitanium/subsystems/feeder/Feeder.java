@@ -65,7 +65,7 @@ public class Feeder extends GenericRoller {
   private FeederState state = FeederState.IDLE;
 
   public Feeder(GenericRollerIO io) {
-    super("Feeder", io);
+    super("Feeder", io, CONSTANTS);
     setDefaultCommand(setVelocity(() -> state.getFeederVelocity().get()));
   }
 

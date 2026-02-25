@@ -37,19 +37,22 @@ public class GenericRoller extends SubsystemBase {
       new Debouncer(0.5, Debouncer.DebounceType.kFalling);
   private final Alert motorDisconnected;
 
-  public GenericRoller(String name, GenericRollerIO io) {
+  public GenericRoller(String name, GenericRollerIO io, GenericRollerConstants constants) {
     this.name = name;
     this.io = io;
 
-    rollerkP = new LoggedTunableNumber(name + "/Roller/kP", 0.0);
-    rollerkI = new LoggedTunableNumber(name + "/Roller/kI", 0.0);
-    rollerkD = new LoggedTunableNumber(name + "/Roller/kD", 0.0);
-    rollerkS = new LoggedTunableNumber(name + "/Roller/kS", 0.0);
-    rollerkV = new LoggedTunableNumber(name + "/Roller/kV", 0.0);
-    rollerkA = new LoggedTunableNumber(name + "/Roller/kA", 0.0);
-
-    rollerMaxVelocity = new LoggedTunableNumber(name + "/Roller/Max Velocity", 0.0);
-    rollerMaxAcceleration = new LoggedTunableNumber(name + "/Roller/Max Acceleration", 0.0);
+    rollerkP = new LoggedTunableNumber(name + "/Roller/kP", constants.gains().kP());
+    rollerkI = new LoggedTunableNumber(name + "/Roller/kI", constants.gains().kI());
+    rollerkD = new LoggedTunableNumber(name + "/Roller/kD", constants.gains().kD());
+    rollerkS = new LoggedTunableNumber(name + "/Roller/kS", constants.gains().kS());
+    rollerkV = new LoggedTunableNumber(name + "/Roller/kV", constants.gains().kV());
+    rollerkA = new LoggedTunableNumber(name + "/Roller/kA", constants.gains().kA());
+    rollerMaxVelocity =
+        new LoggedTunableNumber(
+            name + "/Roller/Max Velocity", constants.constraints().maxVelocity());
+    rollerMaxAcceleration =
+        new LoggedTunableNumber(
+            name + "/Roller/Max Acceleration", constants.constraints().maxAcceleration());
 
     configurableNumber = new LoggedTunableNumber(name + "/Roller/ConfigurableNumber", 0.0);
 
