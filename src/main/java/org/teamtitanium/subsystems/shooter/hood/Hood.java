@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.teamtitanium.utils.Constants.Constraints;
@@ -31,6 +32,11 @@ public class Hood extends SubsystemBase {
       new LoggedTunableNumber("Hood/MaxVelocity", HOOD_MOTION_CONSTRAINTS.maxVelocity());
   private final LoggedTunableNumber hoodMaxAcceleration =
       new LoggedTunableNumber("Hood/MaxAcceleration", HOOD_MOTION_CONSTRAINTS.maxAcceleration());
+
+  public final LoggedTunableNumber hoodConfigNumber1 =
+      new LoggedTunableNumber("Hood/ConfigNumber1", 0.0);
+  public final LoggedTunableNumber hoodConfigNumber2 =
+      new LoggedTunableNumber("Hood/ConfigNumber2", 0.0);
 
   private final HoodIO io;
   private final HoodIOInputsAutoLogged inputs = new HoodIOInputsAutoLogged();
@@ -79,14 +85,14 @@ public class Hood extends SubsystemBase {
   /**
    * Sets the hood to a position supplier
    *
-   * @param positionRots target supplier position for the hood
+   * @param positionSupplier target supplier position for the hood
    * @return A command that repeatedly sets the hood to a position
    */
-  public Command setPosition(DoubleSupplier positionRots) {
+  public Command setPosition(Supplier<Angle> positionSupplier) {
     return run(() -> {
           targetPositionRots =
-              MathUtil.clamp(positionRots.getAsDouble(), MIN_ANGLE_ROTS, MAX_ANGLE_ROTS);
-          io.setPosition(positionRots.getAsDouble());
+              MathUtil.clamp(positionSupplier.get().in(Rotations), MIN_ANGLE_ROTS, MAX_ANGLE_ROTS);
+          io.setPosition(positionSupplier.get().in(Rotations));
         })
         .withName("Hood.SetPosition");
   }
@@ -94,11 +100,11 @@ public class Hood extends SubsystemBase {
   /**
    * Sets the hood to a position
    *
-   * @param positionRots target position for the hood
+   * @param position target position for the hood
    * @return A command that repeatedly sets the hood to a position
    */
-  public Command setPosition(double positionRots) {
-    return setPosition(() -> positionRots);
+  public Command setPosition(Angle position) {
+    return setPosition(() -> position);
   }
 
   /**
@@ -124,9 +130,13 @@ public class Hood extends SubsystemBase {
     return setVoltage(() -> voltage);
   }
 
-  public Command zeroHood() {
-    return setVoltage(0.0); // TODO: Implement current & velocity zeroing
+  public void zeroHood() {
+    io.setMotorPosition(0.0);
   }
+
+  // public Command zeroHood() {
+  //   return setVoltage(0.0); // TODO: Implement current & velocity zeroing
+  // }
 
   /**
    * Gets the current position of the hood.

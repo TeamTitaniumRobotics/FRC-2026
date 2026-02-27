@@ -33,6 +33,7 @@ public class GenericRollerIOTalonFX implements GenericRollerIO {
   private final StatusSignal<Current> supplyCurrent;
   private final StatusSignal<Current> torqueCurrent;
   private final StatusSignal<Temperature> temperature;
+  private final StatusSignal<Double> setpointReference;
 
   public GenericRollerIOTalonFX(GenericRollerConstants constants) {
     rollerMotor = new TalonFX(constants.motorId(), constants.canbus());
@@ -75,10 +76,11 @@ public class GenericRollerIOTalonFX implements GenericRollerIO {
     supplyCurrent = rollerMotor.getSupplyCurrent();
     torqueCurrent = rollerMotor.getTorqueCurrent();
     temperature = rollerMotor.getDeviceTemp();
+    setpointReference = rollerMotor.getClosedLoopReference();
 
     BaseStatusSignal.setUpdateFrequencyForAll(100, velocity);
     BaseStatusSignal.setUpdateFrequencyForAll(
-        50, position, appliedVoltage, supplyCurrent, torqueCurrent, temperature);
+        50, position, appliedVoltage, supplyCurrent, torqueCurrent, temperature, setpointReference);
 
     PhoenixUtil.registerSignals(
         constants.canbus(),
@@ -87,7 +89,8 @@ public class GenericRollerIOTalonFX implements GenericRollerIO {
         appliedVoltage,
         supplyCurrent,
         torqueCurrent,
-        temperature);
+        temperature,
+        setpointReference);
 
     rollerMotor.optimizeBusUtilization(0.0, 1.0);
   }
@@ -103,6 +106,7 @@ public class GenericRollerIOTalonFX implements GenericRollerIO {
     inputs.supplyCurrentAmps = supplyCurrent.getValueAsDouble();
     inputs.torqueCurrentAmps = torqueCurrent.getValueAsDouble();
     inputs.tempCelsius = temperature.getValueAsDouble();
+    inputs.velocitySetpoint = setpointReference.getValueAsDouble();
   }
 
   @Override

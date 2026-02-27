@@ -15,8 +15,6 @@ import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
-import org.teamtitanium.Robot;
-import org.teamtitanium.RobotState;
 import org.teamtitanium.utils.Constants.Constraints;
 import org.teamtitanium.utils.Constants.Gains;
 import org.teamtitanium.utils.LoggedTracer;
@@ -45,6 +43,11 @@ public class Turret extends SubsystemBase {
       new LoggedTunableNumber("Turret/MaxVelocity", TURRET_CONSTRAINTS.maxVelocity());
   private final LoggedTunableNumber turretMaxAcceleration =
       new LoggedTunableNumber("Turret/MaxAcceleration", TURRET_CONSTRAINTS.maxAcceleration());
+
+  public final LoggedTunableNumber turretConfigNumber1 =
+      new LoggedTunableNumber("Turret/ConfigNumber1", 0.0);
+  public final LoggedTunableNumber turretConfigNumber2 =
+      new LoggedTunableNumber("Turret/ConfigNumber2", 0.0);
 
   private final TurretIO io;
   private final TurretIOInputsAutoLogged inputs = new TurretIOInputsAutoLogged();
@@ -113,30 +116,12 @@ public class Turret extends SubsystemBase {
     }
 
     // Attempt to zero the turret
-    if (!isZeroed && Robot.isInitializing()) {
-      zeroTurretCRT();
-    }
+    // if (!isZeroed && Robot.isInitializing()) {
+    //   zeroTurretCRT();
+    // }
 
     // Log the turret loop time
     LoggedTracer.record("Turret");
-  }
-
-  /**
-   * Sets the turret to the stowed position
-   *
-   * @return A command that sets the turret to the stowed position
-   */
-  public Command stow() {
-    return setPosition(TURRET_STOW_ANGLE);
-  }
-
-  /**
-   * Tracks the turret to the robot state turret setpoint
-   *
-   * @return A command that repeatedly sets the turret to the robot state turret setpoint
-   */
-  public Command track() {
-    return setPosition(() -> RobotState.getInstance().getTurretSetpoint());
   }
 
   public Angle getTargetAngle(Angle targetAngle, Angle currentAngle) {
@@ -254,6 +239,10 @@ public class Turret extends SubsystemBase {
    */
   public void setBrakeMode(boolean enabled) {
     io.setBrakeMode(enabled);
+  }
+
+  public void zeroMotor() {
+    io.setMotorPosition(0.0);
   }
 
   /** Zeros the turret using two CANcoder sensors and the Chinese Remainder Theorem. */

@@ -35,12 +35,13 @@ public class HoodIOTalonFX implements HoodIO {
   private final StatusSignal<Current> supplyCurrent;
   private final StatusSignal<Current> torqueCurrent;
   private final StatusSignal<Temperature> temperature;
+  private final StatusSignal<Double> setpoint;
 
   public HoodIOTalonFX() {
     hoodMotor = new TalonFX(HOOD_MOTOR_ID, Constants.RIO_CAN_BUS);
 
     // Configure TalonFX
-    config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+    config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
     // Current limits
@@ -54,9 +55,9 @@ public class HoodIOTalonFX implements HoodIO {
 
     // Soft limits
     config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = MAX_ANGLE_ROTS;
-    config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+    config.SoftwareLimitSwitch.ForwardSoftLimitEnable = false;
     config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = MIN_ANGLE_ROTS;
-    config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+    config.SoftwareLimitSwitch.ReverseSoftLimitEnable = false;
 
     // PID configuration
     config.Slot0.kP = HOOD_GAINS.kP();
@@ -86,32 +87,47 @@ public class HoodIOTalonFX implements HoodIO {
     supplyCurrent = hoodMotor.getSupplyCurrent();
     torqueCurrent = hoodMotor.getTorqueCurrent();
     temperature = hoodMotor.getDeviceTemp();
+    setpoint = hoodMotor.getClosedLoopReference();
 
     // Set update frequencies
     BaseStatusSignal.setUpdateFrequencyForAll(
-        100, position, velocity, appliedVoltage, supplyCurrent, torqueCurrent, temperature);
-
-    PhoenixUtil.registerSignals(
-        Constants.RIO_CAN_BUS,
+        100,
         position,
         velocity,
         appliedVoltage,
         supplyCurrent,
         torqueCurrent,
-        temperature);
+        temperature,
+        setpoint);
+    PhoenixUtil.registerSignals(
+        HoodConstants.HOOD_CANBUS,
+        position,
+        velocity,
+        appliedVoltage,
+        supplyCurrent,
+        torqueCurrent,
+        temperature,
+        setpoint);
   }
 
   @Override
   public void updateInputs(HoodIOInputs inputs) {
     inputs.motorConnected =
         BaseStatusSignal.isAllGood(
-            position, velocity, appliedVoltage, supplyCurrent, torqueCurrent, temperature);
+            position,
+            velocity,
+            appliedVoltage,
+            supplyCurrent,
+            torqueCurrent,
+            temperature,
+            setpoint);
     inputs.positionRots = position.getValueAsDouble();
     inputs.velocityRps = velocity.getValueAsDouble();
     inputs.appliedVolts = appliedVoltage.getValueAsDouble();
     inputs.supplyCurrentAmps = supplyCurrent.getValueAsDouble();
     inputs.torqueCurrentAmps = torqueCurrent.getValueAsDouble();
     inputs.tempCelsius = temperature.getValueAsDouble();
+    inputs.setpointRots = setpoint.getValueAsDouble();
   }
 
   @Override

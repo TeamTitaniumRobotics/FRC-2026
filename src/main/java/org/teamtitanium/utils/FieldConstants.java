@@ -10,6 +10,7 @@ package org.teamtitanium.utils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rectangle2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
@@ -36,6 +37,44 @@ public class FieldConstants {
   // Field dimensions
   public static final double fieldLength = AprilTagLayoutType.OFFICIAL.getLayout().getFieldLength();
   public static final double fieldWidth = AprilTagLayoutType.OFFICIAL.getLayout().getFieldWidth();
+
+  /**
+   * Officially defined and relevant zones on the field (defined as rectangles with bottom left and
+   * top right corners)
+   *
+   * <p>NOTE: The field element start and end are always left to right from the perspective of the
+   * alliance station
+   */
+  public static class Zones {
+    // General Zones
+    public static final Rectangle2d neutralZone =
+        new Rectangle2d(
+            new Translation2d(LinesVertical.neutralZoneNear, fieldWidth),
+            new Translation2d(LinesVertical.neutralZoneFar, 0));
+    public static final Rectangle2d allianceZone =
+        new Rectangle2d(
+            new Translation2d(LinesVertical.allianceZone, fieldWidth), new Translation2d(0, 0));
+
+    // Trench Zones
+    public static final Rectangle2d leftTrenchZone =
+        new Rectangle2d(
+            new Translation2d(LinesVertical.neutralZoneNear, LinesHorizontal.leftTrenchOpenStart),
+            new Translation2d(LinesVertical.starting, LinesHorizontal.leftTrenchOpenEnd));
+    public static final Rectangle2d rightTrenchZone =
+        new Rectangle2d(
+            new Translation2d(LinesVertical.neutralZoneNear, LinesHorizontal.rightTrenchOpenStart),
+            new Translation2d(LinesVertical.starting, LinesHorizontal.rightTrenchOpenEnd));
+
+    // Bump Zones
+    public static final Rectangle2d leftBumpZone =
+        new Rectangle2d(
+            new Translation2d(LinesVertical.neutralZoneNear, LinesHorizontal.leftBumpStart),
+            new Translation2d(LinesVertical.starting, LinesHorizontal.leftBumpEnd));
+    public static final Rectangle2d rightBumpZone =
+        new Rectangle2d(
+            new Translation2d(LinesVertical.neutralZoneNear, LinesHorizontal.rightBumpStart),
+            new Translation2d(LinesVertical.starting, LinesHorizontal.rightBumpEnd));
+  }
 
   /**
    * Officially defined and relevant vertical lines found on the field (defined by X-axis offset)

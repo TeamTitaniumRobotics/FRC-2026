@@ -1,6 +1,7 @@
 package org.teamtitanium.subsystems.shooter.flywheel;
 
 import org.littletonrobotics.junction.AutoLog;
+import org.teamtitanium.utils.Constants.Constraints;
 import org.teamtitanium.utils.Constants.Gains;
 
 public interface FlywheelIO {
@@ -11,6 +12,7 @@ public interface FlywheelIO {
 
     public double positionRots = 0.0;
     public double velocityRps = 0.0;
+    public double velocitySetpoint = 0.0;
     public double[] appliedVolts = new double[] {};
     public double[] supplyCurrentAmps = new double[] {};
     public double[] torqueCurrentAmps = new double[] {};
@@ -28,6 +30,8 @@ public interface FlywheelIO {
 
   /** Updates the flywheel motor PID gains. */
   public default void setGains(Gains gains) {}
+
+  public default void setConstraints(Constraints constraints) {}
 
   /** Sets the brake mode for the flywheel motors. */
   public default void setBrakeMode(boolean enabled) {}

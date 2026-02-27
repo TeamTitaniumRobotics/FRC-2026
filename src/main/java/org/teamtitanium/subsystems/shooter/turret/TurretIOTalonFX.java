@@ -54,7 +54,7 @@ public class TurretIOTalonFX implements TurretIO {
     cancoder2 = new CANcoder(TURRET_CANCODER_2_ID, Constants.RIO_CAN_BUS);
 
     // Configure motor output
-    motorConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+    motorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
     // Current current limits
@@ -68,9 +68,9 @@ public class TurretIOTalonFX implements TurretIO {
 
     // Soft limits
     motorConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = MAX_ANGLE.in(Rotations);
-    motorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+    motorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = false;
     motorConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = MIN_ANGLE.in(Rotations);
-    motorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+    motorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = false;
 
     // PID configuration
     motorConfig.Slot0.kP = TURRET_GAINS.kP();

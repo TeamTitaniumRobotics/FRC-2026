@@ -8,8 +8,10 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
+import org.teamtitanium.utils.Constants.Constraints;
 import org.teamtitanium.utils.Constants.Gains;
 import org.teamtitanium.utils.LoggedTracer;
 import org.teamtitanium.utils.LoggedTunableNumber;
@@ -28,6 +30,16 @@ public class Flywheel extends SubsystemBase {
       new LoggedTunableNumber("Flywheel/kV", FLYWHEEL_GAINS.kV());
   private final LoggedTunableNumber flywheelkA =
       new LoggedTunableNumber("Flywheel/kA", FLYWHEEL_GAINS.kA());
+
+  private final LoggedTunableNumber flywheelMaxVelocty =
+      new LoggedTunableNumber("Flywheel/MaxVelocity", FLYWHEEL_CONSTRAINTS.maxVelocity());
+  private final LoggedTunableNumber flywheelMaxAcceleration =
+      new LoggedTunableNumber("Flywheel/MaxAcceleration", FLYWHEEL_CONSTRAINTS.maxAcceleration());
+
+  public final LoggedTunableNumber flywheelConfigNumber1 =
+      new LoggedTunableNumber("Flywheel/ConfigNumber1", 0.0);
+  public final LoggedTunableNumber flywheelConfigNumber2 =
+      new LoggedTunableNumber("Flywheel/ConfigNumber2", 0.0);
 
   private final FlywheelIO io;
   private final FlywheelIOInputsAutoLogged inputs = new FlywheelIOInputsAutoLogged();
@@ -65,19 +77,24 @@ public class Flywheel extends SubsystemBase {
               flywheelkA.get()));
     }
 
+    if (flywheelMaxVelocty.hasChanged(hashCode())
+        || flywheelMaxAcceleration.hasChanged(hashCode())) {
+      io.setConstraints(new Constraints(flywheelMaxVelocty.get(), flywheelMaxAcceleration.get()));
+    }
+
     LoggedTracer.record("Flywheel");
   }
 
   /**
-   * Sets the flywheel to a velocity supplier
+   * Sets the flywheel to a supplied velocity.
    *
-   * @param velocityRps target supplier velocity for the flywheel
+   * @param velocitySupplier target velocity supplier for the flywheel
    * @return A command that repeatedly sets the flywheel to a velocity
    */
-  public Command setVelocity(DoubleSupplier velocityRps) {
+  public Command setVelocity(Supplier<AngularVelocity> velocitySupplier) {
     return run(() -> {
-          targetVelocityRps = velocityRps.getAsDouble();
-          io.setVelocity(velocityRps.getAsDouble());
+          targetVelocityRps = velocitySupplier.get().in(RotationsPerSecond);
+          io.setVelocity(targetVelocityRps);
         })
         .withName("Flywheel.SetVelocity");
   }
@@ -88,8 +105,8 @@ public class Flywheel extends SubsystemBase {
    * @param velocityRps target velocity for the flywheel
    * @return A command that repeatedly sets the flywheel to a velocity
    */
-  public Command setVelocity(double velocityRps) {
-    return setVelocity(() -> velocityRps);
+  public Command setVelocity(AngularVelocity velocity) {
+    return setVelocity(() -> velocity);
   }
 
   /**

@@ -5,7 +5,6 @@ import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import edu.wpi.first.math.Matrix;
-import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -19,12 +18,14 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.util.Optional;
 import lombok.Getter;
 import lombok.Setter;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.teamtitanium.subsystems.swerve.Swerve;
+import org.teamtitanium.utils.AllianceFlipUtil;
 import org.teamtitanium.utils.FieldConstants;
 
 public class RobotState {
@@ -69,12 +70,10 @@ public class RobotState {
     kinematics = new SwerveDriveKinematics(Swerve.getModuleTranslations());
     poseEstimator =
         new SwerveDrivePoseEstimator(
-            kinematics,
-            Rotation2d.kZero,
-            lastWheelPositions,
-            Pose2d.kZero,
-            VecBuilder.fill(0.05, 0.05, Math.toRadians(5.0)),
-            VecBuilder.fill(0.5, 0.5, Math.toRadians(30.0)));
+            kinematics, Rotation2d.kZero, lastWheelPositions, Pose2d.kZero
+            // VecBuilder.fill(0.05, 0.05, Math.toRadians(5.0)),
+            // VecBuilder.fill(0.5, 0.5, Math.toRadians(30.0))
+            );
   }
 
   public void addOdometryObservation(OdometryObservation observation) {
@@ -108,6 +107,22 @@ public class RobotState {
     estimatedPose = pose;
     poseEstimator.resetPosition(pose.getRotation(), lastWheelPositions, pose);
   }
+
+  public Trigger inAllianceZone =
+      new Trigger(
+          () ->
+              AllianceFlipUtil.apply(FieldConstants.Zones.allianceZone)
+                  .contains(getEstimatedPose().getTranslation()));
+
+  public Trigger inNeutralZone =
+      new Trigger(
+          () -> FieldConstants.Zones.neutralZone.contains(getEstimatedPose().getTranslation()));
+
+  // TODO: Add a check for if robot is driving towards trench at speed and if so, stow hood and
+  // align drivetrain with the trench. Also add an override on driver's controller to override the
+  // function. Also add drivetrain auto rotate for bump with same override
+  public Trigger underTrench =
+      new Trigger(() -> false); // TODO: Replace with actual logic to determine if under trench
 
   public Rotation2d getRotation() {
     return estimatedPose.getRotation();

@@ -3,21 +3,24 @@ package org.teamtitanium.subsystems.shooter.turret;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Rotations;
 
+import com.ctre.phoenix6.CANBus;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Angle;
+import org.teamtitanium.utils.Constants;
 import org.teamtitanium.utils.Constants.Constraints;
 import org.teamtitanium.utils.Constants.Gains;
 
 public class TurretConstants {
-  public static final Angle TURRET_STOW_ANGLE = Rotations.of(0.0);
+  public static final Angle STOW_ANGLE = Rotations.of(0.0);
 
   // CAN IDs
   public static final int TURRET_MOTOR_ID = 15;
   public static final int TURRET_CANCODER_1_ID = 16;
   public static final int TURRET_CANCODER_2_ID = 17;
+  public static final CANBus TURRET_CANBUS = Constants.RIO_CAN_BUS;
 
   // Physical Constants
   public static final double TURRET_GEAR_RATIO = (85.0 / 10.0) * (50.0 / 12.0); // ~35.4:1 reduction
@@ -47,7 +50,7 @@ public class TurretConstants {
       new Constraints(2.0, 4.0); // Max velocity (rps), accel (rps^2)
 
   // PID Gains
-  public static final Gains TURRET_GAINS = new Gains(4.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+  public static final Gains TURRET_GAINS = new Gains(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 
   // Current Limits
   public static final double STATOR_CURRENT_LIMIT = 60.0;
@@ -56,5 +59,5 @@ public class TurretConstants {
   // Simulation
   public static final DCMotor TURRET_GEARBOX = DCMotor.getKrakenX44(1);
   public static final Transform3d TURRET_TO_ROBOT =
-      new Transform3d(new Translation3d(-0.119063, 0.169863, 0.403377), Rotation3d.kZero);
+      new Transform3d(new Translation3d(-0.119063, -0.169863, 0.403377), Rotation3d.kZero);
 }
