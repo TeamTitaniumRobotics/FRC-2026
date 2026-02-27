@@ -64,6 +64,10 @@ import org.teamtitanium.subsystems.swerve.Swerve;
 import org.teamtitanium.subsystems.swerve.SwerveModuleIO;
 import org.teamtitanium.subsystems.swerve.SwerveModuleIOSim;
 import org.teamtitanium.subsystems.swerve.SwerveModuleIOTalonFX;
+import org.teamtitanium.subsystems.vision.Vision;
+import org.teamtitanium.subsystems.vision.VisionIO;
+import org.teamtitanium.subsystems.vision.VisionIOPhoton;
+import org.teamtitanium.subsystems.vision.VisionIOSim;
 import org.teamtitanium.utils.CanivoreReader;
 import org.teamtitanium.utils.Constants;
 import org.teamtitanium.utils.Constants.Mode;
@@ -95,6 +99,7 @@ public class Robot extends LoggedRobot {
   private final IntakeRack intakeRack;
   private final IntakeRoller intakeRoller;
   private final Superstructure superstructure;
+  private final Vision vision;
 
   private final CommandXboxController driver = new CommandXboxController(0);
   private final CommandXboxController copilot = new CommandXboxController(1);
@@ -229,6 +234,7 @@ public class Robot extends LoggedRobot {
         intakeRack = new IntakeRack(new IntakeRackIOTalonFX());
         intakeRoller =
             new IntakeRoller(new GenericRollerIOTalonFX(IntakeConstants.RollerConstants.CONSTANTS));
+        vision = new Vision(new VisionIOPhoton(), RobotState.getInstance());
       }
       case SIM -> {
         swerve =
@@ -258,6 +264,7 @@ public class Robot extends LoggedRobot {
                     IntakeConstants.RollerConstants.CONSTANTS,
                     IntakeConstants.RollerConstants.ROLLER_MOTOR_GEARBOX,
                     IntakeConstants.RollerConstants.ROLLER_MOI));
+        vision = new Vision(new VisionIOSim(), RobotState.getInstance());
       }
       default -> {
         swerve =
@@ -274,6 +281,7 @@ public class Robot extends LoggedRobot {
         spindexer = new Spindexer(new GenericRollerIO() {});
         intakeRack = new IntakeRack(new IntakeRackIO() {});
         intakeRoller = new IntakeRoller(new GenericRollerIO() {});
+        vision = new Vision(new VisionIO() {}, RobotState.getInstance());
       }
     }
     if (swerve != null) {
