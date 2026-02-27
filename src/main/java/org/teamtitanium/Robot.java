@@ -5,7 +5,6 @@
 package org.teamtitanium;
 
 import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import choreo.auto.AutoChooser;
 import com.ctre.phoenix6.SignalLogger;
@@ -35,13 +34,12 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 import org.teamtitanium.autos.*;
 import org.teamtitanium.commands.DriveCommands;
 import org.teamtitanium.subsystems.Leds;
+import org.teamtitanium.subsystems.Superstructure;
 import org.teamtitanium.subsystems.feeder.Feeder;
-import org.teamtitanium.subsystems.feeder.Feeder.FeederState;
 import org.teamtitanium.subsystems.genericroller.GenericRollerIO;
 import org.teamtitanium.subsystems.genericroller.GenericRollerIOSim;
 import org.teamtitanium.subsystems.genericroller.GenericRollerIOTalonFX;
 import org.teamtitanium.subsystems.intake.Intake;
-import org.teamtitanium.subsystems.intake.Intake.IntakeState;
 import org.teamtitanium.subsystems.intake.IntakeConstants;
 import org.teamtitanium.subsystems.intake.rack.IntakeRack;
 import org.teamtitanium.subsystems.intake.rack.IntakeRackIO;
@@ -49,7 +47,6 @@ import org.teamtitanium.subsystems.intake.rack.IntakeRackIOSim;
 import org.teamtitanium.subsystems.intake.rack.IntakeRackIOTalonFX;
 import org.teamtitanium.subsystems.intake.roller.IntakeRoller;
 import org.teamtitanium.subsystems.shooter.Shooter;
-import org.teamtitanium.subsystems.shooter.Shooter.ShooterState;
 import org.teamtitanium.subsystems.shooter.flywheel.Flywheel;
 import org.teamtitanium.subsystems.shooter.flywheel.FlywheelIO;
 import org.teamtitanium.subsystems.shooter.flywheel.FlywheelIOSim;
@@ -63,7 +60,6 @@ import org.teamtitanium.subsystems.shooter.turret.TurretIO;
 import org.teamtitanium.subsystems.shooter.turret.TurretIOSim;
 import org.teamtitanium.subsystems.shooter.turret.TurretIOTalonFX;
 import org.teamtitanium.subsystems.spindexer.Spindexer;
-import org.teamtitanium.subsystems.spindexer.Spindexer.SpindexerState;
 import org.teamtitanium.subsystems.swerve.GyroIO;
 import org.teamtitanium.subsystems.swerve.GyroIOPigeon2;
 import org.teamtitanium.subsystems.swerve.Swerve;
@@ -103,7 +99,7 @@ public class Robot extends LoggedRobot {
   private final Intake intake;
   private final IntakeRack intakeRack;
   private final IntakeRoller intakeRoller;
-  // private final Superstructure superstructure;
+  private final Superstructure superstructure;
   private final Vision vision;
 
   private final CommandXboxController driver = new CommandXboxController(0);
@@ -308,9 +304,9 @@ public class Robot extends LoggedRobot {
 
     intake = new Intake(intakeRack, intakeRoller);
     shooter = new Shooter(flywheel, hood, turret);
-    // superstructure =
-    //     new Superstructure(
-    //         shooter, feeder, spindexer, intake, RobotState.getInstance().underTrench, driver);
+    superstructure =
+        new Superstructure(
+            shooter, feeder, spindexer, intake, RobotState.getInstance().underTrench, driver);
 
     configureButtonBindings();
   }
@@ -409,7 +405,7 @@ public class Robot extends LoggedRobot {
             () -> false));
 
     driver.start().onTrue(Commands.runOnce(() -> swerve.resetPigeon()));
-    driver.start().onTrue(Commands.runOnce(() -> intakeRack.zero()));
+    // driver.start().onTrue(Commands.runOnce(() -> intakeRack.zero()));
 
     // driver.leftBumper().onTrue(Commands.runOnce(() -> intake.setState(IntakeState.INTAKE)));
     // driver.rightBumper().onTrue(Commands.runOnce(() -> intake.setState(IntakeState.STOW)));
@@ -419,28 +415,28 @@ public class Robot extends LoggedRobot {
     // driver.rightTrigger().onTrue(Commands.runOnce(() -> feeder.setState(FeederState.FEED)));
     // driver.leftTrigger().onTrue(Commands.runOnce(() -> feeder.setState(FeederState.IDLE)));
 
-    driver.y().onTrue(Commands.runOnce(() -> shooter.setState(ShooterState.AIM)));
-    driver.a().onTrue(Commands.runOnce(() -> shooter.setState(ShooterState.STOW)));
+    // driver.y().onTrue(Commands.runOnce(() -> shooter.setState(ShooterState.AIM)));
+    // driver.a().onTrue(Commands.runOnce(() -> shooter.setState(ShooterState.STOW)));
 
-    driver
-        .leftTrigger()
-        .onTrue(Commands.runOnce(() -> intake.setState(IntakeState.INTAKE)))
-        .onFalse(Commands.runOnce(() -> intake.setState(IntakeState.STOW)));
+    // driver
+    //     .leftTrigger()
+    //     .onTrue(Commands.runOnce(() -> intake.setState(IntakeState.INTAKE)))
+    //     .onFalse(Commands.runOnce(() -> intake.setState(IntakeState.STOW)));
 
-    driver
-        .rightTrigger()
-        .onTrue(
-            Commands.runOnce(
-                () -> {
-                  feeder.setState(FeederState.FEED);
-                  spindexer.setState(SpindexerState.FEED);
-                }))
-        .onFalse(
-            Commands.runOnce(
-                () -> {
-                  feeder.setState(FeederState.IDLE);
-                  spindexer.setState(SpindexerState.IDLE);
-                }));
+    // driver
+    //     .rightTrigger()
+    //     .onTrue(
+    //         Commands.runOnce(
+    //             () -> {
+    //               feeder.setState(FeederState.FEED);
+    //               spindexer.setState(SpindexerState.FEED);
+    //             }))
+    //     .onFalse(
+    //         Commands.runOnce(
+    //             () -> {
+    //               feeder.setState(FeederState.IDLE);
+    //               spindexer.setState(SpindexerState.IDLE);
+    //             }));
 
     // driver
     //     .rightBumper()
@@ -464,8 +460,8 @@ public class Robot extends LoggedRobot {
     //             () -> RotationsPerSecond.of(-intakeRoller.configurableNumber.get())))
     //     .onFalse(intakeRoller.stop());
 
-    driver.rightBumper().onTrue(intakeRack.setVoltage(() -> 2.0)).onFalse(intakeRack.stop());
-    driver.leftBumper().onTrue(intakeRack.setVoltage(() -> -2.0)).onFalse(intakeRack.stop());
+    // driver.rightBumper().onTrue(intakeRack.setVoltage(() -> 2.0)).onFalse(intakeRack.stop());
+    // driver.leftBumper().onTrue(intakeRack.setVoltage(() -> -2.0)).onFalse(intakeRack.stop());
 
     // driver
     //     .b()
@@ -477,51 +473,52 @@ public class Robot extends LoggedRobot {
     //     .onFalse(intakeRoller.stop());
 
     // Feeder
-    driver
-        .pov(0)
-        .onTrue(feeder.setVoltage(() -> feeder.configurableNumber.get()))
-        .onFalse(feeder.stop());
-    driver
-        .pov(180)
-        .onTrue(feeder.setVoltage(() -> -feeder.configurableNumber.get()))
-        .onFalse(feeder.stop());
+    // driver
+    //     .pov(0)
+    //     .onTrue(feeder.setVoltage(() -> feeder.configurableNumber.get()))
+    //     .onFalse(feeder.stop());
+    // driver
+    //     .pov(180)
+    //     .onTrue(feeder.setVoltage(() -> -feeder.configurableNumber.get()))
+    //     .onFalse(feeder.stop());
 
-    driver
-        .pov(90)
-        .onTrue(feeder.setVelocity(() -> RotationsPerSecond.of(feeder.configurableNumber.get())))
-        .onFalse(feeder.stop());
-    driver
-        .pov(270)
-        .onTrue(feeder.setVelocity(() -> RotationsPerSecond.of(-feeder.configurableNumber.get())))
-        .onFalse(feeder.stop());
+    // driver
+    //     .pov(90)
+    //     .onTrue(feeder.setVelocity(() -> RotationsPerSecond.of(feeder.configurableNumber.get())))
+    //     .onFalse(feeder.stop());
+    // driver
+    //     .pov(270)
+    //     .onTrue(feeder.setVelocity(() ->
+    // RotationsPerSecond.of(-feeder.configurableNumber.get())))
+    //     .onFalse(feeder.stop());
 
     // Spindexer
-    driver
-        .x()
-        .onTrue(spindexer.setVoltage(() -> spindexer.configurableNumber.get()))
-        .onFalse(spindexer.stop());
-    driver
-        .b()
-        .onTrue(spindexer.setVoltage(() -> -spindexer.configurableNumber.get()))
-        .onFalse(spindexer.stop());
+    // driver
+    //     .x()
+    //     .onTrue(spindexer.setVoltage(() -> spindexer.configurableNumber.get()))
+    //     .onFalse(spindexer.stop());
+    // driver
+    //     .b()
+    //     .onTrue(spindexer.setVoltage(() -> -spindexer.configurableNumber.get()))
+    //     .onFalse(spindexer.stop());
 
     // Hood
-    copilot.start().onTrue(Commands.runOnce(() -> hood.zeroHood()));
+    // copilot.start().onTrue(Commands.runOnce(() -> hood.zeroHood()));
 
-    copilot
-        .y()
-        .onTrue(hood.setPosition(() -> Degrees.of(hood.hoodConfigNumber1.get())))
-        .onFalse(hood.setVoltage(0.0));
-    copilot.y().onTrue(hood.setPosition(() -> Degrees.of(0.0))).onFalse(hood.setVoltage(0.0));
+    // copilot
+    //     .y()
+    //     .onTrue(hood.setPosition(() -> Degrees.of(hood.hoodConfigNumber1.get())))
+    //     .onFalse(hood.setVoltage(0.0));
+    // copilot.a().onTrue(hood.setPosition(() -> Degrees.of(0.0))).onFalse(hood.setVoltage(0.0));
 
-    copilot
-        .b()
-        .onTrue(hood.setVoltage(() -> hood.hoodConfigNumber2.get()))
-        .onFalse(hood.setVoltage(0.0));
-    copilot
-        .x()
-        .onTrue(hood.setVoltage(() -> -hood.hoodConfigNumber2.get()))
-        .onFalse(hood.setVoltage(0.0));
+    // copilot
+    //     .b()
+    //     .onTrue(hood.setVoltage(() -> hood.hoodConfigNumber2.get()))
+    //     .onFalse(hood.setVoltage(0.0));
+    // copilot
+    //     .x()
+    //     .onTrue(hood.setVoltage(() -> -hood.hoodConfigNumber2.get()))
+    //     .onFalse(hood.setVoltage(0.0));
 
     // Turet
     copilot.back().onTrue(Commands.runOnce(() -> turret.zeroMotor()));
@@ -545,26 +542,27 @@ public class Robot extends LoggedRobot {
         .onFalse(turret.setVoltage(0.0));
 
     // Shooter
-    copilot
-        .pov(90)
-        .onTrue(
-            flywheel.setVelocity(() -> RotationsPerSecond.of(flywheel.flywheelConfigNumber1.get())))
-        .onFalse(flywheel.setVelocity(RotationsPerSecond.of(0.0)));
-    copilot
-        .pov(270)
-        .onTrue(
-            flywheel.setVelocity(
-                () -> RotationsPerSecond.of(-flywheel.flywheelConfigNumber1.get())))
-        .onFalse(flywheel.setVoltage(0.0));
+    // copilot
+    //     .pov(90)
+    //     .onTrue(
+    //         flywheel.setVelocity(() ->
+    // RotationsPerSecond.of(flywheel.flywheelConfigNumber1.get())))
+    //     .onFalse(flywheel.setVelocity(RotationsPerSecond.of(0.0)));
+    // copilot
+    //     .pov(270)
+    //     .onTrue(
+    //         flywheel.setVelocity(
+    //             () -> RotationsPerSecond.of(-flywheel.flywheelConfigNumber1.get())))
+    //     .onFalse(flywheel.setVoltage(0.0));
 
-    copilot
-        .pov(0)
-        .onTrue(flywheel.setVoltage(() -> flywheel.flywheelConfigNumber2.get()))
-        .onFalse(flywheel.setVoltage(0.0));
-    copilot
-        .pov(180)
-        .onTrue(flywheel.setVoltage(() -> -flywheel.flywheelConfigNumber2.get()))
-        .onFalse(flywheel.setVoltage(0.0));
+    // copilot
+    //     .pov(0)
+    //     .onTrue(flywheel.setVoltage(() -> flywheel.flywheelConfigNumber2.get()))
+    //     .onFalse(flywheel.setVoltage(0.0));
+    // copilot
+    //     .pov(180)
+    //     .onTrue(flywheel.setVoltage(() -> -flywheel.flywheelConfigNumber2.get()))
+    //     .onFalse(flywheel.setVoltage(0.0));
   }
 
   private void updateAlerts() {}

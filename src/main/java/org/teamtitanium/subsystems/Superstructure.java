@@ -70,6 +70,7 @@ public class Superstructure extends VirtualSubsystem {
 
   private final Trigger intakeReq;
   private final Trigger scoreReq;
+  private final Trigger passReq;
   private final Trigger spitReq;
   private final Trigger hasFuel;
 
@@ -106,6 +107,7 @@ public class Superstructure extends VirtualSubsystem {
 
     intakeReq = driver.leftTrigger();
     scoreReq = driver.rightTrigger();
+    passReq = driver.y();
     spitReq = driver.back();
 
     hasFuel = spindexer.hasFuel.or(feeder.hasFuel);
@@ -160,15 +162,15 @@ public class Superstructure extends VirtualSubsystem {
     bindTransition(SuperstructureState.SCORE, SuperstructureState.IDLE, scoreReq.negate());
 
     // IDLE -> SPIN_UP_PASS -> PASS
-    bindTransition(SuperstructureState.IDLE, SuperstructureState.SPIN_UP_PASS, spitReq);
+    bindTransition(SuperstructureState.IDLE, SuperstructureState.SPIN_UP_PASS, passReq);
     bindTransition(
         SuperstructureState.SPIN_UP_PASS,
         SuperstructureState.PASS,
-        shooter.atSetpoint().and(spitReq));
+        shooter.atSetpoint().and(passReq));
     bindTransition(
         SuperstructureState.PASS,
         SuperstructureState.IDLE,
-        spitReq.negate().and(() -> stateTimer.hasElapsed(0.5)));
+        passReq.negate().and(() -> stateTimer.hasElapsed(0.5)));
 
     // EJECT (from IDLE or PREPPED)
     bindTransition(SuperstructureState.IDLE, SuperstructureState.EJECT, spitReq);

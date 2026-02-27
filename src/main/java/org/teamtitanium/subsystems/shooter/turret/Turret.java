@@ -80,8 +80,9 @@ public class Turret extends SubsystemBase {
                 CANCODER_1_GEAR_TEETH,
                 CANCODER_2_GEAR_TEETH)
             .withMechanismRange(MIN_ANGLE, MAX_ANGLE)
-            .withMatchTolerance(Rotations.of(0.005))
+            .withMatchTolerance(Rotations.of(0.06))
             .withAbsoluteEncoderInversions(false, false)
+            .withAbsoluteEncoderOffsets(Rotations.of(-0.4751), Rotations.of(0.2876))
             .withCrtGearRecommendationConstraints(1.2, 15, 45, 30);
     this.easyCRT = new EasyCRT(crtConfig);
   }
@@ -117,7 +118,7 @@ public class Turret extends SubsystemBase {
 
     // Attempt to zero the turret
     // if (!isZeroed && Robot.isInitializing()) {
-    //   zeroTurretCRT();
+    // zeroTurretCRT();
     // }
 
     // Log the turret loop time
@@ -257,7 +258,7 @@ public class Turret extends SubsystemBase {
     Optional<Angle> zeroAngle = easyCRT.getAngleOptional();
     if (zeroAngle.isPresent()) {
       double zeroRots = zeroAngle.get().in(Rotations);
-      io.setMotorPosition(zeroRots);
+      // io.setMotorPosition(zeroRots);
       isZeroed = true;
       if (crtErrorAlert.get()) {
         crtErrorAlert.set(false);

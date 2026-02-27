@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.Degrees;
 
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.util.function.Supplier;
 import lombok.Getter;
@@ -26,7 +27,7 @@ public class Shooter {
         () -> HoodConstants.STOW_ANGLE,
         () -> Degrees.of(0.0)),
     // TODO: Set these up to get shooting setpoints
-    AIM(() -> FlywheelConstants.SHOOT_VELOCITY, () -> Degrees.of(60.0), () -> Degrees.of(0.0)),
+    AIM(() -> FlywheelConstants.SHOOT_VELOCITY, () -> Degrees.of(15.0), () -> Degrees.of(0.0)),
     EJECT(
         () -> FlywheelConstants.EJECT_VELOCITY,
         () -> HoodConstants.EJECT_ANGLE,
@@ -65,11 +66,11 @@ public class Shooter {
     this.turret = turret;
 
     flywheel.setDefaultCommand(flywheel.setVelocity(() -> state.getFlywheelVelocity().get()));
-    // hood.setDefaultCommand(
-    //     Commands.either(
-    //         hood.setPosition(HoodConstants.STOW_ANGLE),
-    //         hood.setPosition(() -> state.getHoodAngle().get()),
-    //         hoodStowOverride));
+    hood.setDefaultCommand(
+        Commands.either(
+            hood.setPosition(HoodConstants.STOW_ANGLE),
+            hood.setPosition(() -> state.getHoodAngle().get()),
+            hoodStowOverride));
     // turret.setDefaultCommand(turret.setPosition(() -> state.getTurretAngle().get()));
   }
 

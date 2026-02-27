@@ -2,7 +2,6 @@ package org.teamtitanium.subsystems.intake;
 
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.util.function.Supplier;
 import lombok.Getter;
@@ -39,13 +38,14 @@ public class Intake {
     this.rack = rack;
     this.roller = roller;
 
-    rack.setDefaultCommand(
-        Commands.either(
-            Commands.repeatingSequence(
-                rack.setExtension(RackConstants.AGITATE_EXTENSION).until(rack.atSetpoint()),
-                rack.setExtension(RackConstants.STOW_EXTENSION).until(rack.atSetpoint())),
-            rack.setExtension(() -> state.getRackDistance().get()),
-            () -> state == IntakeState.AGITATE));
+    // rack.setDefaultCommand(
+    //     Commands.either(
+    //         Commands.repeatingSequence(
+    //             rack.setExtension(RackConstants.AGITATE_EXTENSION).until(rack.atSetpoint()),
+    //             rack.setExtension(RackConstants.STOW_EXTENSION).until(rack.atSetpoint())),
+    //         rack.setExtension(() -> state.getRackDistance().get()),
+    //         () -> state == IntakeState.AGITATE));
+    rack.setDefaultCommand(rack.setExtension(() -> state.getRackDistance().get()));
     roller.setDefaultCommand(roller.setVelocity(() -> state.getIntakeVelocity().get()));
   }
 
