@@ -5,7 +5,6 @@ import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import edu.wpi.first.math.Matrix;
-import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -71,12 +70,10 @@ public class RobotState {
     kinematics = new SwerveDriveKinematics(Swerve.getModuleTranslations());
     poseEstimator =
         new SwerveDrivePoseEstimator(
-            kinematics,
-            Rotation2d.kZero,
-            lastWheelPositions,
-            Pose2d.kZero,
-            VecBuilder.fill(0.05, 0.05, Math.toRadians(5.0)),
-            VecBuilder.fill(0.5, 0.5, Math.toRadians(30.0)));
+            kinematics, Rotation2d.kZero, lastWheelPositions, Pose2d.kZero
+            // VecBuilder.fill(0.05, 0.05, Math.toRadians(5.0)),
+            // VecBuilder.fill(0.5, 0.5, Math.toRadians(30.0))
+            );
   }
 
   public void addOdometryObservation(OdometryObservation observation) {

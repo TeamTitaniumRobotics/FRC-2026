@@ -7,19 +7,15 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
-import org.photonvision.PhotonCamera;
 
 public class VisionConstants {
-  public static final PhotonCamera camera = new PhotonCamera("LumaP1");
+  public static final String forwardCameraName = "front";
+  public static final String leftCameraName = "left";
 
-  public static final Transform3d robotToCamera =
-      new Transform3d(
-          new Translation3d(0.0, 0.0, 0.0),
-          new Rotation3d()); // TODO: Update this with the actual position of the camera on the
-  // robot
-
-  // No idea if all of these are necessary, but these are some of the constants from last year's
-  // code that are related to vision
+  public static final Transform3d forwardCameraPose =
+      new Transform3d(new Translation3d(0.0, 0.0, 0.0), new Rotation3d());
+  public static final Transform3d leftCameraPose =
+      new Transform3d(new Translation3d(0.0, 0.0, 0.0), new Rotation3d());
 
   public static final double maxAmbiguity = 0.3;
   public static final double maxZError = 0.75;

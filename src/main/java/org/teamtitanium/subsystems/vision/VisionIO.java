@@ -1,31 +1,41 @@
 package org.teamtitanium.subsystems.vision;
 
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import java.util.Optional;
 import org.littletonrobotics.junction.AutoLog;
 import org.photonvision.EstimatedRobotPose;
+import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 
 public interface VisionIO {
-
   @AutoLog
   public class VisionIOInputs {
-    public boolean connected = false; // Whether the camera is connected
+    public boolean connected = false;
 
-    public int targetCount = 0; // Number of targets currently detected
+    public PoseObservation[] poseObservation = new PoseObservation[0];
+    public int[] tagIds = new int[0];
+  }
 
-    public double timestampSeconds = 0; // Timestamp (in seconds) of the last update
+  public record PoseObservation(
+      double timestamp,
+      Pose3d pose,
+      double ambiguity,
+      int tagCount,
+      double averageTagDistance,
+      PoseObservationType type,
+      PoseStrategy poseStrategy) {}
 
-    public Pose3d estimatedGlobalPose =
-        new Pose3d(); // Latest estimated pose of the robot, pose3d because
-    // EstimatedRobotPose isn't supported by AutoLog
+  public enum PoseObservationType {
+    MEGATAG_1,
+    MEGATAG_2,
+    PHOTONVISION
   }
 
   default Optional<EstimatedRobotPose> getEstimatedGlobalPose() {
     return Optional.empty();
   }
 
-  default void updateInputs(VisionIOInputs inputs) {}
+  public default void updateInputs(VisionIOInputs inputs) {}
 
-  default void simulationPeriodic(Pose2d robotPose) {}
+  public default void updateHeading(double timestamp, Rotation2d heading) {}
 }
