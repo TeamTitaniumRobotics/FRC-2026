@@ -5,7 +5,6 @@
 package org.teamtitanium;
 
 import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import choreo.auto.AutoChooser;
@@ -37,10 +36,12 @@ import org.teamtitanium.autos.*;
 import org.teamtitanium.commands.DriveCommands;
 import org.teamtitanium.subsystems.Leds;
 import org.teamtitanium.subsystems.feeder.Feeder;
+import org.teamtitanium.subsystems.feeder.Feeder.FeederState;
 import org.teamtitanium.subsystems.genericroller.GenericRollerIO;
 import org.teamtitanium.subsystems.genericroller.GenericRollerIOSim;
 import org.teamtitanium.subsystems.genericroller.GenericRollerIOTalonFX;
 import org.teamtitanium.subsystems.intake.Intake;
+import org.teamtitanium.subsystems.intake.Intake.IntakeState;
 import org.teamtitanium.subsystems.intake.IntakeConstants;
 import org.teamtitanium.subsystems.intake.rack.IntakeRack;
 import org.teamtitanium.subsystems.intake.rack.IntakeRackIO;
@@ -48,6 +49,7 @@ import org.teamtitanium.subsystems.intake.rack.IntakeRackIOSim;
 import org.teamtitanium.subsystems.intake.rack.IntakeRackIOTalonFX;
 import org.teamtitanium.subsystems.intake.roller.IntakeRoller;
 import org.teamtitanium.subsystems.shooter.Shooter;
+import org.teamtitanium.subsystems.shooter.Shooter.ShooterState;
 import org.teamtitanium.subsystems.shooter.flywheel.Flywheel;
 import org.teamtitanium.subsystems.shooter.flywheel.FlywheelIO;
 import org.teamtitanium.subsystems.shooter.flywheel.FlywheelIOSim;
@@ -61,6 +63,7 @@ import org.teamtitanium.subsystems.shooter.turret.TurretIO;
 import org.teamtitanium.subsystems.shooter.turret.TurretIOSim;
 import org.teamtitanium.subsystems.shooter.turret.TurretIOTalonFX;
 import org.teamtitanium.subsystems.spindexer.Spindexer;
+import org.teamtitanium.subsystems.spindexer.Spindexer.SpindexerState;
 import org.teamtitanium.subsystems.swerve.GyroIO;
 import org.teamtitanium.subsystems.swerve.GyroIOPigeon2;
 import org.teamtitanium.subsystems.swerve.Swerve;
@@ -68,9 +71,7 @@ import org.teamtitanium.subsystems.swerve.SwerveModuleIO;
 import org.teamtitanium.subsystems.swerve.SwerveModuleIOSim;
 import org.teamtitanium.subsystems.swerve.SwerveModuleIOTalonFX;
 import org.teamtitanium.subsystems.vision.Vision;
-import org.teamtitanium.subsystems.vision.VisionConstants;
 import org.teamtitanium.subsystems.vision.VisionIO;
-import org.teamtitanium.subsystems.vision.VisionIOPhoton;
 import org.teamtitanium.subsystems.vision.VisionIOSim;
 import org.teamtitanium.utils.CanivoreReader;
 import org.teamtitanium.utils.Constants;
@@ -234,15 +235,17 @@ public class Robot extends LoggedRobot {
         hood = new Hood(new HoodIOTalonFX());
         turret = new Turret(new TurretIOTalonFX());
         feeder = new Feeder(new GenericRollerIOTalonFX(Feeder.CONSTANTS));
-        spindexer = new Spindexer(new GenericRollerIO() {});
+        spindexer = new Spindexer(new GenericRollerIOTalonFX(Spindexer.CONSTANTS));
         intakeRack = new IntakeRack(new IntakeRackIOTalonFX());
         intakeRoller =
             new IntakeRoller(new GenericRollerIOTalonFX(IntakeConstants.RollerConstants.CONSTANTS));
-        vision =
-            new Vision(
-                new VisionIOPhoton(
-                    VisionConstants.forwardCameraName, VisionConstants.forwardCameraPose),
-                new VisionIOPhoton(VisionConstants.leftCameraName, VisionConstants.leftCameraPose));
+        vision = new Vision(new VisionIO() {});
+        // vision =
+        //     new Vision(
+        //         new VisionIOPhoton(
+        //             VisionConstants.forwardCameraName, VisionConstants.forwardCameraPose),
+        //         new VisionIOPhoton(VisionConstants.leftCameraName,
+        // VisionConstants.leftCameraPose));
       }
       case SIM -> {
         swerve =
@@ -416,39 +419,62 @@ public class Robot extends LoggedRobot {
     // driver.rightTrigger().onTrue(Commands.runOnce(() -> feeder.setState(FeederState.FEED)));
     // driver.leftTrigger().onTrue(Commands.runOnce(() -> feeder.setState(FeederState.IDLE)));
 
+    driver.y().onTrue(Commands.runOnce(() -> shooter.setState(ShooterState.AIM)));
+    driver.a().onTrue(Commands.runOnce(() -> shooter.setState(ShooterState.STOW)));
+
     driver
-        .rightBumper()
-        .onTrue(intakeRack.setExtension(() -> Inches.of(intakeRack.configRackNumber.get())))
-        .onFalse(intakeRack.stop());
-    driver
-        .leftBumper()
-        .onTrue(intakeRack.setExtension(() -> Inches.of(0.0)))
-        .onFalse(intakeRack.stop());
+        .leftTrigger()
+        .onTrue(Commands.runOnce(() -> intake.setState(IntakeState.INTAKE)))
+        .onFalse(Commands.runOnce(() -> intake.setState(IntakeState.STOW)));
 
     driver
         .rightTrigger()
         .onTrue(
-            intakeRoller.setVelocity(
-                () -> RotationsPerSecond.of(intakeRoller.configurableNumber.get())))
-        .onFalse(intakeRoller.stop());
-    driver
-        .leftTrigger()
-        .onTrue(
-            intakeRoller.setVelocity(
-                () -> RotationsPerSecond.of(-intakeRoller.configurableNumber.get())))
-        .onFalse(intakeRoller.stop());
+            Commands.runOnce(
+                () -> {
+                  feeder.setState(FeederState.FEED);
+                  spindexer.setState(SpindexerState.FEED);
+                }))
+        .onFalse(
+            Commands.runOnce(
+                () -> {
+                  feeder.setState(FeederState.IDLE);
+                  spindexer.setState(SpindexerState.IDLE);
+                }));
 
-    driver.y().onTrue(intakeRack.setVoltage(() -> 2.0)).onFalse(intakeRack.stop());
-    driver.a().onTrue(intakeRack.setVoltage(() -> -2.0)).onFalse(intakeRack.stop());
+    // driver
+    //     .rightBumper()
+    //     .onTrue(intakeRack.setExtension(() -> Inches.of(intakeRack.configRackNumber.get())))
+    //     .onFalse(intakeRack.stop());
+    // driver
+    //     .leftBumper()
+    //     .onTrue(intakeRack.setExtension(() -> Inches.of(0.0)))
+    //     .onFalse(intakeRack.stop());
 
-    driver
-        .b()
-        .onTrue(intakeRoller.setVoltage(() -> intakeRoller.configurableNumber.get()))
-        .onFalse(intakeRoller.stop());
-    driver
-        .x()
-        .onTrue(intakeRoller.setVoltage(() -> -intakeRoller.configurableNumber.get()))
-        .onFalse(intakeRoller.stop());
+    // driver
+    //     .rightTrigger()
+    //     .onTrue(
+    //         intakeRoller.setVelocity(
+    //             () -> RotationsPerSecond.of(intakeRoller.configurableNumber.get())))
+    //     .onFalse(intakeRoller.stop());
+    // driver
+    //     .leftTrigger()
+    //     .onTrue(
+    //         intakeRoller.setVelocity(
+    //             () -> RotationsPerSecond.of(-intakeRoller.configurableNumber.get())))
+    //     .onFalse(intakeRoller.stop());
+
+    driver.rightBumper().onTrue(intakeRack.setVoltage(() -> 2.0)).onFalse(intakeRack.stop());
+    driver.leftBumper().onTrue(intakeRack.setVoltage(() -> -2.0)).onFalse(intakeRack.stop());
+
+    // driver
+    //     .b()
+    //     .onTrue(intakeRoller.setVoltage(() -> intakeRoller.configurableNumber.get()))
+    //     .onFalse(intakeRoller.stop());
+    // driver
+    //     .x()
+    //     .onTrue(intakeRoller.setVoltage(() -> -intakeRoller.configurableNumber.get()))
+    //     .onFalse(intakeRoller.stop());
 
     // Feeder
     driver
@@ -468,6 +494,16 @@ public class Robot extends LoggedRobot {
         .pov(270)
         .onTrue(feeder.setVelocity(() -> RotationsPerSecond.of(-feeder.configurableNumber.get())))
         .onFalse(feeder.stop());
+
+    // Spindexer
+    driver
+        .x()
+        .onTrue(spindexer.setVoltage(() -> spindexer.configurableNumber.get()))
+        .onFalse(spindexer.stop());
+    driver
+        .b()
+        .onTrue(spindexer.setVoltage(() -> -spindexer.configurableNumber.get()))
+        .onFalse(spindexer.stop());
 
     // Hood
     copilot.start().onTrue(Commands.runOnce(() -> hood.zeroHood()));
@@ -513,7 +549,7 @@ public class Robot extends LoggedRobot {
         .pov(90)
         .onTrue(
             flywheel.setVelocity(() -> RotationsPerSecond.of(flywheel.flywheelConfigNumber1.get())))
-        .onFalse(flywheel.setVoltage(0.0));
+        .onFalse(flywheel.setVelocity(RotationsPerSecond.of(0.0)));
     copilot
         .pov(270)
         .onTrue(

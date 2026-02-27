@@ -21,11 +21,11 @@ public class Spindexer extends GenericRoller {
   /** Independent states for the spindexer. */
   @RequiredArgsConstructor
   public enum SpindexerState {
-    IDLE(() -> IDLE_VELOCITY),
-    AGITATE(() -> AGITATE_VELOCITY),
-    FEED(() -> FEED_VELOCITY);
+    IDLE(() -> 0.0),
+    AGITATE(() -> 9.0),
+    FEED(() -> 9.0);
 
-    @Getter private final Supplier<AngularVelocity> spindexerVelocity;
+    @Getter private final Supplier<Double> spindexerVelocity;
   }
 
   public static final int SPINDEXER_MOTOR_ID = 35;
@@ -67,7 +67,7 @@ public class Spindexer extends GenericRoller {
 
   public Spindexer(GenericRollerIO io) {
     super("Spindexer", io, CONSTANTS);
-    // setDefaultCommand(setVelocity(() -> state.getSpindexerVelocity().get()));
+    setDefaultCommand(setVoltage(() -> state.getSpindexerVelocity().get()));
   }
 
   public Trigger hasFuel =

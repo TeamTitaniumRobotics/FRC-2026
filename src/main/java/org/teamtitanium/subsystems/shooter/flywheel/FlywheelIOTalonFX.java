@@ -47,7 +47,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
     rightMotor = new TalonFX(FLYWHEEL_RIGHT_MOTOR_ID, Constants.RIO_CAN_BUS);
 
     // Configure motors
-    config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+    config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
     config.MotorOutput.NeutralMode = NeutralModeValue.Coast; // Coast for flywheels
 
     // Current limits
@@ -77,9 +77,6 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 
     // Apply to both motors
     PhoenixUtil.tryUntilOk(5, () -> leftMotor.getConfigurator().apply(config));
-
-    // Right motor should be inverted (opposite side of shooter)
-    config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     PhoenixUtil.tryUntilOk(5, () -> rightMotor.getConfigurator().apply(config));
     rightMotor.setControl(new Follower(FLYWHEEL_LEFT_MOTOR_ID, MotorAlignmentValue.Opposed));
 
@@ -175,8 +172,8 @@ public class FlywheelIOTalonFX implements FlywheelIO {
     config.Slot0.kS = gains.kS();
     config.Slot0.kV = gains.kV();
     config.Slot0.kA = gains.kA();
-    PhoenixUtil.tryUntilOk(5, () -> leftMotor.getConfigurator().apply(config));
-    PhoenixUtil.tryUntilOk(5, () -> rightMotor.getConfigurator().apply(config));
+    PhoenixUtil.tryUntilOk(5, () -> leftMotor.getConfigurator().apply(config.Slot0));
+    PhoenixUtil.tryUntilOk(5, () -> rightMotor.getConfigurator().apply(config.Slot0));
   }
 
   @Override
@@ -184,12 +181,14 @@ public class FlywheelIOTalonFX implements FlywheelIO {
     config.MotionMagic.MotionMagicCruiseVelocity = constraints.maxVelocity();
     config.MotionMagic.MotionMagicAcceleration = constraints.maxAcceleration();
     config.MotionMagic.MotionMagicJerk = constraints.kJerk();
+    PhoenixUtil.tryUntilOk(5, () -> leftMotor.getConfigurator().apply(config.MotionMagic));
+    PhoenixUtil.tryUntilOk(5, () -> rightMotor.getConfigurator().apply(config.MotionMagic));
   }
 
   @Override
   public void setBrakeMode(boolean enabled) {
     config.MotorOutput.NeutralMode = enabled ? NeutralModeValue.Brake : NeutralModeValue.Coast;
-    PhoenixUtil.tryUntilOk(5, () -> leftMotor.getConfigurator().apply(config));
-    PhoenixUtil.tryUntilOk(5, () -> rightMotor.getConfigurator().apply(config));
+    PhoenixUtil.tryUntilOk(5, () -> leftMotor.getConfigurator().apply(config.MotorOutput));
+    PhoenixUtil.tryUntilOk(5, () -> rightMotor.getConfigurator().apply(config.MotorOutput));
   }
 }

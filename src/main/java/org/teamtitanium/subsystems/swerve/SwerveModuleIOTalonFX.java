@@ -174,33 +174,34 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
     PhoenixUtil.tryUntilOk(
         5, () -> ParentDevice.optimizeBusUtilizationForAll(driveMotor, turnMotor, turnCANcoder));
 
-    PhoenixUtil.registerSignals(
-        TunerConstants.kCANBus,
-        drivePosition,
-        driveVelocity,
-        driveAppliedVolts,
-        driveSupplyCurrentAmps,
-        driveTorqueCurrentAmps,
-        driveTempCelcius,
-        turnAbsolutePosition,
-        turnPosition,
-        turnVelocity,
-        turnAppliedVolts,
-        turnSupplyCurrentAmps,
-        turnTorqueCurrentAmps,
-        turnTempCelcius);
+    // PhoenixUtil.registerSignals(
+    //     TunerConstants.kCANBus,
+    //     drivePosition,
+    //     driveVelocity,
+    //     driveAppliedVolts,
+    //     driveSupplyCurrentAmps,
+    //     driveTorqueCurrentAmps,
+    //     driveTempCelcius,
+    //     turnAbsolutePosition,
+    //     turnPosition,
+    //     turnVelocity,
+    //     turnAppliedVolts,
+    //     turnSupplyCurrentAmps,
+    //     turnTorqueCurrentAmps,
+    //     turnTempCelcius);
   }
 
   @Override
   public void updateInputs(SwerveModuleIOInputs inputs) {
     inputs.driveConnected =
-        BaseStatusSignal.isAllGood(
-            drivePosition,
-            driveVelocity,
-            driveAppliedVolts,
-            driveSupplyCurrentAmps,
-            driveTorqueCurrentAmps,
-            driveTempCelcius);
+        BaseStatusSignal.refreshAll(
+                drivePosition,
+                driveVelocity,
+                driveAppliedVolts,
+                driveSupplyCurrentAmps,
+                driveTorqueCurrentAmps,
+                driveTempCelcius)
+            .isOK();
     inputs.drivePositionRad = Units.rotationsToRadians(drivePosition.getValueAsDouble());
     inputs.driveVelocityRadPerSec = Units.rotationsToRadians(driveVelocity.getValueAsDouble());
     inputs.driveAppliedVolts = driveAppliedVolts.getValueAsDouble();
@@ -209,14 +210,15 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
     inputs.driveTempCelcius = driveTempCelcius.getValueAsDouble();
 
     inputs.turnConnected =
-        BaseStatusSignal.isAllGood(
-                turnPosition,
-                turnVelocity,
-                turnAppliedVolts,
-                turnSupplyCurrentAmps,
-                turnTorqueCurrentAmps,
-                turnTempCelcius)
-            && BaseStatusSignal.isAllGood(turnAbsolutePosition);
+        BaseStatusSignal.refreshAll(
+                    turnPosition,
+                    turnVelocity,
+                    turnAppliedVolts,
+                    turnSupplyCurrentAmps,
+                    turnTorqueCurrentAmps,
+                    turnTempCelcius)
+                .isOK()
+            && BaseStatusSignal.refreshAll(turnAbsolutePosition).isOK();
     inputs.turnAbsolutePositionRad =
         Units.rotationsToRadians(turnAbsolutePosition.getValueAsDouble());
     inputs.turnPositionRad = Units.rotationsToRadians(turnPosition.getValueAsDouble());

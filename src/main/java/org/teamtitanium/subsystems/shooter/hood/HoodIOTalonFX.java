@@ -41,7 +41,7 @@ public class HoodIOTalonFX implements HoodIO {
     hoodMotor = new TalonFX(HOOD_MOTOR_ID, Constants.RIO_CAN_BUS);
 
     // Configure TalonFX
-    config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+    config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
     // Current limits

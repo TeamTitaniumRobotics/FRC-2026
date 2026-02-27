@@ -22,7 +22,7 @@ public class IntakeConstants {
 
     public static final AngularVelocity IDLE_VELOCITY = RotationsPerSecond.of(0.0);
     public static final AngularVelocity INTAKE_VELOCITY = RotationsPerSecond.of(24.0);
-    public static final AngularVelocity EJECT_VELOCITY = RotationsPerSecond.of(-24.0);
+    public static final AngularVelocity EJECT_VELOCITY = RotationsPerSecond.of(-12.0);
 
     public static final double STATOR_CURRENT_LIMIT = 60.0;
     public static final double SUPPLY_CURRENT_LIMIT = 40.0;
@@ -71,7 +71,7 @@ public class IntakeConstants {
     public static final Distance MIN_EXTENSION = Inches.of(0.0);
     public static final Distance STOW_EXTENSION = Inches.of(0.0);
     public static final Distance AGITATE_EXTENSION = Inches.of(5.0);
-    public static final Distance DEPLOY_EXTENSION = Inches.of(10.0);
+    public static final Distance DEPLOY_EXTENSION = Inches.of(12.0);
     public static final Distance MAX_EXTENSION = Inches.of(12.0);
     public static final Distance EXTENSION_TOLERANCE = Inches.of(0.1);
 
