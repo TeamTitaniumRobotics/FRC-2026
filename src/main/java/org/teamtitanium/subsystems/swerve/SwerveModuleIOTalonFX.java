@@ -211,14 +211,14 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
 
     inputs.turnConnected =
         BaseStatusSignal.refreshAll(
-                    turnPosition,
-                    turnVelocity,
-                    turnAppliedVolts,
-                    turnSupplyCurrentAmps,
-                    turnTorqueCurrentAmps,
-                    turnTempCelcius)
-                .isOK()
-            && BaseStatusSignal.refreshAll(turnAbsolutePosition).isOK();
+                turnPosition,
+                turnVelocity,
+                turnAppliedVolts,
+                turnSupplyCurrentAmps,
+                turnTorqueCurrentAmps,
+                turnTempCelcius)
+            .isOK();
+    inputs.turnCANcoderConnected = BaseStatusSignal.refreshAll(turnAbsolutePosition).isOK();
     inputs.turnAbsolutePositionRad =
         Units.rotationsToRadians(turnAbsolutePosition.getValueAsDouble());
     inputs.turnPositionRad = Units.rotationsToRadians(turnPosition.getValueAsDouble());
@@ -257,8 +257,7 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
   @Override
   public void setDriveVelocity(double velocityRadPerSec) {
     double rotationsPerSec =
-        Units.radiansToRotations(velocityRadPerSec)
-            * swerveConstants.DriveMotorGearRatio; // TODO: verify you need to multiply here
+        Units.radiansToRotations(velocityRadPerSec) * swerveConstants.DriveMotorGearRatio;
     driveMotor.setControl(
         switch (swerveConstants.DriveMotorClosedLoopOutput) {
           case Voltage -> voltageOut.withOutput(rotationsPerSec);
@@ -269,8 +268,7 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
   @Override
   public void setDriveVelocity(double velocityRadPerSec, double torqueFF) {
     double rotationsPerSec =
-        Units.radiansToRotations(velocityRadPerSec)
-            * swerveConstants.DriveMotorGearRatio; // TODO: verify you need to multiply here
+        Units.radiansToRotations(velocityRadPerSec) * swerveConstants.DriveMotorGearRatio;
     driveMotor.setControl(
         switch (swerveConstants.DriveMotorClosedLoopOutput) {
           case Voltage -> velocityVoltage.withVelocity(rotationsPerSec);

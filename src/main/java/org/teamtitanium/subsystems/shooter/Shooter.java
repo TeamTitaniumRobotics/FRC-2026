@@ -1,10 +1,10 @@
 package org.teamtitanium.subsystems.shooter;
 
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.util.function.Supplier;
 import lombok.Getter;
@@ -65,17 +65,20 @@ public class Shooter {
     this.hood = hood;
     this.turret = turret;
 
-    flywheel.setDefaultCommand(flywheel.setVelocity(() -> state.getFlywheelVelocity().get()));
-    hood.setDefaultCommand(
-        Commands.either(
-            hood.setPosition(HoodConstants.STOW_ANGLE),
-            hood.setPosition(() -> state.getHoodAngle().get()),
-            hoodStowOverride));
+    // flywheel.setDefaultCommand(flywheel.setVelocity(() -> state.getFlywheelVelocity().get()));
+    flywheel.setDefaultCommand(
+        flywheel.setVelocity(() -> RotationsPerSecond.of(flywheel.flywheelConfigNumber1.get())));
+    hood.setDefaultCommand(hood.setPosition(() -> Degrees.of(hood.hoodConfigNumber1.get())));
+    // hood.setDefaultCommand(
+    //     Commands.either(
+    //         hood.setPosition(HoodConstants.STOW_ANGLE),
+    //         hood.setPosition(() -> state.getHoodAngle().get()),
+    //         hoodStowOverride));
     // turret.setDefaultCommand(turret.setPosition(() -> state.getTurretAngle().get()));
   }
 
   @AutoLogOutput(key = "Shooter/AtSetpoint")
   public Trigger atSetpoint() {
-    return turret.atSetpoint().and(hood.atSetpoint()).and(flywheel.atSetpoint());
+    return hood.atSetpoint().and(flywheel.atSetpoint());
   }
 }

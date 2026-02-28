@@ -237,7 +237,7 @@ public class Superstructure extends VirtualSubsystem {
       case EJECT -> intake.setState(IntakeState.EJECT);
       case SPIN_UP_SCORE, SPIN_UP_PASS -> {
         // If intake deployed override is active, keep intaking; else agitate
-        intake.setState(intakeDeployed.getAsBoolean() ? IntakeState.INTAKE : IntakeState.AGITATE);
+        intake.setState(intakeDeployed.getAsBoolean() ? IntakeState.INTAKE : IntakeState.STOW);
       }
       case SCORE, PASS -> {
         // If intake deployed override is active, keep intaking; else stow
@@ -257,7 +257,7 @@ public class Superstructure extends VirtualSubsystem {
 
     // --- Resolve Spindexer state ---
     switch (state) {
-      case INTAKE, SPIN_UP_SCORE, SPIN_UP_PASS -> spindexer.setState(SpindexerState.AGITATE);
+      case INTAKE, SPIN_UP_SCORE, SPIN_UP_PASS -> spindexer.setState(SpindexerState.IDLE);
       case SCORE, PASS, EJECT -> spindexer.setState(SpindexerState.FEED);
       default -> spindexer.setState(SpindexerState.IDLE);
     }

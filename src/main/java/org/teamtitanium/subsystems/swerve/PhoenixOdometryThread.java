@@ -59,8 +59,8 @@ public class PhoenixOdometryThread extends Thread {
       phoenixSignals = newSignals;
       phoenixQueues.add(queue);
     } finally {
-      Swerve.odometryLock.unlock();
       signalsLock.unlock();
+      Swerve.odometryLock.unlock();
     }
     return queue;
   }
@@ -75,8 +75,8 @@ public class PhoenixOdometryThread extends Thread {
       genericSignals.add(supplier);
       genericQueues.add(queue);
     } finally {
-      Swerve.odometryLock.unlock();
       signalsLock.unlock();
+      Swerve.odometryLock.unlock();
     }
     return queue;
   }

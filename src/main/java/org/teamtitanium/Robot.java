@@ -47,6 +47,7 @@ import org.teamtitanium.subsystems.intake.rack.IntakeRackIOSim;
 import org.teamtitanium.subsystems.intake.rack.IntakeRackIOTalonFX;
 import org.teamtitanium.subsystems.intake.roller.IntakeRoller;
 import org.teamtitanium.subsystems.shooter.Shooter;
+import org.teamtitanium.subsystems.shooter.ShotCalculator;
 import org.teamtitanium.subsystems.shooter.flywheel.Flywheel;
 import org.teamtitanium.subsystems.shooter.flywheel.FlywheelIO;
 import org.teamtitanium.subsystems.shooter.flywheel.FlywheelIOSim;
@@ -67,7 +68,9 @@ import org.teamtitanium.subsystems.swerve.SwerveModuleIO;
 import org.teamtitanium.subsystems.swerve.SwerveModuleIOSim;
 import org.teamtitanium.subsystems.swerve.SwerveModuleIOTalonFX;
 import org.teamtitanium.subsystems.vision.Vision;
+import org.teamtitanium.subsystems.vision.VisionConstants;
 import org.teamtitanium.subsystems.vision.VisionIO;
+import org.teamtitanium.subsystems.vision.VisionIOPhoton;
 import org.teamtitanium.subsystems.vision.VisionIOSim;
 import org.teamtitanium.utils.CanivoreReader;
 import org.teamtitanium.utils.Constants;
@@ -104,6 +107,8 @@ public class Robot extends LoggedRobot {
 
   private final CommandXboxController driver = new CommandXboxController(0);
   private final CommandXboxController copilot = new CommandXboxController(1);
+
+  private final ShotCalculator shotCalculator = ShotCalculator.getInstance();
 
   private double autoStartTime = 0.0;
   private boolean autoMessagePrinted = false;
@@ -235,7 +240,11 @@ public class Robot extends LoggedRobot {
         intakeRack = new IntakeRack(new IntakeRackIOTalonFX());
         intakeRoller =
             new IntakeRoller(new GenericRollerIOTalonFX(IntakeConstants.RollerConstants.CONSTANTS));
-        vision = new Vision(new VisionIO() {});
+        vision =
+            new Vision(
+                new VisionIOPhoton(
+                    VisionConstants.forwardCameraName, VisionConstants.forwardCameraPose),
+                new VisionIOPhoton(VisionConstants.leftCameraName, VisionConstants.leftCameraPose));
         // vision =
         //     new Vision(
         //         new VisionIOPhoton(
@@ -365,6 +374,8 @@ public class Robot extends LoggedRobot {
             || canStatus.receiveErrorCount > 0) {
           canivoreErrorTimer.restart();
         }
+      } else {
+        Logger.recordOutput("CANivoreStatus/Status", "CANivore Status Not Present");
       }
 
       canivoreErrorAlert.set(
@@ -390,6 +401,11 @@ public class Robot extends LoggedRobot {
     // Initialization Alert
     initializationAlert.set(isInitializing());
 
+    // shotCalculator.getParameters();
+    Logger.recordOutput("ShotCalculator/Parameters", shotCalculator.getParameters());
+
+    shotCalculator.resetShotParameters();
+
     LoggedTracer.record("RobotPeriodic");
 
     MechanismVisualizer.getInstance().log("MechanismVisualizer");
@@ -405,7 +421,7 @@ public class Robot extends LoggedRobot {
             () -> false));
 
     driver.start().onTrue(Commands.runOnce(() -> swerve.resetPigeon()));
-    // driver.start().onTrue(Commands.runOnce(() -> intakeRack.zero()));
+    driver.start().onTrue(Commands.runOnce(() -> intakeRack.zero()));
 
     // driver.leftBumper().onTrue(Commands.runOnce(() -> intake.setState(IntakeState.INTAKE)));
     // driver.rightBumper().onTrue(Commands.runOnce(() -> intake.setState(IntakeState.STOW)));
@@ -503,7 +519,7 @@ public class Robot extends LoggedRobot {
     //     .onFalse(spindexer.stop());
 
     // Hood
-    // copilot.start().onTrue(Commands.runOnce(() -> hood.zeroHood()));
+    copilot.start().onTrue(Commands.runOnce(() -> hood.zeroHood()));
 
     // copilot
     //     .y()
@@ -511,14 +527,14 @@ public class Robot extends LoggedRobot {
     //     .onFalse(hood.setVoltage(0.0));
     // copilot.a().onTrue(hood.setPosition(() -> Degrees.of(0.0))).onFalse(hood.setVoltage(0.0));
 
-    // copilot
-    //     .b()
-    //     .onTrue(hood.setVoltage(() -> hood.hoodConfigNumber2.get()))
-    //     .onFalse(hood.setVoltage(0.0));
-    // copilot
-    //     .x()
-    //     .onTrue(hood.setVoltage(() -> -hood.hoodConfigNumber2.get()))
-    //     .onFalse(hood.setVoltage(0.0));
+    copilot
+        .b()
+        .onTrue(hood.setVoltage(() -> hood.hoodConfigNumber2.get()))
+        .onFalse(hood.setVoltage(0.0));
+    copilot
+        .x()
+        .onTrue(hood.setVoltage(() -> -hood.hoodConfigNumber2.get()))
+        .onFalse(hood.setVoltage(0.0));
 
     // Turet
     copilot.back().onTrue(Commands.runOnce(() -> turret.zeroMotor()));

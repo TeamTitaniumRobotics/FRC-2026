@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.Degrees;
 
 import com.ctre.phoenix6.CANBus;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import org.teamtitanium.utils.Constants;
 import org.teamtitanium.utils.Constants.Constraints;
@@ -27,7 +28,7 @@ public class HoodConstants {
   public static final double MAX_ANGLE_ROTS = 30.0 / 360.0; // 30 degrees
 
   // Tolerance
-  public static final double ANGLE_TOLERANCE_ROTS = 0.005; // ~1.8 degrees
+  public static final double ANGLE_TOLERANCE_ROTS = Units.degreesToRotations(3.0); // ~1.8 degrees
 
   // Motion Magic Constraints
   public static final Constraints HOOD_MOTION_CONSTRAINTS =
