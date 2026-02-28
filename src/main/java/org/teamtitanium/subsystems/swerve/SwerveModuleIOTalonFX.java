@@ -1,5 +1,11 @@
 package org.teamtitanium.subsystems.swerve;
 
+import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Celsius;
+import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.Volts;
+
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
@@ -28,7 +34,6 @@ import edu.wpi.first.units.measure.Voltage;
 import java.util.Queue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import org.littletonrobotics.junction.Logger;
 import org.teamtitanium.utils.Constants;
 import org.teamtitanium.utils.Constants.Gains;
 import org.teamtitanium.utils.PhoenixUtil;
@@ -53,6 +58,7 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
   protected final VelocityTorqueCurrentFOC velocityTorqueCurrentFOC =
       new VelocityTorqueCurrentFOC(0.0);
 
+  private final Queue<Double> timestampQueue;
   private final Queue<Double> drivePositionQueue;
   private final Queue<Double> turnPositionQueue;
 
@@ -78,12 +84,9 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
           swerveConstants) {
     this.swerveConstants = swerveConstants;
 
-    driveMotor =
-        new TalonFX(swerveConstants.DriveMotorId, TunerConstants.DrivetrainConstants.CANBusName);
-    turnMotor =
-        new TalonFX(swerveConstants.SteerMotorId, TunerConstants.DrivetrainConstants.CANBusName);
-    turnCANcoder =
-        new CANcoder(swerveConstants.EncoderId, TunerConstants.DrivetrainConstants.CANBusName);
+    driveMotor = new TalonFX(swerveConstants.DriveMotorId, TunerConstants.kCANBus);
+    turnMotor = new TalonFX(swerveConstants.SteerMotorId, TunerConstants.kCANBus);
+    turnCANcoder = new CANcoder(swerveConstants.EncoderId, TunerConstants.kCANBus);
 
     var driveConfig = swerveConstants.DriveMotorInitialConfigs;
     driveConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
@@ -136,10 +139,11 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
             : SensorDirectionValue.CounterClockwise_Positive;
     PhoenixUtil.tryUntilOk(5, () -> turnCANcoder.getConfigurator().apply(canCoderConfig, 0.25));
 
+    timestampQueue = PhoenixOdometryThread.getInstance().makeTimestampQueue();
+
     drivePositionQueue =
-        PhoenixOdometryThread.getInstance().registerSignal(driveMotor.getPosition().clone());
-    turnPositionQueue =
-        PhoenixOdometryThread.getInstance().registerSignal(turnMotor.getPosition().clone());
+        PhoenixOdometryThread.getInstance().registerSignal(driveMotor.getPosition());
+    turnPositionQueue = PhoenixOdometryThread.getInstance().registerSignal(turnMotor.getPosition());
 
     drivePosition = driveMotor.getPosition();
     driveVelocity = driveMotor.getVelocity();
@@ -157,7 +161,7 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
     turnTempCelcius = turnMotor.getDeviceTemp();
 
     BaseStatusSignal.setUpdateFrequencyForAll(
-        Swerve.ODOMETRY_FREQUENCY, drivePosition, turnAbsolutePosition);
+        Swerve.ODOMETRY_FREQUENCY, drivePosition, turnPosition, turnAbsolutePosition);
     BaseStatusSignal.setUpdateFrequencyForAll(
         50.0,
         driveVelocity,
@@ -165,7 +169,6 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
         driveSupplyCurrentAmps,
         driveTorqueCurrentAmps,
         driveTempCelcius,
-        turnPosition,
         turnVelocity,
         turnAppliedVolts,
         turnSupplyCurrentAmps,
@@ -202,12 +205,12 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
                 driveTorqueCurrentAmps,
                 driveTempCelcius)
             .isOK();
-    inputs.drivePositionRad = Units.rotationsToRadians(drivePosition.getValueAsDouble());
-    inputs.driveVelocityRadPerSec = Units.rotationsToRadians(driveVelocity.getValueAsDouble());
-    inputs.driveAppliedVolts = driveAppliedVolts.getValueAsDouble();
-    inputs.driveSupplyCurrentAmps = driveSupplyCurrentAmps.getValueAsDouble();
-    inputs.driveTorqueCurrentAmps = driveTorqueCurrentAmps.getValueAsDouble();
-    inputs.driveTempCelcius = driveTempCelcius.getValueAsDouble();
+    inputs.drivePositionRad = drivePosition.getValue().in(Radians);
+    inputs.driveVelocityRadPerSec = driveVelocity.getValue().in(RadiansPerSecond);
+    inputs.driveAppliedVolts = driveAppliedVolts.getValue().in(Volts);
+    inputs.driveSupplyCurrentAmps = driveSupplyCurrentAmps.getValue().in(Amps);
+    inputs.driveTorqueCurrentAmps = driveTorqueCurrentAmps.getValue().in(Amps);
+    inputs.driveTempCelcius = driveTempCelcius.getValue().in(Celsius);
 
     inputs.turnConnected =
         BaseStatusSignal.refreshAll(
@@ -219,21 +222,26 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
                 turnTempCelcius)
             .isOK();
     inputs.turnCANcoderConnected = BaseStatusSignal.refreshAll(turnAbsolutePosition).isOK();
-    inputs.turnAbsolutePositionRad =
-        Units.rotationsToRadians(turnAbsolutePosition.getValueAsDouble());
-    inputs.turnPositionRad = Units.rotationsToRadians(turnPosition.getValueAsDouble());
-    inputs.turnVelocityRadPerSec = Units.rotationsToRadians(turnVelocity.getValueAsDouble());
-    inputs.turnAppliedVolts = turnAppliedVolts.getValueAsDouble();
-    inputs.turnSupplyCurrentAmps = turnSupplyCurrentAmps.getValueAsDouble();
-    inputs.turnTorqueCurrentAmps = turnTorqueCurrentAmps.getValueAsDouble();
-    inputs.turnTempCelcius = turnTempCelcius.getValueAsDouble();
+    inputs.turnAbsolutePositionRad = turnAbsolutePosition.getValue().in(Radians);
+    inputs.turnPositionRad = turnPosition.getValue().in(Radians);
+    inputs.turnVelocityRadPerSec = turnVelocity.getValue().in(RadiansPerSecond);
+    inputs.turnAppliedVolts = turnAppliedVolts.getValue().in(Volts);
+    inputs.turnSupplyCurrentAmps = turnSupplyCurrentAmps.getValue().in(Amps);
+    inputs.turnTorqueCurrentAmps = turnTorqueCurrentAmps.getValue().in(Amps);
+    inputs.turnTempCelcius = turnTempCelcius.getValue().in(Celsius);
 
+    inputs.odometryTimestamps =
+        timestampQueue.stream().mapToDouble((Double value) -> value).toArray();
     inputs.odometryDrivePositionsRad =
         drivePositionQueue.stream()
             .mapToDouble((Double value) -> Units.rotationsToRadians(value))
             .toArray();
     inputs.odometryTurnPositions =
         turnPositionQueue.stream().map(Rotation2d::fromRotations).toArray(Rotation2d[]::new);
+
+    timestampQueue.clear();
+    drivePositionQueue.clear();
+    turnPositionQueue.clear();
   }
 
   @Override
@@ -286,8 +294,6 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
           case Voltage -> positionVoltage.withPosition(rotations);
           case TorqueCurrentFOC -> positionTorqueCurrentFOC.withPosition(rotations);
         });
-
-    Logger.recordOutput("SwerveModule/TargetTurnPosition", rotations);
   }
 
   @Override

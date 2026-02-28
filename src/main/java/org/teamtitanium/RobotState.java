@@ -42,7 +42,7 @@ public class RobotState {
 
   // Poses
   @Getter @Setter @AutoLogOutput private Pose2d odometryPose = Pose2d.kZero;
-  @Getter @AutoLogOutput private Pose2d estimatedPose = Pose2d.kZero;
+  private Pose2d estimatedPose = Pose2d.kZero;
 
   private final TimeInterpolatableBuffer<Pose2d> poseBuffer =
       TimeInterpolatableBuffer.createBuffer(poseBufferSizeSeconds);
@@ -93,7 +93,7 @@ public class RobotState {
     poseBuffer.addSample(observation.timestamp(), odometryPose);
     // Update estimated pose from estimator
     Rotation2d gyroAngle = observation.gyroAngle().orElse(estimatedPose.getRotation());
-    poseEstimator.update(gyroAngle, observation.wheelPositions());
+    poseEstimator.updateWithTime(observation.timestamp(), gyroAngle, observation.wheelPositions());
     estimatedPose = poseEstimator.getEstimatedPosition();
   }
 
@@ -101,6 +101,11 @@ public class RobotState {
       Pose2d visionPoseMeters, double timestampSeconds, Matrix<N3, N1> visionStdDevs) {
     poseEstimator.addVisionMeasurement(visionPoseMeters, timestampSeconds, visionStdDevs);
     estimatedPose = poseEstimator.getEstimatedPosition();
+  }
+
+  @AutoLogOutput(key = "RobotState/EstimatedPose")
+  public Pose2d getEstimatedPose() {
+    return poseEstimator.getEstimatedPosition();
   }
 
   public void setEstimatedPose(Pose2d pose) {

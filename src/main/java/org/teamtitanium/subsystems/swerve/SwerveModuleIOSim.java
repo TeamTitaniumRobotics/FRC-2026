@@ -9,6 +9,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 
 public class SwerveModuleIOSim implements SwerveModuleIO {
@@ -91,7 +92,7 @@ public class SwerveModuleIOSim implements SwerveModuleIO {
     inputs.turnSupplyCurrentAmps = Math.abs(turnMotorSim.getCurrentDrawAmps());
     inputs.turnTorqueCurrentAmps = Math.abs(turnMotorSim.getCurrentDrawAmps());
 
-    // inputs.odometryTimestamps = new double[] {Timer.getFPGATimestamp()};
+    inputs.odometryTimestamps = new double[] {Timer.getFPGATimestamp()};
     inputs.odometryDrivePositionsRad = new double[] {driveMotorSim.getAngularPositionRad()};
     inputs.odometryTurnPositions =
         new Rotation2d[] {new Rotation2d(turnMotorSim.getAngularPositionRad())};
