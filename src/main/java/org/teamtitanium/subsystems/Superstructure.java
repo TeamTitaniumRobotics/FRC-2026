@@ -72,6 +72,7 @@ public class Superstructure extends VirtualSubsystem {
   private final Trigger scoreReq;
   private final Trigger passReq;
   private final Trigger spitReq;
+  private final Trigger stowReq;
   private final Trigger hasFuel;
 
   // ───────────────────────────── Modifier triggers ────────────────────────────
@@ -108,6 +109,7 @@ public class Superstructure extends VirtualSubsystem {
     intakeReq = driver.leftTrigger();
     scoreReq = driver.rightTrigger();
     passReq = driver.y();
+    stowReq = driver.povDown();
     spitReq = driver.back();
 
     hasFuel = spindexer.hasFuel.or(feeder.hasFuel);
@@ -140,6 +142,10 @@ public class Superstructure extends VirtualSubsystem {
     bindTransition(SuperstructureState.IDLE, SuperstructureState.INTAKE, intakeReq);
     bindTransition(SuperstructureState.INTAKE, SuperstructureState.IDLE, intakeReq.negate());
 
+    bindTransition(SuperstructureState.INTAKE, SuperstructureState.IDLE, stowReq);
+    bindTransition(SuperstructureState.SPIN_UP_SCORE, SuperstructureState.IDLE, stowReq);
+    bindTransition(SuperstructureState.SCORE, SuperstructureState.IDLE, stowReq);
+
     // // IDLE / INTAKE → PREPPED (fuel acquired)
     // bindTransition(
     //     SuperstructureState.IDLE, SuperstructureState.PREPPED, hasFuel.and(intakeReq.negate()));
@@ -159,6 +165,7 @@ public class Superstructure extends VirtualSubsystem {
         SuperstructureState.SPIN_UP_SCORE,
         SuperstructureState.SCORE,
         shooter.atSetpoint().and(scoreReq));
+    bindTransition(SuperstructureState.SPIN_UP_SCORE, SuperstructureState.IDLE, scoreReq.negate());
     bindTransition(SuperstructureState.SCORE, SuperstructureState.IDLE, scoreReq.negate());
 
     // IDLE -> SPIN_UP_PASS -> PASS
@@ -169,6 +176,10 @@ public class Superstructure extends VirtualSubsystem {
         shooter.atSetpoint().and(passReq));
     bindTransition(
         SuperstructureState.PASS,
+        SuperstructureState.IDLE,
+        passReq.negate().and(() -> stateTimer.hasElapsed(0.5)));
+    bindTransition(
+        SuperstructureState.SPIN_UP_PASS,
         SuperstructureState.IDLE,
         passReq.negate().and(() -> stateTimer.hasElapsed(0.5)));
 

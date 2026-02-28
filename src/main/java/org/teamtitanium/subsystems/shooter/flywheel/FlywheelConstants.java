@@ -24,7 +24,7 @@ public class FlywheelConstants {
   public static final double FLYWHEEL_MOMENT_OF_INERTIA = 0.008; // kg*m^2
 
   // Tolerance
-  public static final double VELOCITY_TOLERANCE_RPS = 2.0; // ~60 RPM tolerance
+  public static final double VELOCITY_TOLERANCE_RPS = 6.0; // ~60 RPM tolerance
 
   // PID Gains (Velocity control)
   public static final Gains FLYWHEEL_GAINS = new Gains(0.3, 0.0, 0.0, 0.175, 0.095, 0.0, 0.01);
