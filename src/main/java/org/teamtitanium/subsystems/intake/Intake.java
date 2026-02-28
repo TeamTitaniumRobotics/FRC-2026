@@ -45,7 +45,7 @@ public class Intake {
     //             rack.setExtension(RackConstants.STOW_EXTENSION).until(rack.atSetpoint())),
     //         rack.setExtension(() -> state.getRackDistance().get()),
     //         () -> state == IntakeState.AGITATE));
-    rack.setDefaultCommand(rack.setExtension(() -> state.getRackDistance().get()));
+    // rack.setDefaultCommand(rack.setExtension(() -> state.getRackDistance().get()));
     roller.setDefaultCommand(roller.setVelocity(() -> state.getIntakeVelocity().get()));
   }
 
