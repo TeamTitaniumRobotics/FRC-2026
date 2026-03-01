@@ -1,6 +1,7 @@
 package org.teamtitanium.subsystems.shooter;
 
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import edu.wpi.first.units.measure.Angle;
@@ -25,9 +26,12 @@ public class Shooter {
     STOW(
         () -> FlywheelConstants.IDLE_VELOCITY,
         () -> HoodConstants.STOW_ANGLE,
-        () -> Degrees.of(0.0)),
+        () -> Rotations.of(ShotCalculator.getInstance().getParameters().turretAngleRots())),
     // TODO: Set these up to get shooting setpoints
-    AIM(() -> FlywheelConstants.SHOOT_VELOCITY, () -> Degrees.of(15.0), () -> Degrees.of(0.0)),
+    AIM(
+        () -> FlywheelConstants.SHOOT_VELOCITY,
+        () -> Degrees.of(15.0),
+        () -> Rotations.of(ShotCalculator.getInstance().getParameters().turretAngleRots())),
     EJECT(
         () -> FlywheelConstants.EJECT_VELOCITY,
         () -> HoodConstants.EJECT_ANGLE,
@@ -74,11 +78,15 @@ public class Shooter {
     //         hood.setPosition(HoodConstants.STOW_ANGLE),
     //         hood.setPosition(() -> state.getHoodAngle().get()),
     //         hoodStowOverride));
-    // turret.setDefaultCommand(turret.setPosition(() -> state.getTurretAngle().get()));
+    turret.setDefaultCommand(turret.setPosition(() -> state.getTurretAngle().get()));
   }
 
   @AutoLogOutput(key = "Shooter/AtSetpoint")
   public Trigger atSetpoint() {
     return hood.atSetpoint().and(flywheel.atSetpoint());
+  }
+
+  public Angle getTurretAngle() {
+    return turret.getPosition();
   }
 }

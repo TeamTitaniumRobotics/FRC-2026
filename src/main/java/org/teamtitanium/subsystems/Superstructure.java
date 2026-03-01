@@ -1,5 +1,11 @@
 package org.teamtitanium.subsystems;
 
+import static edu.wpi.first.units.Units.Radians;
+
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -8,12 +14,14 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import lombok.Getter;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
+import org.teamtitanium.RobotState;
 import org.teamtitanium.subsystems.feeder.Feeder;
 import org.teamtitanium.subsystems.feeder.Feeder.FeederState;
 import org.teamtitanium.subsystems.intake.Intake;
 import org.teamtitanium.subsystems.intake.Intake.IntakeState;
 import org.teamtitanium.subsystems.shooter.Shooter;
 import org.teamtitanium.subsystems.shooter.Shooter.ShooterState;
+import org.teamtitanium.subsystems.shooter.turret.TurretConstants;
 import org.teamtitanium.subsystems.spindexer.Spindexer;
 import org.teamtitanium.subsystems.spindexer.Spindexer.SpindexerState;
 import org.teamtitanium.utils.virtualsubsystem.VirtualSubsystem;
@@ -132,7 +140,14 @@ public class Superstructure extends VirtualSubsystem {
 
   @Override
   public void simulationPeriodic() {
-    // TODO: Add subsystem visualization here
+    Pose2d estimatedPose = RobotState.getInstance().getEstimatedPose();
+    Pose3d turretPose =
+        new Pose3d(RobotState.getInstance().getOdometryPose())
+            .transformBy(
+                new Transform3d(
+                    TurretConstants.TURRET_TO_ROBOT.getTranslation(),
+                    new Rotation3d(0.0, 0.0, shooter.getTurretAngle().in(Radians))));
+    Logger.recordOutput("Superstructure/TurretPose", turretPose);
   }
 
   // ───────────────────────────── State transitions ────────────────────────────

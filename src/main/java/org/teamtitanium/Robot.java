@@ -402,9 +402,7 @@ public class Robot extends LoggedRobot {
     // Initialization Alert
     initializationAlert.set(isInitializing());
 
-    // shotCalculator.getParameters();
     Logger.recordOutput("ShotCalculator/Parameters", shotCalculator.getParameters());
-
     shotCalculator.resetShotParameters();
 
     LoggedTracer.record("RobotPeriodic");

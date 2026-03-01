@@ -157,6 +157,10 @@ public class RobotState {
     return Radians.of(targetAngle.getRadians());
   }
 
+  public ChassisSpeeds getFieldVelocity() {
+    return ChassisSpeeds.fromRobotRelativeSpeeds(getRobotVelocity(), getRotation());
+  }
+
   public record OdometryObservation(
       SwerveModulePosition[] wheelPositions, Optional<Rotation2d> gyroAngle, double timestamp) {}
 }
