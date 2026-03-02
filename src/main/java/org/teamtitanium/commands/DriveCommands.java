@@ -1,6 +1,7 @@
 package org.teamtitanium.commands;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
@@ -18,6 +19,8 @@ import org.teamtitanium.subsystems.swerve.Swerve;
 public class DriveCommands {
   public static final double DEADBAND = 0.1;
 
+  private static final PIDController trenchYPIDController = new PIDController(8.0, 0.0, 0.05);
+
   public static Translation2d getLinearVelocityFromJoysticks(double x, double y) {
     double linearMagnitude = MathUtil.applyDeadband(Math.hypot(x, y), DEADBAND);
     Rotation2d linearDirection = new Rotation2d(x, y);
@@ -29,10 +32,10 @@ public class DriveCommands {
         .getTranslation();
   }
 
-  // public static double getOmegaFromJoysticks(double driverOmega) {
-  //   double omega = MathUtil.applyDeadband(driverOmega, DEADBAND);
-  //   return omega * omega * Math.signum(omega);
-  // }
+  public static double getOmegaFromJoysticks(double driverOmega) {
+    double omega = MathUtil.applyDeadband(driverOmega, DEADBAND);
+    return omega = Math.copySign(omega * omega, omega);
+  }
 
   // public static ChassisSpeeds getSpeedsFromJoysticks(
   //     double driverX, double driverY, double driverOmega) {
@@ -58,15 +61,48 @@ public class DriveCommands {
           Translation2d linearVelocity =
               getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
 
-          double theta = MathUtil.applyDeadband(omegaSupplier.getAsDouble(), DEADBAND);
-
-          theta = Math.copySign(theta * theta, theta);
+          double omega = getOmegaFromJoysticks(omegaSupplier.getAsDouble());
 
           ChassisSpeeds speeds =
               new ChassisSpeeds(
                   linearVelocity.getX() * Swerve.getMaxLinearSpeedMetersPerSec(),
                   linearVelocity.getY() * Swerve.getMaxLinearSpeedMetersPerSec(),
-                  theta * Swerve.getMaxAngularVelocityRadPerSec());
+                  omega * Swerve.getMaxAngularVelocityRadPerSec());
+
+          boolean isFlipped =
+              DriverStation.getAlliance().isPresent()
+                  && DriverStation.getAlliance().get() == Alliance.Red;
+
+          swerve.runVelocity(
+              robotRelative.getAsBoolean()
+                  ? speeds
+                  : ChassisSpeeds.fromFieldRelativeSpeeds(
+                      speeds,
+                      isFlipped
+                          ? RobotState.getInstance().getRotation().plus(Rotation2d.kPi)
+                          : RobotState.getInstance().getRotation()));
+        },
+        swerve);
+  }
+
+  public static Command trenchDrive(
+      Swerve swerve,
+      DoubleSupplier xSupplier,
+      DoubleSupplier ySupplier,
+      DoubleSupplier omegaSupplier,
+      BooleanSupplier robotRelative) {
+    return Commands.run(
+        () -> {
+          Translation2d linearVelocity =
+              getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
+
+          double omega = getOmegaFromJoysticks(omegaSupplier.getAsDouble());
+
+          ChassisSpeeds speeds =
+              new ChassisSpeeds(
+                  linearVelocity.getX() * Swerve.getMaxLinearSpeedMetersPerSec(),
+                  linearVelocity.getY() * Swerve.getMaxLinearSpeedMetersPerSec(),
+                  omega * Swerve.getMaxAngularVelocityRadPerSec());
 
           boolean isFlipped =
               DriverStation.getAlliance().isPresent()
