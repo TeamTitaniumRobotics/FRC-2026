@@ -425,6 +425,8 @@ public class Robot extends LoggedRobot {
     driver.start().onTrue(Commands.runOnce(() -> swerve.setGyroAngle(Rotations.of(0.0))));
     driver.start().onTrue(Commands.runOnce(() -> intakeRack.zero()));
 
+    driver.rightBumper().whileTrue(DriveCommands.trenchDrive(swerve, () -> -driver.getLeftY()));
+
     // driver.leftBumper().onTrue(Commands.runOnce(() -> intake.setState(IntakeState.INTAKE)));
     // driver.rightBumper().onTrue(Commands.runOnce(() -> intake.setState(IntakeState.STOW)));
     // driver.a().onTrue(Commands.runOnce(() -> intake.setState(IntakeState.AGITATE)));
