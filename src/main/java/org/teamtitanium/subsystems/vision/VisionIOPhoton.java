@@ -30,63 +30,10 @@ public class VisionIOPhoton implements VisionIO {
 
   @Override
   public void updateInputs(VisionIOInputs inputs) {
-    // inputs.connected = camera.isConnected();
-
-    // Set<Integer> tagIds = new HashSet<>();
-    // List<PoseObservation> poseObservations = new LinkedList<>();
-
-    // for (var result : camera.getAllUnreadResults()) {
-    //   var visionEstimate = poseEstimator.estimateCoprocMultiTagPose(result);
-
-    //   if (visionEstimate.isPresent()) {
-    //     var estimate = visionEstimate.get();
-
-    //     double averageTagDistance = 0.0;
-    //     double averagePoseAmbiguity = 0.0;
-
-    //     for (var target : estimate.targetsUsed) {
-    //       averageTagDistance += target.getBestCameraToTarget().getTranslation().getNorm();
-    //       averagePoseAmbiguity += target.getPoseAmbiguity();
-    //       tagIds.add(target.getFiducialId());
-    //     }
-
-    //     averageTagDistance /= estimate.targetsUsed.size();
-    //     averagePoseAmbiguity /= estimate.targetsUsed.size();
-
-    //     poseObservations.add(
-    //         new PoseObservation(
-    //             result.getTimestampSeconds(),
-    //             estimate.estimatedPose,
-    //             averagePoseAmbiguity,
-    //             estimate.targetsUsed.size(),
-    //             averageTagDistance,
-    //             PoseObservationType.PHOTONVISION,
-    //             estimate.strategy));
-
-    //     inputs.poseObservations = new PoseObservation[poseObservations.size()];
-    //     for (int i = 0; i < poseObservations.size(); i++) {
-    //       inputs.poseObservations[i] = poseObservations.get(i);
-    //     }
-
-    //     inputs.tagIds = new int[tagIds.size()];
-    //     int i = 0;
-    //     for (var tagId : tagIds) {
-    //       inputs.tagIds[i++] = tagId;
-    //     }
-    //   }
-    // }
     inputs.connected = camera.isConnected();
 
     Set<Integer> tagIds = new HashSet<>();
     List<PoseObservation> poseObservations = new LinkedList<>();
-
-    // if (Robot.getCurrentCoralTarget().isPresent()
-    //     && !poseEstimator.getPrimaryStrategy().equals(PoseStrategy.PNP_DISTANCE_TRIG_SOLVE)) {
-    //   poseEstimator.setPrimaryStrategy(PoseStrategy.PNP_DISTANCE_TRIG_SOLVE);
-    // } else if (Robot.getCurrentCoralTarget().isEmpty()
-    //     && poseEstimator.getPrimaryStrategy().equals(PoseStrategy.PNP_DISTANCE_TRIG_SOLVE)) {
-    //   poseEstimator.setPrimaryStrategy(PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR);
-    // }
 
     for (var result : camera.getAllUnreadResults()) {
       var visionEstimate =

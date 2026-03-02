@@ -246,12 +246,6 @@ public class Robot extends LoggedRobot {
                 new VisionIOPhoton(
                     VisionConstants.forwardCameraName, VisionConstants.forwardCameraPose),
                 new VisionIOPhoton(VisionConstants.leftCameraName, VisionConstants.leftCameraPose));
-        // vision =
-        //     new Vision(
-        //         new VisionIOPhoton(
-        //             VisionConstants.forwardCameraName, VisionConstants.forwardCameraPose),
-        //         new VisionIOPhoton(VisionConstants.leftCameraName,
-        // VisionConstants.leftCameraPose));
       }
       case SIM -> {
         swerve =
@@ -281,7 +275,16 @@ public class Robot extends LoggedRobot {
                     IntakeConstants.RollerConstants.CONSTANTS,
                     IntakeConstants.RollerConstants.ROLLER_MOTOR_GEARBOX,
                     IntakeConstants.RollerConstants.ROLLER_MOI));
-        vision = new Vision(new VisionIOSim());
+        vision =
+            new Vision(
+                new VisionIOSim(
+                    VisionConstants.forwardCameraName,
+                    VisionConstants.forwardCameraPose,
+                    () -> RobotState.getInstance().getEstimatedPose()),
+                new VisionIOSim(
+                    VisionConstants.leftCameraName,
+                    VisionConstants.leftCameraPose,
+                    () -> RobotState.getInstance().getEstimatedPose()));
       }
       default -> {
         swerve =

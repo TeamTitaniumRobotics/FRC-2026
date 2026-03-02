@@ -16,10 +16,9 @@ import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.geometry.Twist3d;
+import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -117,6 +116,14 @@ public class Swerve extends SubsystemBase {
 
   private final SwerveDriveKinematics kinematics =
       new SwerveDriveKinematics(getModuleTranslations());
+  private Rotation2d rawGyroRotation = Rotation2d.kZero;
+  private SwerveModulePosition[] lastModulePositions =
+      new SwerveModulePosition[] {
+        new SwerveModulePosition(),
+        new SwerveModulePosition(),
+        new SwerveModulePosition(),
+        new SwerveModulePosition()
+      };
 
   private SwerveSetpoint currentSetpoint =
       new SwerveSetpoint(
@@ -210,39 +217,47 @@ public class Swerve extends SubsystemBase {
     int sampleCount = sampleTimestamps.length;
     for (int i = 0; i < sampleCount; i++) {
       var wheelPositions = new SwerveModulePosition[4];
+      SwerveModulePosition[] moduleDeltas = new SwerveModulePosition[4];
       for (int j = 0; j < 4; j++) {
         wheelPositions[j] = swerveModules[j].getOdometryPositions()[i];
+        moduleDeltas[j] =
+            new SwerveModulePosition(
+                wheelPositions[j].distanceMeters - lastModulePositions[j].distanceMeters,
+                wheelPositions[j].angle);
+        lastModulePositions[j] = wheelPositions[j];
+      }
+      if (gyroInputs.connected) {
+        rawGyroRotation = Rotation2d.fromRadians(gyroInputs.odometryYawPositionsRads[i]);
+      } else {
+        Twist2d twist = kinematics.toTwist2d(moduleDeltas);
+        rawGyroRotation = rawGyroRotation.plus(new Rotation2d(twist.dtheta));
       }
       RobotState.getInstance()
           .addOdometryObservation(
               new OdometryObservation(
-                  wheelPositions,
-                  Optional.ofNullable(
-                      gyroInputs.connected
-                          ? Rotation2d.fromRadians(gyroInputs.odometryYawPositionsRads[i])
-                          : null),
-                  sampleTimestamps[i]));
+                  wheelPositions, Optional.ofNullable(rawGyroRotation), sampleTimestamps[i]));
 
-      // Log 3D estimated pose with pitch and roll adjustments
-      Logger.recordOutput(
-          "RobotState/EstimatedPose3d",
-          new Pose3d(RobotState.getInstance().getEstimatedPose())
-              .exp(
-                  new Twist3d(
-                      0.0,
-                      0.0,
-                      Math.abs(gyroInputs.pitchPositionRads) * TunerConstants.FrontLeft.LocationX,
-                      0.0,
-                      gyroInputs.pitchPositionRads,
-                      0.0))
-              .exp(
-                  new Twist3d(
-                      0.0,
-                      0.0,
-                      Math.abs(gyroInputs.rollPositionRads) * TunerConstants.FrontLeft.LocationY,
-                      gyroInputs.rollPositionRads,
-                      0.0,
-                      0.0)));
+      // // Log 3D estimated pose with pitch and roll adjustments TODO: Move to RobotState
+      // Logger.recordOutput(
+      //     "RobotState/EstimatedPose3d",
+      //     new Pose3d(RobotState.getInstance().getEstimatedPose())
+      //         .exp(
+      //             new Twist3d(
+      //                 0.0,
+      //                 0.0,
+      //                 Math.abs(gyroInputs.pitchPositionRads) *
+      // TunerConstants.FrontLeft.LocationX,
+      //                 0.0,
+      //                 gyroInputs.pitchPositionRads,
+      //                 0.0))
+      //         .exp(
+      //             new Twist3d(
+      //                 0.0,
+      //                 0.0,
+      //                 Math.abs(gyroInputs.rollPositionRads) * TunerConstants.FrontLeft.LocationY,
+      //                 gyroInputs.rollPositionRads,
+      //                 0.0,
+      //                 0.0)));
     }
 
     RobotState.getInstance().addSwerveSpeeds(getChassisSpeeds());
