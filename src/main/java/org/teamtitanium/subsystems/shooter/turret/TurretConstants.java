@@ -38,9 +38,9 @@ public class TurretConstants {
       CANCODER_COMMON_RATIO
           * (CANCODER_DRIVE_GEAR_TEETH / (double) CANCODER_2_GEAR_TEETH); // 21.25:1 reduction
   // Mechanical Limits
-  public static final Angle MIN_ANGLE = Degrees.of(-90.0); // -90 degrees
+  public static final Angle MIN_ANGLE = Degrees.of(-180.0); // -180 degrees
   public static final Angle MAX_ANGLE = Degrees.of(180.0); // 180 degrees
-  public static final Angle TURRET_RANGE = MAX_ANGLE.minus(MIN_ANGLE); // 270 degrees
+  public static final Angle TURRET_RANGE = MAX_ANGLE.minus(MIN_ANGLE); // 360 degrees
 
   // Tolerance
   public static final double ANGLE_TOLERANCE_ROTS = 0.01; // ~3.6 degrees

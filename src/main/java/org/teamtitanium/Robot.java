@@ -45,6 +45,7 @@ import org.teamtitanium.subsystems.intake.IntakeConstants;
 import org.teamtitanium.subsystems.intake.rack.IntakeRack;
 import org.teamtitanium.subsystems.intake.rack.IntakeRackIO;
 import org.teamtitanium.subsystems.intake.rack.IntakeRackIOSim;
+import org.teamtitanium.subsystems.intake.rack.IntakeRackIOTalonFX;
 import org.teamtitanium.subsystems.intake.roller.IntakeRoller;
 import org.teamtitanium.subsystems.shooter.Shooter;
 import org.teamtitanium.subsystems.shooter.ShotCalculator;
@@ -237,8 +238,7 @@ public class Robot extends LoggedRobot {
         turret = new Turret(new TurretIOTalonFX());
         feeder = new Feeder(new GenericRollerIOTalonFX(Feeder.CONSTANTS));
         spindexer = new Spindexer(new GenericRollerIOTalonFX(Spindexer.CONSTANTS));
-        intakeRack = new IntakeRack(new IntakeRackIO() {});
-
+        intakeRack = new IntakeRack(new IntakeRackIOTalonFX());
         intakeRoller =
             new IntakeRoller(new GenericRollerIOTalonFX(IntakeConstants.RollerConstants.CONSTANTS));
         vision =
@@ -423,9 +423,15 @@ public class Robot extends LoggedRobot {
             () -> false));
 
     driver.start().onTrue(Commands.runOnce(() -> swerve.setGyroAngle(Rotations.of(0.0))));
+    // driver.start().onTrue(Commands.runOnce(() -> turret.zeroMotor()));
     driver.start().onTrue(Commands.runOnce(() -> intakeRack.zero()));
 
-    driver.rightBumper().whileTrue(DriveCommands.trenchDrive(swerve, () -> -driver.getLeftY()));
+    driver.leftBumper().whileTrue(turret.setVoltage(() -> turret.turretConfigNumber2.get()));
+    driver.rightBumper().whileTrue(turret.setVoltage(() -> -turret.turretConfigNumber2.get()));
+    driver.x().whileTrue(intakeRack.setVoltage(() -> intakeRack.configRackNumber.get()));
+    driver.b().whileTrue(intakeRack.setVoltage(() -> -intakeRack.configRackNumber.get()));
+
+    // driver.rightBumper().whileTrue(DriveCommands.trenchDrive(swerve, () -> -driver.getLeftY()));
 
     // driver.leftBumper().onTrue(Commands.runOnce(() -> intake.setState(IntakeState.INTAKE)));
     // driver.rightBumper().onTrue(Commands.runOnce(() -> intake.setState(IntakeState.STOW)));
