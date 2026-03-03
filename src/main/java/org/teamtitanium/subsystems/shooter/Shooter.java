@@ -1,6 +1,7 @@
 package org.teamtitanium.subsystems.shooter;
 
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Rotations;
 
 import edu.wpi.first.units.measure.Angle;
@@ -24,13 +25,12 @@ public class Shooter {
   @RequiredArgsConstructor
   public enum ShooterState {
     STOW(
-        () -> FlywheelConstants.IDLE_VELOCITY,
-        () -> HoodConstants.STOW_ANGLE,
+        () -> RPM.of(ShotCalculator.getInstance().getParameters().flywheelIdleRPM()),
+        () -> Rotations.of(ShotCalculator.getInstance().getParameters().hoodAngleRots()),
         () -> Rotations.of(ShotCalculator.getInstance().getParameters().turretAngleRots())),
-    // TODO: Set these up to get shooting setpoints
     AIM(
-        () -> FlywheelConstants.SHOOT_VELOCITY,
-        () -> Degrees.of(15.0),
+        () -> RPM.of(ShotCalculator.getInstance().getParameters().flywheelRPM()),
+        () -> Rotations.of(ShotCalculator.getInstance().getParameters().hoodAngleRots()),
         () -> Rotations.of(ShotCalculator.getInstance().getParameters().turretAngleRots())),
     EJECT(
         () -> FlywheelConstants.EJECT_VELOCITY,

@@ -31,7 +31,7 @@ public class ShotCalculator {
   }
 
   public static final LoggedTunableNumber maxFlywheelIdleRPM =
-      new LoggedTunableNumber("ShotCalculator/MaxFlywheelIdleRPM", 30.0);
+      new LoggedTunableNumber("ShotCalculator/MaxFlywheelIdleRPM", 1800.0);
 
   private ShotParameters latestParameters = null;
 
@@ -152,7 +152,7 @@ public class ShotCalculator {
 
   public record ShotData(double flywheelRPM, double hoodAngleDegs, double tof) {
     public ShotData(double flywheelRPM, double hoodAngleDegs) {
-      this(flywheelRPM, hoodAngleDegs, 1.0);
+      this(flywheelRPM, hoodAngleDegs, 0.95);
     }
 
     public double getHoodAngleRots() {

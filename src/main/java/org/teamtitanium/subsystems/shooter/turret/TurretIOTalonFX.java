@@ -54,7 +54,10 @@ public class TurretIOTalonFX implements TurretIO {
     cancoder2 = new CANcoder(TURRET_CANCODER_2_ID, Constants.RIO_CAN_BUS);
 
     // Configure motor output
-    motorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+    motorConfig.MotorOutput.Inverted =
+        TURRET_INVERTED
+            ? InvertedValue.Clockwise_Positive
+            : InvertedValue.CounterClockwise_Positive;
     motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
     // Current current limits

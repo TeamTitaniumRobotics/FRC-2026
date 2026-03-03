@@ -426,10 +426,13 @@ public class Robot extends LoggedRobot {
     // driver.start().onTrue(Commands.runOnce(() -> turret.zeroMotor()));
     driver.start().onTrue(Commands.runOnce(() -> intakeRack.zero()));
 
-    driver.leftBumper().whileTrue(turret.setVoltage(() -> turret.turretConfigNumber2.get()));
-    driver.rightBumper().whileTrue(turret.setVoltage(() -> -turret.turretConfigNumber2.get()));
-    driver.x().whileTrue(intakeRack.setVoltage(() -> intakeRack.configRackNumber.get()));
-    driver.b().whileTrue(intakeRack.setVoltage(() -> -intakeRack.configRackNumber.get()));
+    // driver.leftBumper().whileTrue(turret.setVoltage(() -> turret.turretConfigNumber2.get()));
+    // driver.rightBumper().whileTrue(turret.setVoltage(() -> -turret.turretConfigNumber2.get()));
+    driver.y().whileTrue(intakeRack.setVoltage(() -> intakeRack.configRackNumber.get()));
+    driver.a().whileTrue(intakeRack.setVoltage(() -> -intakeRack.configRackNumber.get()));
+
+    driver.x().whileTrue(spindexer.setVoltage(() -> -spindexer.configurableNumber.get()));
+    driver.b().whileTrue(spindexer.setVoltage(() -> spindexer.configurableNumber.get()));
 
     // driver.rightBumper().whileTrue(DriveCommands.trenchDrive(swerve, () -> -driver.getLeftY()));
 

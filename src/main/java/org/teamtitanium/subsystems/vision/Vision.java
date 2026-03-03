@@ -3,6 +3,7 @@ package org.teamtitanium.subsystems.vision;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.DriverStation;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -99,6 +100,10 @@ public class Vision extends VirtualSubsystem {
                       + (observation.averageTagDistance()
                           * observation.averageTagDistance()
                           / (observation.tagCount() * 15.0)));
+        }
+
+        if (DriverStation.isDisabled()) {
+          estStdDevs = VisionConstants.DISABLED_STD_DEVS;
         }
 
         RobotState.getInstance()

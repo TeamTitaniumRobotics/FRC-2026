@@ -113,7 +113,7 @@ public class Superstructure extends VirtualSubsystem {
 
     intakeReq = driver.leftTrigger();
     scoreReq = driver.rightTrigger();
-    passReq = driver.y();
+    passReq = driver.pov(0);
     stowReq = driver.povDown();
     spitReq = driver.back();
 
