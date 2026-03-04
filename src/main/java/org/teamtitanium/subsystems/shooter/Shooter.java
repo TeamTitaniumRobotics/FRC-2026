@@ -1,11 +1,12 @@
 package org.teamtitanium.subsystems.shooter;
 
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Rotations;
-import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.util.function.Supplier;
 import lombok.Getter;
@@ -24,13 +25,12 @@ public class Shooter {
   @RequiredArgsConstructor
   public enum ShooterState {
     STOW(
-        () -> FlywheelConstants.IDLE_VELOCITY,
-        () -> HoodConstants.STOW_ANGLE,
+        () -> RPM.of(ShotCalculator.getInstance().getParameters().flywheelIdleRPM()),
+        () -> Rotations.of(ShotCalculator.getInstance().getParameters().hoodAngleRots()),
         () -> Rotations.of(ShotCalculator.getInstance().getParameters().turretAngleRots())),
-    // TODO: Set these up to get shooting setpoints
     AIM(
-        () -> FlywheelConstants.SHOOT_VELOCITY,
-        () -> Degrees.of(15.0),
+        () -> RPM.of(ShotCalculator.getInstance().getParameters().flywheelRPM()),
+        () -> Rotations.of(ShotCalculator.getInstance().getParameters().hoodAngleRots()),
         () -> Rotations.of(ShotCalculator.getInstance().getParameters().turretAngleRots())),
     EJECT(
         () -> FlywheelConstants.EJECT_VELOCITY,
@@ -69,15 +69,17 @@ public class Shooter {
     this.hood = hood;
     this.turret = turret;
 
-    // flywheel.setDefaultCommand(flywheel.setVelocity(() -> state.getFlywheelVelocity().get()));
-    flywheel.setDefaultCommand(
-        flywheel.setVelocity(() -> RotationsPerSecond.of(flywheel.flywheelConfigNumber1.get())));
-    hood.setDefaultCommand(hood.setPosition(() -> Degrees.of(hood.hoodConfigNumber1.get())));
-    // hood.setDefaultCommand(
-    //     Commands.either(
-    //         hood.setPosition(HoodConstants.STOW_ANGLE),
-    //         hood.setPosition(() -> state.getHoodAngle().get()),
-    //         hoodStowOverride));
+    flywheel.setDefaultCommand(flywheel.setVelocity(() -> state.getFlywheelVelocity().get()));
+    // flywheel.setDefaultCommand(
+    //     flywheel.setVelocity(() -> RotationsPerSecond.of(flywheel.flywheelConfigNumber1.get())));
+    // hood.setDefaultCommand(hood.setPosition(() -> Degrees.of(hood.hoodConfigNumber1.get())));
+    hood.setDefaultCommand(
+        Commands.either(
+            hood.setPosition(HoodConstants.STOW_ANGLE),
+            hood.setPosition(() -> state.getHoodAngle().get()),
+            hoodStowOverride));
+    // turret.setDefaultCommand(
+    //     turret.setPosition(() -> Degrees.of(turret.turretConfigNumber1.get())));
     turret.setDefaultCommand(turret.setPosition(() -> state.getTurretAngle().get()));
   }
 

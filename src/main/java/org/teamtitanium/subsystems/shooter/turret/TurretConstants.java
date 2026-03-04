@@ -25,6 +25,7 @@ public class TurretConstants {
   // Physical Constants
   public static final double TURRET_GEAR_RATIO = (85.0 / 10.0) * (50.0 / 12.0); // ~35.4:1 reduction
   public static final double TURRET_MOMENT_OF_INERTIA = 0.1; // kg*m^2
+  public static final boolean TURRET_INVERTED = false;
 
   // CANcoder Gear Ratios from Turret
   public static final double CANCODER_COMMON_RATIO = (85.0 / 10.0); // 8.5:1 reduction
@@ -38,9 +39,9 @@ public class TurretConstants {
       CANCODER_COMMON_RATIO
           * (CANCODER_DRIVE_GEAR_TEETH / (double) CANCODER_2_GEAR_TEETH); // 21.25:1 reduction
   // Mechanical Limits
-  public static final Angle MIN_ANGLE = Degrees.of(-90.0); // -90 degrees
-  public static final Angle MAX_ANGLE = Degrees.of(180.0); // 180 degrees
-  public static final Angle TURRET_RANGE = MAX_ANGLE.minus(MIN_ANGLE); // 270 degrees
+  public static final Angle MIN_ANGLE = Degrees.of(-315.0); // -315 degrees
+  public static final Angle MAX_ANGLE = Degrees.of(45.0); // 45 degrees
+  public static final Angle TURRET_RANGE = MAX_ANGLE.minus(MIN_ANGLE); // 360 degrees
 
   // Tolerance
   public static final double ANGLE_TOLERANCE_ROTS = 0.01; // ~3.6 degrees
@@ -59,5 +60,5 @@ public class TurretConstants {
   // Simulation
   public static final DCMotor TURRET_GEARBOX = DCMotor.getKrakenX44(1);
   public static final Transform3d TURRET_TO_ROBOT =
-      new Transform3d(new Translation3d(-0.119063, -0.169863, 0.403377), Rotation3d.kZero);
+      new Transform3d(new Translation3d(-0.119063, -0.169863, 0.398463), Rotation3d.kZero);
 }

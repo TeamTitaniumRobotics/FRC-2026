@@ -1,5 +1,7 @@
 package org.teamtitanium.subsystems.intake;
 
+import static edu.wpi.first.units.Units.RotationsPerSecond;
+
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -19,7 +21,7 @@ public class Intake {
   public enum IntakeState {
     STOW(() -> RackConstants.STOW_EXTENSION, () -> RollerConstants.IDLE_VELOCITY),
     INTAKE(() -> RackConstants.DEPLOY_EXTENSION, () -> RollerConstants.INTAKE_VELOCITY),
-    AGITATE(() -> RackConstants.AGITATE_EXTENSION, () -> RollerConstants.INTAKE_VELOCITY),
+    AGITATE(() -> RackConstants.DEPLOY_EXTENSION, () -> RollerConstants.INTAKE_VELOCITY),
     EJECT(() -> RackConstants.DEPLOY_EXTENSION, () -> RollerConstants.EJECT_VELOCITY);
 
     @Getter private final Supplier<Distance> rackDistance;
@@ -42,11 +44,12 @@ public class Intake {
     //     Commands.either(
     //         Commands.repeatingSequence(
     //             rack.setExtension(RackConstants.AGITATE_EXTENSION).until(rack.atSetpoint()),
-    //             rack.setExtension(RackConstants.STOW_EXTENSION).until(rack.atSetpoint())),
+    //             rack.setExtension(RackConstants.DEPLOY_EXTENSION).until(rack.atSetpoint())),
     //         rack.setExtension(() -> state.getRackDistance().get()),
     //         () -> state == IntakeState.AGITATE));
-    // rack.setDefaultCommand(rack.setExtension(() -> state.getRackDistance().get()));
-    roller.setDefaultCommand(roller.setVelocity(() -> state.getIntakeVelocity().get()));
+    rack.setDefaultCommand(rack.setExtension(() -> state.getRackDistance().get()));
+    roller.setDefaultCommand(
+        roller.setVelocity(() -> RotationsPerSecond.of(roller.configurableNumber.get())));
   }
 
   public Trigger atSetpoint() {

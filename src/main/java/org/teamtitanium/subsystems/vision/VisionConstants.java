@@ -30,4 +30,5 @@ public class VisionConstants {
 
   public static final Matrix<N3, N1> SINGLE_TAG_STD_DEVS = VecBuilder.fill(4, 4, 8);
   public static final Matrix<N3, N1> MULTI_TAG_STD_DEVS = VecBuilder.fill(0.5, 0.5, 1);
+  public static final Matrix<N3, N1> DISABLED_STD_DEVS = VecBuilder.fill(0.05, 0.05, 0.1);
 }

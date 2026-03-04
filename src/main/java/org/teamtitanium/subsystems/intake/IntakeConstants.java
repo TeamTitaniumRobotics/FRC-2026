@@ -21,8 +21,8 @@ public class IntakeConstants {
     public static final boolean ROLLER_INVERTED = false;
 
     public static final AngularVelocity IDLE_VELOCITY = RotationsPerSecond.of(0.0);
-    public static final AngularVelocity INTAKE_VELOCITY = RotationsPerSecond.of(24.0);
-    public static final AngularVelocity EJECT_VELOCITY = RotationsPerSecond.of(-12.0);
+    public static final AngularVelocity INTAKE_VELOCITY = RotationsPerSecond.of(30.0);
+    public static final AngularVelocity EJECT_VELOCITY = RotationsPerSecond.of(-24.0);
 
     public static final double STATOR_CURRENT_LIMIT = 60.0;
     public static final double SUPPLY_CURRENT_LIMIT = 40.0;
@@ -70,10 +70,10 @@ public class IntakeConstants {
     // Extension limits
     public static final Distance MIN_EXTENSION = Inches.of(0.0);
     public static final Distance STOW_EXTENSION = Inches.of(0.0);
-    public static final Distance AGITATE_EXTENSION = Inches.of(12.0);
+    public static final Distance AGITATE_EXTENSION = Inches.of(6.0);
     public static final Distance DEPLOY_EXTENSION = Inches.of(12.0);
     public static final Distance MAX_EXTENSION = Inches.of(12.0);
-    public static final Distance EXTENSION_TOLERANCE = Inches.of(0.1);
+    public static final Distance EXTENSION_TOLERANCE = Inches.of(2.0);
 
     // Gains
     public static final Gains RACK_GAINS = new Gains(0.25, 0.0, 0.0, 0.275, 0.45, 0.0, 0.0);
