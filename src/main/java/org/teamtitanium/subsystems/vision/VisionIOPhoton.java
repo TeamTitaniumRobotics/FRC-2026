@@ -1,53 +1,83 @@
 package org.teamtitanium.subsystems.vision;
 
+import edu.wpi.first.math.geometry.Transform3d;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Optional;
-import org.photonvision.EstimatedRobotPose;
+import java.util.Set;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
+import org.photonvision.PhotonPoseEstimator.ConstrainedSolvepnpParams;
+import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 import org.teamtitanium.utils.FieldConstants;
 
 public class VisionIOPhoton implements VisionIO {
-  private final PhotonCamera camera = VisionConstants.camera; // Get camera from VisionConstants
-  private final PhotonPoseEstimator poseEstimator =
-      new PhotonPoseEstimator(
-          FieldConstants.defaultAprilTagType
-              .getLayout(), // The layout of the AprilTags on the field, specified in FieldConstants
-          VisionConstants
-              .robotToCamera); // The transformation from the robot's center(?) to the camera,
+  protected final PhotonCamera camera;
+  protected final Transform3d robotToCamera;
+  private final PhotonPoseEstimator poseEstimator;
 
-  // specified in VisionConstants
+  public VisionIOPhoton(String name, Transform3d robotToCamera) {
+    camera = new PhotonCamera(name);
+    this.robotToCamera = robotToCamera;
+
+    this.poseEstimator =
+        new PhotonPoseEstimator(
+            FieldConstants.defaultAprilTagType.getLayout(),
+            PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
+            robotToCamera);
+  }
 
   @Override
   public void updateInputs(VisionIOInputs inputs) {
     inputs.connected = camera.isConnected();
 
-    inputs.targetCount = camera.getLatestResult().getTargets().size();
+    Set<Integer> tagIds = new HashSet<>();
+    List<PoseObservation> poseObservations = new LinkedList<>();
 
-    inputs.timestampSeconds = camera.getLatestResult().getTimestampSeconds();
+    for (var result : camera.getAllUnreadResults()) {
+      var visionEstimate =
+          poseEstimator.update(
+              result,
+              Optional.empty(),
+              Optional.empty(),
+              Optional.of(new ConstrainedSolvepnpParams(false, 1.0)));
 
-    inputs.estimatedGlobalPose = getEstimatedGlobalPose().get().estimatedPose;
-  }
+      if (visionEstimate.isPresent()) {
+        var estimate = visionEstimate.get();
 
-  /*
-   * This method gets the latest result from the camera and tries to estimate the robot's pose using the PhotonPoseEstimator.
-   * If no targets are detected, it returns an empty Optional. If the coprocessor estimate is not available, it gets the estimate with the lowest ambiguity.
-   */
-  @Override
-  public Optional<EstimatedRobotPose> getEstimatedGlobalPose() {
-    var results = camera.getAllUnreadResults();
-    if (results.isEmpty()) {
-      return Optional.empty();
+        double averageTagDistance = 0.0;
+        double averagePoseAmbiguity = 0.0;
+        for (var target : estimate.targetsUsed) {
+          averageTagDistance += target.getBestCameraToTarget().getTranslation().getNorm();
+          averagePoseAmbiguity += target.getPoseAmbiguity();
+          tagIds.add(target.getFiducialId());
+        }
+
+        averageTagDistance /= estimate.targetsUsed.size();
+        averagePoseAmbiguity /= estimate.targetsUsed.size();
+
+        poseObservations.add(
+            new PoseObservation(
+                result.getTimestampSeconds(),
+                estimate.estimatedPose,
+                averagePoseAmbiguity,
+                estimate.targetsUsed.size(),
+                averageTagDistance,
+                PoseObservationType.PHOTONVISION,
+                estimate.strategy));
+      }
+
+      inputs.poseObservations = new PoseObservation[poseObservations.size()];
+      for (int i = 0; i < poseObservations.size(); i++) {
+        inputs.poseObservations[i] = poseObservations.get(i);
+      }
+
+      inputs.tagIds = new int[tagIds.size()];
+      int i = 0;
+      for (var tagId : tagIds) {
+        inputs.tagIds[i++] = tagId;
+      }
     }
-
-    var result = results.get(results.size() - 1);
-    if (!result.hasTargets()) {
-      return Optional.empty();
-    }
-
-    Optional<EstimatedRobotPose> estimate = poseEstimator.estimateCoprocMultiTagPose(result);
-    if (estimate.isEmpty()) {
-      estimate = poseEstimator.estimateLowestAmbiguityPose(result);
-    }
-    return estimate;
   }
 }

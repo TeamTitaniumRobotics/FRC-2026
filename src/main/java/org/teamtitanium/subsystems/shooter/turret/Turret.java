@@ -15,8 +15,6 @@ import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
-import org.teamtitanium.Robot;
-import org.teamtitanium.RobotState;
 import org.teamtitanium.utils.Constants.Constraints;
 import org.teamtitanium.utils.Constants.Gains;
 import org.teamtitanium.utils.LoggedTracer;
@@ -45,6 +43,11 @@ public class Turret extends SubsystemBase {
       new LoggedTunableNumber("Turret/MaxVelocity", TURRET_CONSTRAINTS.maxVelocity());
   private final LoggedTunableNumber turretMaxAcceleration =
       new LoggedTunableNumber("Turret/MaxAcceleration", TURRET_CONSTRAINTS.maxAcceleration());
+
+  public final LoggedTunableNumber turretConfigNumber1 =
+      new LoggedTunableNumber("Turret/ConfigNumber1", 0.0);
+  public final LoggedTunableNumber turretConfigNumber2 =
+      new LoggedTunableNumber("Turret/ConfigNumber2", 0.0);
 
   private final TurretIO io;
   private final TurretIOInputsAutoLogged inputs = new TurretIOInputsAutoLogged();
@@ -77,8 +80,9 @@ public class Turret extends SubsystemBase {
                 CANCODER_1_GEAR_TEETH,
                 CANCODER_2_GEAR_TEETH)
             .withMechanismRange(MIN_ANGLE, MAX_ANGLE)
-            .withMatchTolerance(Rotations.of(0.005))
+            .withMatchTolerance(Rotations.of(0.06))
             .withAbsoluteEncoderInversions(false, false)
+            .withAbsoluteEncoderOffsets(Rotations.of(-0.4751), Rotations.of(0.2876))
             .withCrtGearRecommendationConstraints(1.2, 15, 45, 30);
     this.easyCRT = new EasyCRT(crtConfig);
   }
@@ -113,72 +117,76 @@ public class Turret extends SubsystemBase {
     }
 
     // Attempt to zero the turret
-    if (!isZeroed && Robot.isInitializing()) {
-      zeroTurretCRT();
-    }
+    // if (!isZeroed && Robot.isInitializing()) {
+    // zeroTurretCRT();
+    // }
 
     // Log the turret loop time
     LoggedTracer.record("Turret");
   }
 
-  /**
-   * Sets the turret to the stowed position
-   *
-   * @return A command that sets the turret to the stowed position
-   */
-  public Command stow() {
-    return setPosition(TURRET_STOW_ANGLE);
-  }
-
-  /**
-   * Tracks the turret to the robot state turret setpoint
-   *
-   * @return A command that repeatedly sets the turret to the robot state turret setpoint
-   */
-  public Command track() {
-    return setPosition(() -> RobotState.getInstance().getTurretSetpoint());
-  }
-
   public Angle getTargetAngle(Angle targetAngle, Angle currentAngle) {
+    double minRad = MIN_ANGLE.in(Radians);
+    double maxRad = MAX_ANGLE.in(Radians);
+    double rangeRad = maxRad - minRad;
+
     // Normalize target angle to [-180, 180] range
     double targetRad = targetAngle.in(Radians);
-    while (targetRad > Math.PI) {
-      targetRad -= 2 * Math.PI;
-    }
-    while (targetRad < -Math.PI) {
+    while (targetRad < minRad) {
       targetRad += 2 * Math.PI;
+    }
+    while (targetRad > maxRad) {
+      targetRad -= 2 * Math.PI;
     }
 
     double currentRad = currentAngle.in(Radians);
 
+    if (targetRad < minRad) {
+      targetRad = minRad;
+    } else if (targetRad > maxRad) {
+      targetRad = maxRad;
+    }
+
     // Calculate shortest angular distance
     double deltaAngleRad = targetRad - currentRad;
-    if (deltaAngleRad > Math.PI) {
-      deltaAngleRad -= 2 * Math.PI;
-    } else if (deltaAngleRad < -Math.PI) {
-      deltaAngleRad += 2 * Math.PI;
-    }
 
-    Logger.recordOutput("Turret/DeltaAngle", deltaAngleRad);
+    double wrapDelta = deltaAngleRad;
+    // if (deltaAngleRad > 0) {
+    //   double backwardsDelta = deltaAngleRad - rangeRad;
+    //   if (Math.abs(backwardsDelta) < Math.abs(deltaAngleRad)
+    //       && currentRad + backwardsDelta >= minRad) {
+    //     wrapDelta = backwardsDelta;
+    //   }
+    // } else {
+    //   double forwardsDelta = deltaAngleRad + rangeRad;
+    //   if (Math.abs(forwardsDelta) < Math.abs(deltaAngleRad)
+    //       && currentRad + forwardsDelta <= maxRad) {
+    //     wrapDelta = forwardsDelta;
+    //   }
+    // }
+
+    Logger.recordOutput("Turret/DeltaAngle", wrapDelta);
 
     // Calculate optimal target position
-    double optimalAngleRad = currentRad + deltaAngleRad;
+    double optimalAngleRad = currentRad + wrapDelta;
+    optimalAngleRad = Math.max(minRad, Math.min(maxRad, optimalAngleRad));
+
     Logger.recordOutput("Turret/OptimalAngle", optimalAngleRad);
 
-    // Special case: if delta is exactly ±π (±180°), prefer the representation
-    // that matches the original target to avoid oscillation
-    if (Math.abs(Math.abs(deltaAngleRad) - Math.PI) < 0.001) {
-      // Use the normalized target directly to be consistent
-      optimalAngleRad = targetRad;
-    }
+    // // Special case: if delta is exactly ±π (±180°), prefer the representation
+    // // that matches the original target to avoid oscillation
+    // if (Math.abs(Math.abs(deltaAngleRad) - Math.PI) < 0.001) {
+    //   // Use the normalized target directly to be consistent
+    //   optimalAngleRad = targetRad;
+    // }
 
-    // Wrap to keep within [-π, π] range for continuous rotation tracking
-    // But don't wrap if we're already very close to the boundary to avoid oscillation
-    if (optimalAngleRad > Math.PI && Math.abs(optimalAngleRad - Math.PI) > 0.001) {
-      optimalAngleRad -= 2 * Math.PI;
-    } else if (optimalAngleRad < -Math.PI && Math.abs(optimalAngleRad + Math.PI) > 0.001) {
-      optimalAngleRad += 2 * Math.PI;
-    }
+    // // Wrap to keep within [-π, π] range for continuous rotation tracking
+    // // But don't wrap if we're already very close to the boundary to avoid oscillation
+    // if (optimalAngleRad > Math.PI && Math.abs(optimalAngleRad - Math.PI) > 0.001) {
+    //   optimalAngleRad -= 2 * Math.PI;
+    // } else if (optimalAngleRad < -Math.PI && Math.abs(optimalAngleRad + Math.PI) > 0.001) {
+    //   optimalAngleRad += 2 * Math.PI;
+    // }
 
     return Radians.of(optimalAngleRad);
   }
@@ -256,6 +264,10 @@ public class Turret extends SubsystemBase {
     io.setBrakeMode(enabled);
   }
 
+  public void zeroMotor() {
+    io.setMotorPosition(0.0);
+  }
+
   /** Zeros the turret using two CANcoder sensors and the Chinese Remainder Theorem. */
   public void zeroTurretCRT() {
     if (!inputs.motorConnected || !inputs.cancoder1Connected || !inputs.cancoder2Connected) {
@@ -268,7 +280,7 @@ public class Turret extends SubsystemBase {
     Optional<Angle> zeroAngle = easyCRT.getAngleOptional();
     if (zeroAngle.isPresent()) {
       double zeroRots = zeroAngle.get().in(Rotations);
-      io.setMotorPosition(zeroRots);
+      // io.setMotorPosition(zeroRots);
       isZeroed = true;
       if (crtErrorAlert.get()) {
         crtErrorAlert.set(false);

@@ -9,6 +9,7 @@ public interface HoodIO {
   public class HoodIOInputs {
     public boolean motorConnected = false;
     public double positionRots = 0.0;
+    public double setpointRots = 0.0;
     public double velocityRps = 0.0;
     public double appliedVolts = 0.0;
     public double supplyCurrentAmps = 0.0;

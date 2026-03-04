@@ -11,7 +11,6 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import org.littletonrobotics.junction.Logger;
-import org.teamtitanium.RobotState;
 
 public class TurretIOSim extends TurretIOTalonFX {
   private final DCMotorSim turretSim =
@@ -27,6 +26,7 @@ public class TurretIOSim extends TurretIOTalonFX {
     inputs.cancoder2Connected = true;
 
     var motorSimState = turretMotor.getSimState();
+    // motorSimState.Orientation = ChassisReference.Clockwise_Positive;
     motorSimState.setSupplyVoltage(RobotController.getBatteryVoltage());
 
     // Update simulation
@@ -41,11 +41,16 @@ public class TurretIOSim extends TurretIOTalonFX {
 
     Logger.recordOutput(
         "Turret/Sim/TurretPosition",
-        new Pose3d(RobotState.getInstance().getEstimatedPose())
-            .plus(TURRET_TO_ROBOT)
+        new Pose3d(TURRET_TO_ROBOT.getTranslation(), Rotation3d.kZero)
             .plus(
                 new Transform3d(
                     Translation3d.kZero,
                     new Rotation3d(0.0, 0.0, Units.rotationsToRadians(inputs.positionRots)))));
+    // new Pose3d(RobotState.getInstance().getEstimatedPose())
+    //     // .plus(TURRET_TO_ROBOT)
+    //     .plus(
+    //         new Transform3d(
+    //             Translation3d.kZero,
+    //             new Rotation3d(0.0, 0.0, Units.rotationsToRadians(inputs.positionRots)))));
   }
 }

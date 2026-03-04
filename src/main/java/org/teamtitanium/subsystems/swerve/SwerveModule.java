@@ -126,7 +126,7 @@ public class SwerveModule {
     }
 
     // Update odometry positions
-    int sampleCount = inputs.odometryDrivePositionsRad.length;
+    int sampleCount = inputs.odometryTimestamps.length;
     odometryPositions = new SwerveModulePosition[sampleCount];
     for (int i = 0; i < sampleCount; i++) {
       double positionMeters = inputs.odometryDrivePositionsRad[i] * constants.WheelRadius;
@@ -238,6 +238,15 @@ public class SwerveModule {
    */
   public SwerveModulePosition[] getOdometryPositions() {
     return odometryPositions;
+  }
+
+  /**
+   * Gets the odometry timestamps of the module.
+   *
+   * @return The odometry timestamps of the module.
+   */
+  public double[] getOdometryTimestamps() {
+    return inputs.odometryTimestamps;
   }
 
   /**

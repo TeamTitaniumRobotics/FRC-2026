@@ -6,7 +6,7 @@ import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
-import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -20,6 +20,7 @@ import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
 import java.util.List;
 import org.teamtitanium.utils.Constants;
+import org.teamtitanium.utils.Constants.Constraints;
 import org.teamtitanium.utils.Constants.Gains;
 import org.teamtitanium.utils.PhoenixUtil;
 
@@ -29,11 +30,13 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 
   private final TalonFXConfiguration config = new TalonFXConfiguration();
 
-  private final VelocityVoltage velocityControl = new VelocityVoltage(0.0);
+  private final MotionMagicVelocityVoltage motionMagicVelocityVoltage =
+      new MotionMagicVelocityVoltage(0.0);
   private final VoltageOut voltageOut = new VoltageOut(0.0);
 
   private final StatusSignal<Angle> position;
   private final StatusSignal<AngularVelocity> velocity;
+  private final StatusSignal<Double> velocitySetpoint;
   private final List<StatusSignal<Voltage>> appliedVolts;
   private final List<StatusSignal<Current>> supplyCurrent;
   private final List<StatusSignal<Current>> torqueCurrent;
@@ -44,7 +47,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
     rightMotor = new TalonFX(FLYWHEEL_RIGHT_MOTOR_ID, Constants.RIO_CAN_BUS);
 
     // Configure motors
-    config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+    config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     config.MotorOutput.NeutralMode = NeutralModeValue.Coast; // Coast for flywheels
 
     // Current limits
@@ -64,21 +67,23 @@ public class FlywheelIOTalonFX implements FlywheelIO {
     config.Slot0.kV = FLYWHEEL_GAINS.kV();
     config.Slot0.kA = FLYWHEEL_GAINS.kA();
 
+    config.MotionMagic.MotionMagicCruiseVelocity = FLYWHEEL_CONSTRAINTS.maxVelocity();
+    config.MotionMagic.MotionMagicAcceleration = FLYWHEEL_CONSTRAINTS.maxAcceleration();
+    config.MotionMagic.MotionMagicJerk = FLYWHEEL_CONSTRAINTS.kJerk();
+
     // Voltage compensation
     config.Voltage.PeakForwardVoltage = 12.0;
     config.Voltage.PeakReverseVoltage = -12.0;
 
     // Apply to both motors
     PhoenixUtil.tryUntilOk(5, () -> leftMotor.getConfigurator().apply(config));
-
-    // Right motor should be inverted (opposite side of shooter)
-    config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     PhoenixUtil.tryUntilOk(5, () -> rightMotor.getConfigurator().apply(config));
     rightMotor.setControl(new Follower(FLYWHEEL_LEFT_MOTOR_ID, MotorAlignmentValue.Opposed));
 
     // Get status signals
     position = leftMotor.getPosition();
     velocity = leftMotor.getVelocity();
+    velocitySetpoint = leftMotor.getClosedLoopReference();
     appliedVolts = List.of(leftMotor.getMotorVoltage(), rightMotor.getMotorVoltage());
     supplyCurrent = List.of(leftMotor.getSupplyCurrent(), rightMotor.getSupplyCurrent());
     torqueCurrent = List.of(leftMotor.getTorqueCurrent(), rightMotor.getTorqueCurrent());
@@ -89,6 +94,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
         100,
         position,
         velocity,
+        velocitySetpoint,
         appliedVolts.get(0),
         appliedVolts.get(1),
         supplyCurrent.get(0),
@@ -102,9 +108,10 @@ public class FlywheelIOTalonFX implements FlywheelIO {
         5, () -> ParentDevice.optimizeBusUtilizationForAll(leftMotor, rightMotor));
 
     PhoenixUtil.registerSignals(
-        Constants.RIO_CAN_BUS,
+        FlywheelConstants.FLYWHEEL_CANBUS,
         position,
         velocity,
+        velocitySetpoint,
         appliedVolts.get(0),
         appliedVolts.get(1),
         supplyCurrent.get(0),
@@ -121,6 +128,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
         BaseStatusSignal.isAllGood(
             position,
             velocity,
+            velocitySetpoint,
             appliedVolts.get(0),
             supplyCurrent.get(0),
             torqueCurrent.get(0),
@@ -136,6 +144,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 
     inputs.positionRots = position.getValueAsDouble();
     inputs.velocityRps = velocity.getValueAsDouble();
+    inputs.velocitySetpoint = velocitySetpoint.getValueAsDouble();
     inputs.appliedVolts = appliedVolts.stream().mapToDouble(s -> s.getValueAsDouble()).toArray();
     inputs.supplyCurrentAmps =
         supplyCurrent.stream().mapToDouble(s -> s.getValueAsDouble()).toArray();
@@ -147,7 +156,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 
   @Override
   public void setVelocity(double velocityRps) {
-    leftMotor.setControl(velocityControl.withVelocity(velocityRps));
+    leftMotor.setControl(motionMagicVelocityVoltage.withVelocity(velocityRps));
   }
 
   @Override
@@ -163,14 +172,23 @@ public class FlywheelIOTalonFX implements FlywheelIO {
     config.Slot0.kS = gains.kS();
     config.Slot0.kV = gains.kV();
     config.Slot0.kA = gains.kA();
-    PhoenixUtil.tryUntilOk(5, () -> leftMotor.getConfigurator().apply(config));
-    PhoenixUtil.tryUntilOk(5, () -> rightMotor.getConfigurator().apply(config));
+    PhoenixUtil.tryUntilOk(5, () -> leftMotor.getConfigurator().apply(config.Slot0));
+    PhoenixUtil.tryUntilOk(5, () -> rightMotor.getConfigurator().apply(config.Slot0));
+  }
+
+  @Override
+  public void setConstraints(Constraints constraints) {
+    config.MotionMagic.MotionMagicCruiseVelocity = constraints.maxVelocity();
+    config.MotionMagic.MotionMagicAcceleration = constraints.maxAcceleration();
+    config.MotionMagic.MotionMagicJerk = constraints.kJerk();
+    PhoenixUtil.tryUntilOk(5, () -> leftMotor.getConfigurator().apply(config.MotionMagic));
+    PhoenixUtil.tryUntilOk(5, () -> rightMotor.getConfigurator().apply(config.MotionMagic));
   }
 
   @Override
   public void setBrakeMode(boolean enabled) {
     config.MotorOutput.NeutralMode = enabled ? NeutralModeValue.Brake : NeutralModeValue.Coast;
-    PhoenixUtil.tryUntilOk(5, () -> leftMotor.getConfigurator().apply(config));
-    PhoenixUtil.tryUntilOk(5, () -> rightMotor.getConfigurator().apply(config));
+    PhoenixUtil.tryUntilOk(5, () -> leftMotor.getConfigurator().apply(config.MotorOutput));
+    PhoenixUtil.tryUntilOk(5, () -> rightMotor.getConfigurator().apply(config.MotorOutput));
   }
 }
