@@ -25,7 +25,7 @@ public class Shooter {
   @RequiredArgsConstructor
   public enum ShooterState {
     STOW(
-        () -> RPM.of(ShotCalculator.getInstance().getParameters().flywheelIdleRPM()),
+        () -> RPM.of(ShotCalculator.getInstance().getParameters().flywheelRPM()),
         () -> Rotations.of(ShotCalculator.getInstance().getParameters().hoodAngleRots()),
         () -> Rotations.of(ShotCalculator.getInstance().getParameters().turretAngleRots())),
     AIM(
@@ -71,7 +71,7 @@ public class Shooter {
 
     flywheel.setDefaultCommand(flywheel.setVelocity(() -> state.getFlywheelVelocity().get()));
     // flywheel.setDefaultCommand(
-    //     flywheel.setVelocity(() -> RotationsPerSecond.of(flywheel.flywheelConfigNumber1.get())));
+    //     flywheel.setVelocity(() -> RPM.of(flywheel.flywheelConfigNumber1.get())));
     // hood.setDefaultCommand(hood.setPosition(() -> Degrees.of(hood.hoodConfigNumber1.get())));
     hood.setDefaultCommand(
         Commands.either(

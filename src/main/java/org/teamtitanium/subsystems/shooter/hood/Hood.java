@@ -4,8 +4,10 @@ import static edu.wpi.first.units.Units.Rotations;
 import static org.teamtitanium.subsystems.shooter.hood.HoodConstants.*;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.util.function.DoubleSupplier;
@@ -46,6 +48,14 @@ public class Hood extends SubsystemBase {
 
   private Trigger atSetpoint =
       new Trigger(() -> Math.abs(inputs.positionRots - targetPositionRots) < ANGLE_TOLERANCE_ROTS);
+
+  private final Debouncer currentDebouncer = new Debouncer(0.1, Debouncer.DebounceType.kRising);
+  private final Debouncer velocityDebouncer = new Debouncer(0.05, Debouncer.DebounceType.kRising);
+  private final Trigger currentTrigger =
+      new Trigger(
+          () ->
+              currentDebouncer.calculate(
+                  Math.abs(inputs.torqueCurrentAmps) >= HoodConstants.ZERO_CURRENT_LIMIT));
 
   /** Creates a new Hood subsystem. */
   public Hood(HoodIO io) {
@@ -114,9 +124,7 @@ public class Hood extends SubsystemBase {
    * @return A command that repeatedly runs the hood at a voltage
    */
   public Command setVoltage(DoubleSupplier voltage) {
-    return run(() -> {
-          io.setVoltage(voltage.getAsDouble());
-        })
+    return runEnd(() -> io.setVoltage(voltage.getAsDouble()), () -> io.stopMotor())
         .withName("Hood.SetVoltage");
   }
 
@@ -130,13 +138,10 @@ public class Hood extends SubsystemBase {
     return setVoltage(() -> voltage);
   }
 
-  public void zeroHood() {
-    io.setMotorPosition(0.0);
+  public Command zeroHood() {
+    return Commands.sequence(
+        setVoltage(-1.0).until(currentTrigger), Commands.runOnce(() -> io.setMotorPosition(0.0)));
   }
-
-  // public Command zeroHood() {
-  //   return setVoltage(0.0); // TODO: Implement current & velocity zeroing
-  // }
 
   /**
    * Gets the current position of the hood.
