@@ -141,6 +141,11 @@ public class HoodIOTalonFX implements HoodIO {
   }
 
   @Override
+  public void stopMotor() {
+    hoodMotor.stopMotor();
+  }
+
+  @Override
   public void setGains(Gains gains) {
     config.Slot0.kP = gains.kP();
     config.Slot0.kI = gains.kI();

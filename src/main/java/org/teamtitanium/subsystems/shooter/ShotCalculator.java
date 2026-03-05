@@ -43,11 +43,16 @@ public class ShotCalculator {
       new InterpolatingTreeMap<>(InverseInterpolator.forDouble(), ShotData::interpolate);
 
   static {
-    shotMap.put(3.31, new ShotData(3240, 8));
-    shotMap.put(3.05, new ShotData(3120, 10));
-    shotMap.put(2.75, new ShotData(3000, 9));
-    shotMap.put(2.50, new ShotData(2880, 8));
+    shotMap.put(1.35, new ShotData(2450, 3));
     shotMap.put(1.50, new ShotData(2580, 4));
+    shotMap.put(2.00, new ShotData(2600, 6));
+    shotMap.put(2.55, new ShotData(2800, 8));
+    shotMap.put(2.75, new ShotData(2850, 9));
+    shotMap.put(3.05, new ShotData(2900, 10));
+    shotMap.put(3.5, new ShotData(3100, 12));
+    shotMap.put(4.05, new ShotData(3250, 14));
+    shotMap.put(4.5, new ShotData(3450, 16));
+    shotMap.put(5.0, new ShotData(3550, 18));
   }
 
   public ShotParameters getParameters() {
