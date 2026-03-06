@@ -313,10 +313,10 @@ public class Robot extends LoggedRobot {
       }
     }
     if (swerve != null) {
-      autos = new AutoRoutines(swerve, (sample, isStart) -> {});
+      autos = new AutoRoutines(swerve);
 
       // Create an AutoChooser
-      autoChooser.addRoutine("NewAuto", () -> autos.idealRoutine());
+      // autoChooser.addRoutine("NewAuto", () -> autos.idealRoutine());
       // Put the auto chooser on the dashboard
       SmartDashboard.putData("autos", autoChooser);
     } else {
