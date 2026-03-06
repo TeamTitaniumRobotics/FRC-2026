@@ -9,7 +9,6 @@ import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.util.function.DoubleSupplier;
@@ -174,7 +173,7 @@ public class Climber extends SubsystemBase {
   }
 
   public Command stop() {
-    return Commands.runOnce(() -> io.stop());
+    return runOnce(() -> io.stop());
   }
 
   public double getExtensionMeters() {
