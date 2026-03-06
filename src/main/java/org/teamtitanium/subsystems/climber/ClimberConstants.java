@@ -11,13 +11,13 @@ import org.teamtitanium.utils.Constants.Constraints;
 import org.teamtitanium.utils.Constants.Gains;
 
 public class ClimberConstants {
-  public static final int CLIMBER_MOTOR_ID = 40;
-  public static final CANBus CLIMBER_CAN_BUS = Constants.CANIVORE;
+  public static final int CLIMBER_MOTOR_ID = 45;
+  public static final CANBus CLIMBER_CAN_BUS = Constants.RIO_CAN_BUS;
 
   public static final boolean CLIMBER_INVERTED = false;
 
-  public static final double CLIMBER_STATOR_CURRENT_LIMIT = 60.0;
-  public static final double CLIMBER_SUPPLY_CURRENT_LIMIT = 40.0;
+  public static final double CLIMBER_STATOR_CURRENT_LIMIT = 120.0;
+  public static final double CLIMBER_SUPPLY_CURRENT_LIMIT = 60.0;
 
   public static final double CLIMBER_GEAR_RATIO = 16.0;
   private static final double SPROCKET_PD_METERS = Units.inchesToMeters(0.9659);

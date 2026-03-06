@@ -7,7 +7,7 @@ import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicTorqueCurrentFOC;
-import com.ctre.phoenix6.controls.TorqueCurrentFOC;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -25,7 +25,7 @@ public class ClimberIOTalonFX implements ClimberIO {
 
   private final TalonFXConfiguration motorConfig = new TalonFXConfiguration();
 
-  private final TorqueCurrentFOC torqueCurrentFOC = new TorqueCurrentFOC(0.0);
+  private final VoltageOut voltageOut = new VoltageOut(0.0).withEnableFOC(true);
   private final MotionMagicTorqueCurrentFOC motionMagicTorqueCurrentFOC =
       new MotionMagicTorqueCurrentFOC(0.0);
 
@@ -53,6 +53,9 @@ public class ClimberIOTalonFX implements ClimberIO {
 
     motorConfig.TorqueCurrent.PeakForwardTorqueCurrent = CLIMBER_STATOR_CURRENT_LIMIT;
     motorConfig.TorqueCurrent.PeakReverseTorqueCurrent = -CLIMBER_STATOR_CURRENT_LIMIT;
+
+    motorConfig.Voltage.PeakForwardVoltage = 12.0;
+    motorConfig.Voltage.PeakReverseVoltage = -12.0;
 
     motorConfig.Feedback.SensorToMechanismRatio = CLIMBER_GEAR_RATIO;
 
@@ -134,7 +137,7 @@ public class ClimberIOTalonFX implements ClimberIO {
 
   @Override
   public void setCurrent(double amps) {
-    climberMotor.setControl(torqueCurrentFOC.withOutput(amps));
+    climberMotor.setControl(voltageOut.withOutput(amps));
   }
 
   @Override

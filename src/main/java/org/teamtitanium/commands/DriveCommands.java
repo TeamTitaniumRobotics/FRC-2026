@@ -22,7 +22,7 @@ import org.teamtitanium.subsystems.swerve.Swerve;
 import org.teamtitanium.utils.FieldConstants;
 
 public class DriveCommands {
-  public static final double DEADBAND = 0.1;
+  public static final double DEADBAND = 0.05;
 
   private static final PIDController TRENCH_CONTROLLER = new PIDController(8.0, 0.0, 0.05);
   private static final PIDController ROTATIONAL_CONTROLLER = new PIDController(5.0, 0.0, 0.0);

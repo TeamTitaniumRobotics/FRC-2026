@@ -58,9 +58,9 @@ public class Climber extends SubsystemBase {
       new LoggedTunableNumber("Climber/MaxAcceleration", CLIMBER_CONSTRAINTS.maxAcceleration());
 
   public final LoggedTunableNumber configClimberNumber1 =
-      new LoggedTunableNumber("Intake/Climber/ConfigNumber1", 0.0);
+      new LoggedTunableNumber("Climber/ConfigNumber1", 0.0);
   public final LoggedTunableNumber configClimberNumber2 =
-      new LoggedTunableNumber("Intake/Climber/ConfigNumber2", 0.0);
+      new LoggedTunableNumber("Climber/ConfigNumber2", 0.0);
 
   private final ClimberIO io;
   private final ClimberIOInputsAutoLogged inputs = new ClimberIOInputsAutoLogged();
@@ -157,7 +157,7 @@ public class Climber extends SubsystemBase {
           targetExtensionMeters = requestedMeters;
           io.setPosition(metersToMotorRotations(requestedMeters), 0);
         })
-        .withName("IntakeRack.SetExtension");
+        .withName("Climber.SetExtension");
   }
 
   public Command setExtension(Distance position) {
@@ -166,7 +166,7 @@ public class Climber extends SubsystemBase {
 
   public Command setCurrent(DoubleSupplier currentSupplier) {
     return runEnd(() -> io.setCurrent(currentSupplier.getAsDouble()), () -> io.stop())
-        .withName("IntakeRack.SetCurrent");
+        .withName("Climber.SetCurrent");
   }
 
   public Command setCurrent(double currentAmps) {
