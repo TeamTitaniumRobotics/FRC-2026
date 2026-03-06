@@ -147,7 +147,7 @@ public class Superstructure extends VirtualSubsystem {
   // ───────────────────────────── State transitions ────────────────────────────
 
   private void bindTransitions() {
-    // IDLE ↔ INTAKE
+    // IDLE <--> INTAKE
     bindTransition(SuperstructureState.IDLE, SuperstructureState.INTAKE, intakeReq);
     bindTransition(SuperstructureState.INTAKE, SuperstructureState.IDLE, intakeReq.negate());
 
@@ -155,25 +155,16 @@ public class Superstructure extends VirtualSubsystem {
     bindTransition(SuperstructureState.SPIN_UP_SCORE, SuperstructureState.IDLE, stowReq);
     bindTransition(SuperstructureState.SCORE, SuperstructureState.IDLE, stowReq);
 
-    // // IDLE / INTAKE → PREPPED (fuel acquired)
-    // bindTransition(
-    //     SuperstructureState.IDLE, SuperstructureState.PREPPED, hasFuel.and(intakeReq.negate()));
-    // bindTransition(
-    //     SuperstructureState.INTAKE, SuperstructureState.PREPPED,
-    // hasFuel.and(intakeReq.negate()));
-
-    // // PREPPED → IDLE (fuel lost after grace period)
-    // bindTransition(
-    //     SuperstructureState.PREPPED,
-    //     SuperstructureState.IDLE,
-    //     hasFuel.negate().and(() -> stateTimer.hasElapsed(0.5)));
-
     // IDLE -> SPIN_UP_SCORE -> SCORE
     bindTransition(SuperstructureState.IDLE, SuperstructureState.SPIN_UP_SCORE, scoreReq);
     bindTransition(
         SuperstructureState.SPIN_UP_SCORE,
         SuperstructureState.SCORE,
         shooter.atSetpoint().and(scoreReq));
+    bindTransition(
+        SuperstructureState.SCORE,
+        SuperstructureState.SPIN_UP_SCORE,
+        scoreReq.and(shooter.atSetpoint().negate().debounce(0.25)));
     bindTransition(SuperstructureState.SPIN_UP_SCORE, SuperstructureState.IDLE, scoreReq.negate());
     bindTransition(SuperstructureState.SCORE, SuperstructureState.IDLE, scoreReq.negate());
 
@@ -194,7 +185,6 @@ public class Superstructure extends VirtualSubsystem {
 
     // EJECT (from IDLE or PREPPED)
     bindTransition(SuperstructureState.IDLE, SuperstructureState.EJECT, spitReq);
-    // bindTransition(SuperstructureState.PREPPED, SuperstructureState.EJECT, spitReq);
     // Return to the state we were in before ejecting
     SuperstructureState.EJECT
         .getTrigger()
@@ -225,7 +215,7 @@ public class Superstructure extends VirtualSubsystem {
                 .withName("ToggleIntakeDeployed"));
   }
 
-  // ──────────────── Central resolution: (game state + modifiers) → sub states ─
+  // ──────────────── Central resolution: (game state + modifiers) -> sub states ─
 
   /**
    * Returns a command that should be scheduled once and kept running for the lifetime of

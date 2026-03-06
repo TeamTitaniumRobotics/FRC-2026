@@ -8,6 +8,7 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import org.teamtitanium.utils.Constants;
 import org.teamtitanium.utils.Constants.Constraints;
@@ -44,7 +45,7 @@ public class TurretConstants {
   public static final Angle TURRET_RANGE = MAX_ANGLE.minus(MIN_ANGLE); // 360 degrees
 
   // Tolerance
-  public static final double ANGLE_TOLERANCE_ROTS = 0.01; // ~3.6 degrees
+  public static final double ANGLE_TOLERANCE_ROTS = Units.degreesToRotations(3.5);
 
   // Motion Magic Constraints
   public static final Constraints TURRET_CONSTRAINTS =

@@ -85,7 +85,7 @@ public class Shooter {
 
   @AutoLogOutput(key = "Shooter/AtSetpoint")
   public Trigger atSetpoint() {
-    return hood.atSetpoint().and(flywheel.atSetpoint());
+    return hood.atSetpoint().and(flywheel.atSetpoint()).and(turret.atSetpoint());
   }
 
   public Angle getTurretAngle() {
