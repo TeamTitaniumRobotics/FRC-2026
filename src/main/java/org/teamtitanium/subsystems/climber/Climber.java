@@ -155,7 +155,7 @@ public class Climber extends SubsystemBase {
                   CLIMBER_MIN_EXTENSION.in(Meters),
                   CLIMBER_MAX_EXTENSION.in(Meters));
           targetExtensionMeters = requestedMeters;
-          io.setPosition(metersToMotorRotations(requestedMeters), 0);
+          io.setPosition(metersToMechRotations(requestedMeters), 0);
         })
         .withName("Climber.SetExtension");
   }
@@ -164,13 +164,13 @@ public class Climber extends SubsystemBase {
     return setExtension(() -> position);
   }
 
-  public Command setCurrent(DoubleSupplier currentSupplier) {
-    return runEnd(() -> io.setCurrent(currentSupplier.getAsDouble()), () -> io.stop())
-        .withName("Climber.SetCurrent");
+  public Command setVoltage(DoubleSupplier voltageSupplier) {
+    return runEnd(() -> io.setVoltage(voltageSupplier.getAsDouble()), () -> io.stop())
+        .withName("Climber.SetVoltage");
   }
 
-  public Command setCurrent(double currentAmps) {
-    return setCurrent(() -> currentAmps);
+  public Command setVoltage(double voltage) {
+    return setVoltage(() -> voltage);
   }
 
   public Command stop() {

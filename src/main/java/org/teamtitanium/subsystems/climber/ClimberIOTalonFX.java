@@ -6,7 +6,7 @@ import static org.teamtitanium.subsystems.climber.ClimberConstants.*;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.MotionMagicTorqueCurrentFOC;
+import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -26,8 +26,8 @@ public class ClimberIOTalonFX implements ClimberIO {
   private final TalonFXConfiguration motorConfig = new TalonFXConfiguration();
 
   private final VoltageOut voltageOut = new VoltageOut(0.0).withEnableFOC(true);
-  private final MotionMagicTorqueCurrentFOC motionMagicTorqueCurrentFOC =
-      new MotionMagicTorqueCurrentFOC(0.0);
+  private final MotionMagicVoltage motionMagicVoltage =
+      new MotionMagicVoltage(0.0).withEnableFOC(true);
 
   private final StatusSignal<Angle> position;
   private final StatusSignal<AngularVelocity> velocity;
@@ -81,10 +81,10 @@ public class ClimberIOTalonFX implements ClimberIO {
 
     motorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = false;
     motorConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold =
-        metersToMotorRotations(CLIMBER_MAX_EXTENSION.in(Meters));
+        metersToMechRotations(CLIMBER_MAX_EXTENSION.in(Meters));
     motorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = false;
     motorConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold =
-        metersToMotorRotations(CLIMBER_MIN_EXTENSION.in(Meters));
+        metersToMechRotations(CLIMBER_MIN_EXTENSION.in(Meters));
 
     PhoenixUtil.tryUntilOk(5, () -> climberMotor.getConfigurator().apply(motorConfig));
 
@@ -124,20 +124,19 @@ public class ClimberIOTalonFX implements ClimberIO {
     inputs.tempCelsius = temperature.getValueAsDouble();
     inputs.setpointRots = targetSetpoint.getValueAsDouble();
 
-    inputs.positionMeters = motorRotationsToMeters(inputs.positionRots);
-    inputs.velocityMps = motorRotationsToMeters(inputs.velocityRps);
-    inputs.setpointMeters = motorRotationsToMeters(inputs.setpointRots);
+    inputs.positionMeters = mechRotationsToMeters(inputs.positionRots);
+    inputs.velocityMps = mechRotationsToMeters(inputs.velocityRps);
+    inputs.setpointMeters = mechRotationsToMeters(inputs.setpointRots);
   }
 
   @Override
   public void setPosition(double positionRots, int slotId) {
-    climberMotor.setControl(
-        motionMagicTorqueCurrentFOC.withPosition(positionRots).withSlot(slotId));
+    climberMotor.setControl(motionMagicVoltage.withPosition(positionRots).withSlot(slotId));
   }
 
   @Override
-  public void setCurrent(double amps) {
-    climberMotor.setControl(voltageOut.withOutput(amps));
+  public void setVoltage(double volts) {
+    climberMotor.setControl(voltageOut.withOutput(volts));
   }
 
   @Override

@@ -28,7 +28,7 @@ public interface ClimberIO {
   public default void setPosition(double positionRots, int slotId) {}
 
   /** Runs the climber open loop at the requested current. */
-  public default void setCurrent(double amps) {}
+  public default void setVoltage(double volts) {}
 
   /** Enables or disables brake mode. */
   public default void setBrakeMode(boolean enabled) {}

@@ -444,8 +444,8 @@ public class Robot extends LoggedRobot {
     driver.x().whileTrue(spindexer.setVoltage(() -> -spindexer.configurableNumber.get()));
     driver.b().whileTrue(spindexer.setVoltage(() -> spindexer.configurableNumber.get()));
 
-    driver.povUp().whileTrue(climber.setCurrent(() -> climber.configClimberNumber1.get()));
-    driver.povDown().whileTrue(climber.setCurrent(() -> -climber.configClimberNumber1.get()));
+    driver.povUp().whileTrue(climber.setVoltage(() -> climber.configClimberNumber1.get()));
+    driver.povDown().whileTrue(climber.setVoltage(() -> -climber.configClimberNumber1.get()));
 
     // driver.rightBumper().whileTrue(DriveCommands.trenchDrive(swerve, () -> -driver.getLeftY()));
 

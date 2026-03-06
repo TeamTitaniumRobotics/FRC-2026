@@ -19,8 +19,8 @@ public class ClimberConstants {
   public static final double CLIMBER_STATOR_CURRENT_LIMIT = 120.0;
   public static final double CLIMBER_SUPPLY_CURRENT_LIMIT = 60.0;
 
-  public static final double CLIMBER_GEAR_RATIO = 16.0;
-  private static final double SPROCKET_PD_METERS = Units.inchesToMeters(0.9659);
+  public static final double CLIMBER_GEAR_RATIO = 25.0;
+  public static final double SPROCKET_PD_METERS = Units.inchesToMeters(0.9659);
   private static final double SPROCKET_CIRCUMFERENCE_METERS = Math.PI * SPROCKET_PD_METERS;
 
   public static final Distance CLIMBER_MAX_EXTENSION = Inches.of(24.0);
@@ -48,11 +48,11 @@ public class ClimberConstants {
   public static final DCMotor CLIMBER_GEARBOX = DCMotor.getKrakenX60Foc(1);
   public static final double CLIMBER_MOMENT_OF_INERTIA = 0.025;
 
-  public static double metersToMotorRotations(double extensionMeters) {
+  public static double metersToMechRotations(double extensionMeters) {
     return extensionMeters / SPROCKET_CIRCUMFERENCE_METERS;
   }
 
-  public static double motorRotationsToMeters(double motorRotations) {
+  public static double mechRotationsToMeters(double motorRotations) {
     return motorRotations * SPROCKET_CIRCUMFERENCE_METERS;
   }
 }
