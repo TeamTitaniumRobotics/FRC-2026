@@ -1,5 +1,5 @@
 {
- "name":"TestAuto",
+ "name":"rebuilt",
  "version":2,
  "type":"Swerve",
  "variables":{
@@ -28,20 +28,20 @@
    }
   },
   "mass":{
-   "exp":"100 lbs",
-   "val":45.359237
+   "exp":"150 lbs",
+   "val":68.0388555
   },
   "inertia":{
    "exp":"6 kg m ^ 2",
    "val":6.0
   },
   "gearing":{
-   "exp":"6.12",
-   "val":6.12
+   "exp":"6.5",
+   "val":6.5
   },
   "radius":{
-   "exp":"1.975 in",
-   "val":0.050165
+   "exp":"2 in",
+   "val":0.0508
   },
   "vmax":{
    "exp":"6000 RPM",
@@ -57,16 +57,16 @@
   },
   "bumper":{
    "front":{
-    "exp":"15.25 in",
-    "val":0.38735
+    "exp":"16 in",
+    "val":0.4064
    },
    "side":{
-    "exp":"13.5 in",
-    "val":0.3429
+    "exp":"16 in",
+    "val":0.4064
    },
    "back":{
-    "exp":"15.25 in",
-    "val":0.38735
+    "exp":"16 in",
+    "val":0.4064
    }
   },
   "differentialTrackWidth":{
@@ -76,8 +76,8 @@
  },
  "generationFeatures":[],
  "codegen":{
-  "root":"..\\C:\\GitHub\\FRC-2026\\src\\main\\deploy\\choreo",
-  "genVars":false,
+  "root":"../../java/org/teamtitanium/autos/generated",
+  "genVars":true,
   "genTrajData":true,
   "useChoreoLib":true
  }

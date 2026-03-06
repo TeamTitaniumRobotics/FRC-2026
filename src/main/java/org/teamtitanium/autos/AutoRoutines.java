@@ -8,12 +8,6 @@ import choreo.trajectory.SwerveSample;
 import edu.wpi.first.wpilibj2.command.Commands;
 import lombok.Getter;
 import org.teamtitanium.RobotState;
-import org.teamtitanium.subsystems.feeder.Feeder;
-import org.teamtitanium.subsystems.intake.Intake;
-import org.teamtitanium.subsystems.shooter.flywheel.Flywheel;
-import org.teamtitanium.subsystems.shooter.hood.Hood;
-import org.teamtitanium.subsystems.shooter.turret.Turret;
-import org.teamtitanium.subsystems.spindexer.Spindexer;
 import org.teamtitanium.subsystems.swerve.Swerve;
 import org.teamtitanium.utils.AllianceFlipUtil;
 
@@ -22,29 +16,9 @@ public class AutoRoutines {
   private final Swerve swerve;
   @Getter private final AutoFactory factory;
   private final RobotState robotState = RobotState.getInstance();
-  private final Turret turret;
-  private final Hood hood;
-  private final Flywheel flywheel;
-  private final Intake intake;
-  private final Feeder feeder;
-  private final Spindexer spindexer;
 
-  public AutoRoutines(
-      Swerve swerve,
-      TrajectoryLogger<SwerveSample> trajLogger,
-      Turret turret,
-      Hood hood,
-      Flywheel flywheel,
-      Intake intake,
-      Feeder feeder,
-      Spindexer spindexer) {
-    this.turret = turret;
+  public AutoRoutines(Swerve swerve, TrajectoryLogger<SwerveSample> trajLogger) {
     this.swerve = swerve;
-    this.hood = hood;
-    this.flywheel = flywheel;
-    this.intake = intake;
-    this.feeder = feeder;
-    this.spindexer = spindexer;
     this.factory =
         new AutoFactory(
             robotState::getEstimatedPose, // A function that returns the current robot pose
@@ -78,8 +52,9 @@ public class AutoRoutines {
                 idealPaths.resetOdometry(),
                 Commands.print("This is the start of the routine."),
                 idealPaths.cmd()));
-    idealPaths.atTime("Intake").onTrue(intake.intake().andThen(Commands.print("Intake starting")));
-    idealPaths.atTime("Stow").onTrue(intake.stow().andThen(Commands.print("Intake stopping")));
+    // idealPaths.atTime("Intake").onTrue(intake.intake().andThen(Commands.print("Intake
+    // starting")));
+    // idealPaths.atTime("Stow").onTrue(intake.stow().andThen(Commands.print("Intake stopping")));
     // // long-running command: start intake repeatedly, stow on end
     // WrapperCommand intakeBetweenMarkers =
     //     Commands.sequence(
