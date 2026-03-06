@@ -73,7 +73,7 @@ public class Climber extends SubsystemBase {
 
   private final Alert motorDisconnectedAlert =
       new Alert("Climber Motor Disconnected", Alert.AlertType.kWarning);
-  private final Debouncer disconnectedDebouncer = new Debouncer(0.5, DebounceType.kFalling);
+  private final Debouncer disconnectedDebouncer = new Debouncer(0.5, DebounceType.kRising);
 
   private final Trigger atSetpoint =
       new Trigger(
@@ -95,7 +95,7 @@ public class Climber extends SubsystemBase {
     io.updateInputs(inputs);
     Logger.processInputs("Climber", inputs);
 
-    motorDisconnectedAlert.set(disconnectedDebouncer.calculate(inputs.motorConnected));
+    motorDisconnectedAlert.set(disconnectedDebouncer.calculate(!inputs.motorConnected));
 
     if (climberkPSlot0.hasChanged(hashCode())
         || climberkISlot0.hasChanged(hashCode())
