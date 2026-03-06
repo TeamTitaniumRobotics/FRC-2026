@@ -26,6 +26,8 @@ public interface HoodIO {
   /** Sets the hood motor to open loop control with the given voltage. */
   public default void setVoltage(double volts) {}
 
+  public default void stopMotor() {}
+
   /** Updates the hood motor PID gains. */
   public default void setGains(Gains gains) {}
 

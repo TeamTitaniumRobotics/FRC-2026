@@ -16,10 +16,9 @@ import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.geometry.Twist3d;
+import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -27,6 +26,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Mass;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -46,6 +46,7 @@ import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.teamtitanium.Robot;
 import org.teamtitanium.RobotState;
+import org.teamtitanium.RobotState.OdometryObservation;
 import org.teamtitanium.utils.Constants;
 import org.teamtitanium.utils.LoggedTracer;
 import org.teamtitanium.utils.LoggedTunableBoolean;
@@ -91,14 +92,17 @@ public class Swerve extends SubsystemBase {
                   WHEEL_COF));
 
   public static final Lock odometryLock = new ReentrantLock();
+
   private final GyroIO gyroIO;
   private final GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
-  private final SwerveModule[] swerveModules = new SwerveModule[4];
-  private final SysIdRoutine sysId;
   private final Debouncer gyroDisconnectedDebouncer =
       new Debouncer(0.5, Debouncer.DebounceType.kFalling);
   private final Alert gyroDisconnectedAlert =
       new Alert("Swerve Gyro Disconnected", Alert.AlertType.kError);
+
+  private final SwerveModule[] swerveModules = new SwerveModule[4];
+
+  private final SysIdRoutine sysId;
 
   private static final LoggedTunableNumber coastWaitTime =
       new LoggedTunableNumber("Swerve/CoastWaitTimeSecs", 0.5);
@@ -107,11 +111,19 @@ public class Swerve extends SubsystemBase {
 
   private final Timer lastMovementTimer = new Timer();
 
+  @Setter @AutoLogOutput private CoastRequest coastRequest = CoastRequest.ALWAYS_BRAKE;
+  @AutoLogOutput private boolean brakeModeEnabled = true;
+
   private final SwerveDriveKinematics kinematics =
       new SwerveDriveKinematics(getModuleTranslations());
-
-  @AutoLogOutput private boolean velocityMode = false;
-  @AutoLogOutput private boolean brakeModeEnabled = true;
+  private Rotation2d rawGyroRotation = Rotation2d.kZero;
+  private SwerveModulePosition[] lastModulePositions =
+      new SwerveModulePosition[] {
+        new SwerveModulePosition(),
+        new SwerveModulePosition(),
+        new SwerveModulePosition(),
+        new SwerveModulePosition()
+      };
 
   private SwerveSetpoint currentSetpoint =
       new SwerveSetpoint(
@@ -122,7 +134,8 @@ public class Swerve extends SubsystemBase {
             new SwerveModuleState(),
             new SwerveModuleState()
           });
-  private final SwerveSetpointGenerator swerveSetpointGenerator;
+  private final SwerveSetpointGenerator swerveSetpointGenerator =
+      new SwerveSetpointGenerator(kinematics, getModuleTranslations());
 
   private final double maxLinearAcceleration = 22.0;
   private final double maxAngularVelocity = Units.degreesToRadians(1080.0);
@@ -132,14 +145,11 @@ public class Swerve extends SubsystemBase {
           maxLinearAcceleration,
           maxAngularVelocity);
 
-  @Setter @AutoLogOutput private CoastRequest coastRequest = CoastRequest.ALWAYS_BRAKE;
+  @AutoLogOutput private boolean velocityMode = false;
 
-  private final PIDController xPosController =
-      new PIDController(3.0, 0.0, 0.0); // TODO: Tune these PID values
-  private final PIDController yPosController =
-      new PIDController(3.0, 0.0, 0.0); // TODO: Tune these PID values
-  private final PIDController headingController =
-      new PIDController(3.0, 0.0, 0.0); // TODO: Tune these PID values
+  private final PIDController xPosController = new PIDController(5.0, 0.0, 0.0);
+  private final PIDController yPosController = new PIDController(5.0, 0.0, 0.0);
+  private final PIDController headingController = new PIDController(5.0, 0.0, 0.0);
 
   public Swerve(
       GyroIO gyroIO,
@@ -155,8 +165,6 @@ public class Swerve extends SubsystemBase {
 
     lastMovementTimer.start();
     setBrakeMode(true);
-
-    swerveSetpointGenerator = new SwerveSetpointGenerator(kinematics, getModuleTranslations());
 
     HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_AdvantageKit);
 
@@ -177,6 +185,7 @@ public class Swerve extends SubsystemBase {
   @Override
   public void periodic() {
     odometryLock.lock(); // Lock odometry for the duration of input updates
+
     gyroIO.updateInputs(gyroInputs);
     Logger.processInputs("Swerve/Gyro", gyroInputs);
 
@@ -184,12 +193,12 @@ public class Swerve extends SubsystemBase {
       module.updateInputs();
     }
 
-    odometryLock.unlock();
-    LoggedTracer.record("Swerve/Inputs");
-
     for (var swerveModule : swerveModules) {
       swerveModule.periodic();
     }
+
+    odometryLock.unlock();
+    LoggedTracer.record("Swerve/Inputs");
 
     // Stop swerve modules if disabled
     if (DriverStation.isDisabled()) {
@@ -204,55 +213,56 @@ public class Swerve extends SubsystemBase {
     }
 
     // Update robot state with odometry updates
-    double[] sampleTimestamps =
-        Constants.getMode() == Constants.Mode.SIM
-            ? new double[] {Timer.getTimestamp()}
-            : gyroInputs.odometryYawTimestamps;
+    double[] sampleTimestamps = swerveModules[0].getOdometryTimestamps();
     int sampleCount = sampleTimestamps.length;
     for (int i = 0; i < sampleCount; i++) {
       var wheelPositions = new SwerveModulePosition[4];
+      SwerveModulePosition[] moduleDeltas = new SwerveModulePosition[4];
       for (int j = 0; j < 4; j++) {
         wheelPositions[j] = swerveModules[j].getOdometryPositions()[i];
+        moduleDeltas[j] =
+            new SwerveModulePosition(
+                wheelPositions[j].distanceMeters - lastModulePositions[j].distanceMeters,
+                wheelPositions[j].angle);
+        lastModulePositions[j] = wheelPositions[j];
+      }
+      if (gyroInputs.connected) {
+        rawGyroRotation = Rotation2d.fromRadians(gyroInputs.odometryYawPositionsRads[i]);
+      } else {
+        Twist2d twist = kinematics.toTwist2d(moduleDeltas);
+        rawGyroRotation = rawGyroRotation.plus(new Rotation2d(twist.dtheta));
       }
       RobotState.getInstance()
           .addOdometryObservation(
-              new RobotState.OdometryObservation(
-                  wheelPositions,
-                  Optional.ofNullable(
-                      gyroInputs.gyroData.connected()
-                          ? Rotation2d.fromRadians(gyroInputs.odometryYawPositionsRads[i])
-                          : null),
-                  sampleTimestamps[i]));
+              new OdometryObservation(
+                  wheelPositions, Optional.ofNullable(rawGyroRotation), sampleTimestamps[i]));
 
-      // Log 3D estimated pose with pitch and roll adjustments
-      Logger.recordOutput(
-          "RobotState/EstimatedPose3d",
-          new Pose3d(RobotState.getInstance().getEstimatedPose())
-              .exp(
-                  new Twist3d(
-                      0.0,
-                      0.0,
-                      Math.abs(gyroInputs.gyroData.pitchPositionRads())
-                          * TunerConstants.FrontLeft.LocationX,
-                      0.0,
-                      gyroInputs.gyroData.pitchPositionRads(),
-                      0.0))
-              .exp(
-                  new Twist3d(
-                      0.0,
-                      0.0,
-                      Math.abs(gyroInputs.gyroData.rollPositionRads())
-                          * TunerConstants.FrontLeft.LocationY,
-                      gyroInputs.gyroData.rollPositionRads(),
-                      0.0,
-                      0.0)));
+      // // Log 3D estimated pose with pitch and roll adjustments TODO: Move to RobotState
+      // Logger.recordOutput(
+      //     "RobotState/EstimatedPose3d",
+      //     new Pose3d(RobotState.getInstance().getEstimatedPose())
+      //         .exp(
+      //             new Twist3d(
+      //                 0.0,
+      //                 0.0,
+      //                 Math.abs(gyroInputs.pitchPositionRads) *
+      // TunerConstants.FrontLeft.LocationX,
+      //                 0.0,
+      //                 gyroInputs.pitchPositionRads,
+      //                 0.0))
+      //         .exp(
+      //             new Twist3d(
+      //                 0.0,
+      //                 0.0,
+      //                 Math.abs(gyroInputs.rollPositionRads) * TunerConstants.FrontLeft.LocationY,
+      //                 gyroInputs.rollPositionRads,
+      //                 0.0,
+      //                 0.0)));
     }
 
     RobotState.getInstance().addSwerveSpeeds(getChassisSpeeds());
-    RobotState.getInstance()
-        .setPitch(Rotation2d.fromRadians(gyroInputs.gyroData.pitchPositionRads()));
-    RobotState.getInstance()
-        .setRoll(Rotation2d.fromRadians(gyroInputs.gyroData.rollPositionRads()));
+    RobotState.getInstance().setPitch(Rotation2d.fromRadians(gyroInputs.pitchPositionRads));
+    RobotState.getInstance().setRoll(Rotation2d.fromRadians(gyroInputs.rollPositionRads));
 
     // Update break mode based on coast request
     if (DriverStation.isEnabled()) {
@@ -287,7 +297,7 @@ public class Swerve extends SubsystemBase {
 
     // Update gyro disconnected alert
     gyroDisconnectedAlert.set(
-        !gyroDisconnectedDebouncer.calculate(gyroInputs.gyroData.connected())
+        !gyroDisconnectedDebouncer.calculate(gyroInputs.connected)
             && Constants.getMode() != Constants.Mode.SIM
             && !Robot.isInitializing());
 
@@ -377,8 +387,8 @@ public class Swerve extends SubsystemBase {
     }
   }
 
-  public void resetPigeon() {
-    gyroIO.reset();
+  public void setGyroAngle(Angle angle) {
+    gyroIO.setGyroAngle(angle);
   }
 
   private void setBrakeMode(boolean enabled) {

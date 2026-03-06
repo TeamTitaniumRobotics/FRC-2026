@@ -12,7 +12,7 @@ public interface VisionIO {
   public class VisionIOInputs {
     public boolean connected = false;
 
-    public PoseObservation[] poseObservation = new PoseObservation[0];
+    public PoseObservation[] poseObservations = new PoseObservation[0];
     public int[] tagIds = new int[0];
   }
 

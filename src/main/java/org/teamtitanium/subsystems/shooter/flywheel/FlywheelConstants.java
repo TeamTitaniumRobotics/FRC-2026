@@ -15,7 +15,7 @@ public class FlywheelConstants {
   public static final int FLYWHEEL_RIGHT_MOTOR_ID = 20;
   public static final CANBus FLYWHEEL_CANBUS = Constants.RIO_CAN_BUS;
 
-  public static final AngularVelocity IDLE_VELOCITY = RPM.of(1500);
+  public static final AngularVelocity IDLE_VELOCITY = RPM.of(1500.0);
   public static final AngularVelocity SHOOT_VELOCITY = RPM.of(3500);
   public static final AngularVelocity EJECT_VELOCITY = RPM.of(1000);
 
@@ -24,7 +24,7 @@ public class FlywheelConstants {
   public static final double FLYWHEEL_MOMENT_OF_INERTIA = 0.008; // kg*m^2
 
   // Tolerance
-  public static final double VELOCITY_TOLERANCE_RPS = 1.0; // ~60 RPM tolerance
+  public static final double VELOCITY_TOLERANCE_RPS = 6.0; // ~60 RPM tolerance
 
   // PID Gains (Velocity control)
   public static final Gains FLYWHEEL_GAINS = new Gains(0.3, 0.0, 0.0, 0.175, 0.095, 0.0, 0.01);

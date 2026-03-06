@@ -1,5 +1,9 @@
 package org.teamtitanium.subsystems;
 
+import static edu.wpi.first.units.Units.Radians;
+
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -14,6 +18,7 @@ import org.teamtitanium.subsystems.intake.Intake;
 import org.teamtitanium.subsystems.intake.Intake.IntakeState;
 import org.teamtitanium.subsystems.shooter.Shooter;
 import org.teamtitanium.subsystems.shooter.Shooter.ShooterState;
+import org.teamtitanium.subsystems.shooter.turret.TurretConstants;
 import org.teamtitanium.subsystems.spindexer.Spindexer;
 import org.teamtitanium.subsystems.spindexer.Spindexer.SpindexerState;
 import org.teamtitanium.utils.virtualsubsystem.VirtualSubsystem;
@@ -70,7 +75,9 @@ public class Superstructure extends VirtualSubsystem {
 
   private final Trigger intakeReq;
   private final Trigger scoreReq;
+  private final Trigger passReq;
   private final Trigger spitReq;
+  private final Trigger stowReq;
   private final Trigger hasFuel;
 
   // ───────────────────────────── Modifier triggers ────────────────────────────
@@ -106,7 +113,9 @@ public class Superstructure extends VirtualSubsystem {
 
     intakeReq = driver.leftTrigger();
     scoreReq = driver.rightTrigger();
-    spitReq = driver.back();
+    passReq = new Trigger(() -> false);
+    stowReq = new Trigger(() -> false);
+    spitReq = new Trigger(() -> false);
 
     hasFuel = spindexer.hasFuel.or(feeder.hasFuel);
 
@@ -128,28 +137,23 @@ public class Superstructure extends VirtualSubsystem {
 
   @Override
   public void simulationPeriodic() {
-    // TODO: Add subsystem visualization here
+    Pose3d turretPose =
+        new Pose3d(
+            TurretConstants.TURRET_TO_ROBOT.getTranslation(),
+            new Rotation3d(0.0, 0.0, shooter.getTurretAngle().in(Radians)));
+    Logger.recordOutput("Superstructure/TurretPose", turretPose);
   }
 
   // ───────────────────────────── State transitions ────────────────────────────
 
   private void bindTransitions() {
-    // IDLE ↔ INTAKE
+    // IDLE <--> INTAKE
     bindTransition(SuperstructureState.IDLE, SuperstructureState.INTAKE, intakeReq);
     bindTransition(SuperstructureState.INTAKE, SuperstructureState.IDLE, intakeReq.negate());
 
-    // // IDLE / INTAKE → PREPPED (fuel acquired)
-    // bindTransition(
-    //     SuperstructureState.IDLE, SuperstructureState.PREPPED, hasFuel.and(intakeReq.negate()));
-    // bindTransition(
-    //     SuperstructureState.INTAKE, SuperstructureState.PREPPED,
-    // hasFuel.and(intakeReq.negate()));
-
-    // // PREPPED → IDLE (fuel lost after grace period)
-    // bindTransition(
-    //     SuperstructureState.PREPPED,
-    //     SuperstructureState.IDLE,
-    //     hasFuel.negate().and(() -> stateTimer.hasElapsed(0.5)));
+    bindTransition(SuperstructureState.INTAKE, SuperstructureState.IDLE, stowReq);
+    bindTransition(SuperstructureState.SPIN_UP_SCORE, SuperstructureState.IDLE, stowReq);
+    bindTransition(SuperstructureState.SCORE, SuperstructureState.IDLE, stowReq);
 
     // IDLE -> SPIN_UP_SCORE -> SCORE
     bindTransition(SuperstructureState.IDLE, SuperstructureState.SPIN_UP_SCORE, scoreReq);
@@ -157,22 +161,30 @@ public class Superstructure extends VirtualSubsystem {
         SuperstructureState.SPIN_UP_SCORE,
         SuperstructureState.SCORE,
         shooter.atSetpoint().and(scoreReq));
+    bindTransition(
+        SuperstructureState.SCORE,
+        SuperstructureState.SPIN_UP_SCORE,
+        scoreReq.and(shooter.atSetpoint().negate().debounce(0.25)));
+    bindTransition(SuperstructureState.SPIN_UP_SCORE, SuperstructureState.IDLE, scoreReq.negate());
     bindTransition(SuperstructureState.SCORE, SuperstructureState.IDLE, scoreReq.negate());
 
     // IDLE -> SPIN_UP_PASS -> PASS
-    bindTransition(SuperstructureState.IDLE, SuperstructureState.SPIN_UP_PASS, spitReq);
+    bindTransition(SuperstructureState.IDLE, SuperstructureState.SPIN_UP_PASS, passReq);
     bindTransition(
         SuperstructureState.SPIN_UP_PASS,
         SuperstructureState.PASS,
-        shooter.atSetpoint().and(spitReq));
+        shooter.atSetpoint().and(passReq));
     bindTransition(
         SuperstructureState.PASS,
         SuperstructureState.IDLE,
-        spitReq.negate().and(() -> stateTimer.hasElapsed(0.5)));
+        passReq.negate().and(() -> stateTimer.hasElapsed(0.5)));
+    bindTransition(
+        SuperstructureState.SPIN_UP_PASS,
+        SuperstructureState.IDLE,
+        passReq.negate().and(() -> stateTimer.hasElapsed(0.5)));
 
     // EJECT (from IDLE or PREPPED)
     bindTransition(SuperstructureState.IDLE, SuperstructureState.EJECT, spitReq);
-    // bindTransition(SuperstructureState.PREPPED, SuperstructureState.EJECT, spitReq);
     // Return to the state we were in before ejecting
     SuperstructureState.EJECT
         .getTrigger()
@@ -203,7 +215,7 @@ public class Superstructure extends VirtualSubsystem {
                 .withName("ToggleIntakeDeployed"));
   }
 
-  // ──────────────── Central resolution: (game state + modifiers) → sub states ─
+  // ──────────────── Central resolution: (game state + modifiers) -> sub states ─
 
   /**
    * Returns a command that should be scheduled once and kept running for the lifetime of
@@ -224,7 +236,7 @@ public class Superstructure extends VirtualSubsystem {
       case EJECT -> intake.setState(IntakeState.EJECT);
       case SPIN_UP_SCORE, SPIN_UP_PASS -> {
         // If intake deployed override is active, keep intaking; else agitate
-        intake.setState(intakeDeployed.getAsBoolean() ? IntakeState.INTAKE : IntakeState.AGITATE);
+        intake.setState(intakeDeployed.getAsBoolean() ? IntakeState.INTAKE : IntakeState.STOW);
       }
       case SCORE, PASS -> {
         // If intake deployed override is active, keep intaking; else stow
@@ -244,7 +256,7 @@ public class Superstructure extends VirtualSubsystem {
 
     // --- Resolve Spindexer state ---
     switch (state) {
-      case INTAKE, SPIN_UP_SCORE, SPIN_UP_PASS -> spindexer.setState(SpindexerState.AGITATE);
+      case INTAKE, SPIN_UP_SCORE, SPIN_UP_PASS -> spindexer.setState(SpindexerState.IDLE);
       case SCORE, PASS, EJECT -> spindexer.setState(SpindexerState.FEED);
       default -> spindexer.setState(SpindexerState.IDLE);
     }

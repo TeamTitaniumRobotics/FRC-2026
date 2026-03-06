@@ -4,9 +4,11 @@ import edu.wpi.first.math.geometry.Transform3d;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
+import org.photonvision.PhotonPoseEstimator.ConstrainedSolvepnpParams;
 import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 import org.teamtitanium.utils.FieldConstants;
 
@@ -34,14 +36,18 @@ public class VisionIOPhoton implements VisionIO {
     List<PoseObservation> poseObservations = new LinkedList<>();
 
     for (var result : camera.getAllUnreadResults()) {
-      var visionEstimate = poseEstimator.estimateCoprocMultiTagPose(result);
+      var visionEstimate =
+          poseEstimator.update(
+              result,
+              Optional.empty(),
+              Optional.empty(),
+              Optional.of(new ConstrainedSolvepnpParams(false, 1.0)));
 
       if (visionEstimate.isPresent()) {
         var estimate = visionEstimate.get();
 
         double averageTagDistance = 0.0;
         double averagePoseAmbiguity = 0.0;
-
         for (var target : estimate.targetsUsed) {
           averageTagDistance += target.getBestCameraToTarget().getTranslation().getNorm();
           averagePoseAmbiguity += target.getPoseAmbiguity();
@@ -60,17 +66,17 @@ public class VisionIOPhoton implements VisionIO {
                 averageTagDistance,
                 PoseObservationType.PHOTONVISION,
                 estimate.strategy));
+      }
 
-        inputs.poseObservation = new PoseObservation[poseObservations.size()];
-        for (int i = 0; i < poseObservations.size(); i++) {
-          inputs.poseObservation[i] = poseObservations.get(i);
-        }
+      inputs.poseObservations = new PoseObservation[poseObservations.size()];
+      for (int i = 0; i < poseObservations.size(); i++) {
+        inputs.poseObservations[i] = poseObservations.get(i);
+      }
 
-        inputs.tagIds = new int[tagIds.size()];
-        int i = 0;
-        for (var tagId : tagIds) {
-          inputs.tagIds[i++] = tagId;
-        }
+      inputs.tagIds = new int[tagIds.size()];
+      int i = 0;
+      for (var tagId : tagIds) {
+        inputs.tagIds[i++] = tagId;
       }
     }
   }
