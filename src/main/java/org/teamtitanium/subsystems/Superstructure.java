@@ -113,9 +113,9 @@ public class Superstructure extends VirtualSubsystem {
 
     intakeReq = driver.leftTrigger();
     scoreReq = driver.rightTrigger();
-    passReq = driver.pov(0);
-    stowReq = driver.povDown();
-    spitReq = driver.povLeft();
+    passReq = new Trigger(() -> false);
+    stowReq = new Trigger(() -> false);
+    spitReq = new Trigger(() -> false);
 
     hasFuel = spindexer.hasFuel.or(feeder.hasFuel);
 

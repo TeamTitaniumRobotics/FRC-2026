@@ -34,7 +34,7 @@ public class IntakeRackIOTalonFX implements IntakeRackIO {
   private final StatusSignal<Current> supplyCurrent;
   private final StatusSignal<Current> torqueCurrent;
   private final StatusSignal<Temperature> temperature;
-  protected final StatusSignal<Double> targetSetpoint;
+  private final StatusSignal<Double> targetSetpoint;
 
   public IntakeRackIOTalonFX() {
     rackMotor = new TalonFX(RACK_MOTOR_ID, RACK_CAN_BUS);

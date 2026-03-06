@@ -36,6 +36,10 @@ import org.teamtitanium.autos.*;
 import org.teamtitanium.commands.DriveCommands;
 import org.teamtitanium.subsystems.Leds;
 import org.teamtitanium.subsystems.Superstructure;
+import org.teamtitanium.subsystems.climber.Climber;
+import org.teamtitanium.subsystems.climber.ClimberIO;
+import org.teamtitanium.subsystems.climber.ClimberIOSim;
+import org.teamtitanium.subsystems.climber.ClimberIOTalonFX;
 import org.teamtitanium.subsystems.feeder.Feeder;
 import org.teamtitanium.subsystems.genericroller.GenericRollerIO;
 import org.teamtitanium.subsystems.genericroller.GenericRollerIOSim;
@@ -103,6 +107,7 @@ public class Robot extends LoggedRobot {
   private final Intake intake;
   private final IntakeRack intakeRack;
   private final IntakeRoller intakeRoller;
+  private final Climber climber;
   private final Superstructure superstructure;
   private final Vision vision;
 
@@ -241,6 +246,7 @@ public class Robot extends LoggedRobot {
         intakeRack = new IntakeRack(new IntakeRackIOTalonFX());
         intakeRoller =
             new IntakeRoller(new GenericRollerIOTalonFX(IntakeConstants.RollerConstants.CONSTANTS));
+        climber = new Climber(new ClimberIOTalonFX());
         vision =
             new Vision(
                 new VisionIOPhoton(
@@ -275,6 +281,7 @@ public class Robot extends LoggedRobot {
                     IntakeConstants.RollerConstants.CONSTANTS,
                     IntakeConstants.RollerConstants.ROLLER_MOTOR_GEARBOX,
                     IntakeConstants.RollerConstants.ROLLER_MOI));
+        climber = new Climber(new ClimberIOSim());
         vision =
             new Vision(
                 new VisionIOSim(
@@ -301,6 +308,7 @@ public class Robot extends LoggedRobot {
         spindexer = new Spindexer(new GenericRollerIO() {});
         intakeRack = new IntakeRack(new IntakeRackIO() {});
         intakeRoller = new IntakeRoller(new GenericRollerIO() {});
+        climber = new Climber(new ClimberIO() {});
         vision = new Vision(new VisionIO() {});
       }
     }
@@ -435,6 +443,9 @@ public class Robot extends LoggedRobot {
 
     driver.x().whileTrue(spindexer.setVoltage(() -> -spindexer.configurableNumber.get()));
     driver.b().whileTrue(spindexer.setVoltage(() -> spindexer.configurableNumber.get()));
+
+    driver.povUp().whileTrue(climber.setCurrent(() -> climber.configClimberNumber1.get()));
+    driver.povDown().whileTrue(climber.setCurrent(() -> -climber.configClimberNumber1.get()));
 
     // driver.rightBumper().whileTrue(DriveCommands.trenchDrive(swerve, () -> -driver.getLeftY()));
 
