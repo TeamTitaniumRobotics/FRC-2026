@@ -3,28 +3,86 @@
  "version":2,
  "type":"Swerve",
  "variables":{
-  "expressions":{},
-  "poses":{}
+  "expressions":{
+   "FieldW":{
+    "dimension":"Length",
+    "var":{
+     "exp":"317.6875 in",
+     "val":8.069262499999999
+    }
+   },
+   "TrenchW":{
+    "dimension":"Length",
+    "var":{
+     "exp":"47 in",
+     "val":1.1938
+    }
+   }
+  },
+  "poses":{
+   "RFE":{
+    "x":{
+     "exp":"RFS.x",
+     "val":7.93556325
+    },
+    "y":{
+     "exp":"FieldW / 2 - 12 in - 16.625 in",
+     "val":3.3075562499999993
+    },
+    "heading":{
+     "exp":"RFS.heading",
+     "val":1.5707963267948966
+    }
+   },
+   "RFS":{
+    "x":{
+     "exp":"(324.29875 - 11.875) in",
+     "val":7.93556325
+    },
+    "y":{
+     "exp":"(158.84375 - 95 - 28.625) in",
+     "val":0.8945562499999999
+    },
+    "heading":{
+     "exp":"(PI / 2) rad",
+     "val":1.5707963267948966
+    }
+   },
+   "RTS":{
+    "x":{
+     "exp":"4.398963262 m",
+     "val":4.398963262
+    },
+    "y":{
+     "exp":"0.6393655 m",
+     "val":0.6393655
+    },
+    "heading":{
+     "exp":"0 rad",
+     "val":0.0
+    }
+   }
+  }
  },
  "config":{
   "frontLeft":{
    "x":{
-    "exp":"11 in",
-    "val":0.2794
+    "exp":"9.6875 in",
+    "val":0.2460625
    },
    "y":{
-    "exp":"11 in",
-    "val":0.2794
+    "exp":"11.875 in",
+    "val":0.301625
    }
   },
   "backLeft":{
    "x":{
-    "exp":"-11 in",
-    "val":-0.2794
+    "exp":"-9.6875 in",
+    "val":-0.2460625
    },
    "y":{
-    "exp":"11 in",
-    "val":0.2794
+    "exp":"11.875 in",
+    "val":0.301625
    }
   },
   "mass":{
@@ -57,16 +115,16 @@
   },
   "bumper":{
    "front":{
-    "exp":"16 in",
-    "val":0.4064
+    "exp":"16.625 in",
+    "val":0.422275
    },
    "side":{
-    "exp":"16 in",
-    "val":0.4064
+    "exp":"18.75 in",
+    "val":0.47625
    },
    "back":{
-    "exp":"16 in",
-    "val":0.4064
+    "exp":"16.625 in",
+    "val":0.422275
    }
   },
   "differentialTrackWidth":{
