@@ -86,6 +86,13 @@ public class IntakeConstants {
             MAX_LINEAR_VELOCITY_MPS / GEAR_CIRCUMFERENCE_METERS, // 15rps
             MAX_LINEAR_ACCELERATION_MPS2 / GEAR_CIRCUMFERENCE_METERS); // 50rps
 
+    private static final double AGITATE_LINEAR_VELOCITY_MPS = 0.5;
+    private static final double AGITATE_LINEAR_ACCELERATION_MPS2 = 2.0;
+    public static final Constraints AGITATE_CONSTRAINTS =
+        new Constraints(
+            AGITATE_LINEAR_VELOCITY_MPS / GEAR_CIRCUMFERENCE_METERS,
+            AGITATE_LINEAR_ACCELERATION_MPS2 / GEAR_CIRCUMFERENCE_METERS);
+
     // Homing parameters
     public static final double HOMING_VOLTAGE_VOLTS = -2.5;
     public static final double HOMING_CURRENT_THRESHOLD_AMPS = 25.0;

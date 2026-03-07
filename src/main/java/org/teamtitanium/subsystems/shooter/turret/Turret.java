@@ -128,67 +128,38 @@ public class Turret extends SubsystemBase {
   public Angle getTargetAngle(Angle targetAngle, Angle currentAngle) {
     double minRad = MIN_ANGLE.in(Radians);
     double maxRad = MAX_ANGLE.in(Radians);
-    double rangeRad = maxRad - minRad;
 
-    // Normalize target angle to [-180, 180] range
     double targetRad = targetAngle.in(Radians);
-    while (targetRad < minRad) {
-      targetRad += 2 * Math.PI;
-    }
-    while (targetRad > maxRad) {
-      targetRad -= 2 * Math.PI;
-    }
-
     double currentRad = currentAngle.in(Radians);
 
-    if (targetRad < minRad) {
-      targetRad = minRad;
-    } else if (targetRad > maxRad) {
-      targetRad = maxRad;
+    double normalizedTarget =
+        targetRad - (2 * Math.PI) * Math.floor((targetRad - minRad) / (2 * Math.PI));
+
+    double bestTarget = Double.NaN;
+    double bestDistance = Double.MAX_VALUE;
+
+    for (int offset = -2; offset <= 2; offset++) {
+      double candidate = normalizedTarget + offset * 2 * Math.PI;
+      if (candidate >= minRad - 1e-9 && candidate <= maxRad + 1e-9) {
+        candidate = Math.max(minRad, Math.min(maxRad, candidate));
+        double distance = Math.abs(candidate - currentRad);
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          bestTarget = candidate;
+        }
+      }
     }
 
-    // Calculate shortest angular distance
-    double deltaAngleRad = targetRad - currentRad;
+    if (Double.isNaN(bestTarget)) {
+      double distToMin = Math.abs(currentRad - minRad);
+      double distToMax = Math.abs(currentRad - maxRad);
+      bestTarget = distToMin < distToMax ? minRad : maxRad;
+    }
 
-    double wrapDelta = deltaAngleRad;
-    // if (deltaAngleRad > 0) {
-    //   double backwardsDelta = deltaAngleRad - rangeRad;
-    //   if (Math.abs(backwardsDelta) < Math.abs(deltaAngleRad)
-    //       && currentRad + backwardsDelta >= minRad) {
-    //     wrapDelta = backwardsDelta;
-    //   }
-    // } else {
-    //   double forwardsDelta = deltaAngleRad + rangeRad;
-    //   if (Math.abs(forwardsDelta) < Math.abs(deltaAngleRad)
-    //       && currentRad + forwardsDelta <= maxRad) {
-    //     wrapDelta = forwardsDelta;
-    //   }
-    // }
+    Logger.recordOutput("Turret/DeltaAngle", bestTarget - currentRad);
+    Logger.recordOutput("Turret/OptimalAngle", bestTarget);
 
-    Logger.recordOutput("Turret/DeltaAngle", wrapDelta);
-
-    // Calculate optimal target position
-    double optimalAngleRad = currentRad + wrapDelta;
-    optimalAngleRad = Math.max(minRad, Math.min(maxRad, optimalAngleRad));
-
-    Logger.recordOutput("Turret/OptimalAngle", optimalAngleRad);
-
-    // // Special case: if delta is exactly ±π (±180°), prefer the representation
-    // // that matches the original target to avoid oscillation
-    // if (Math.abs(Math.abs(deltaAngleRad) - Math.PI) < 0.001) {
-    //   // Use the normalized target directly to be consistent
-    //   optimalAngleRad = targetRad;
-    // }
-
-    // // Wrap to keep within [-π, π] range for continuous rotation tracking
-    // // But don't wrap if we're already very close to the boundary to avoid oscillation
-    // if (optimalAngleRad > Math.PI && Math.abs(optimalAngleRad - Math.PI) > 0.001) {
-    //   optimalAngleRad -= 2 * Math.PI;
-    // } else if (optimalAngleRad < -Math.PI && Math.abs(optimalAngleRad + Math.PI) > 0.001) {
-    //   optimalAngleRad += 2 * Math.PI;
-    // }
-
-    return Radians.of(optimalAngleRad);
+    return Radians.of(bestTarget);
   }
 
   /**

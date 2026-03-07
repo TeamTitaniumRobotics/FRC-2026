@@ -112,6 +112,10 @@ public class IntakeRack extends SubsystemBase {
   }
 
   public Command setExtension(Supplier<Distance> positionSupplier) {
+    return setExtension(() -> positionSupplier.get(), RACK_CONSTRAINTS);
+  }
+
+  public Command setExtension(Supplier<Distance> positionSupplier, Constraints constraints) {
     return run(() -> {
           double requestedMeters =
               MathUtil.clamp(
@@ -119,7 +123,7 @@ public class IntakeRack extends SubsystemBase {
                   MIN_EXTENSION.in(Meters),
                   MAX_EXTENSION.in(Meters));
           targetExtensionMeters = requestedMeters;
-          io.setPosition(metersToMotorRotations(requestedMeters));
+          io.setPosition(metersToMotorRotations(requestedMeters), constraints);
         })
         .withName("IntakeRack.SetExtension");
   }

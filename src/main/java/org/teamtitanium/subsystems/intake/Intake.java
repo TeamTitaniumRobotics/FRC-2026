@@ -1,9 +1,11 @@
 package org.teamtitanium.subsystems.intake;
 
 import static edu.wpi.first.units.Units.RotationsPerSecond;
+import static org.teamtitanium.subsystems.intake.IntakeConstants.RackConstants.AGITATE_CONSTRAINTS;
 
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.util.function.Supplier;
 import lombok.Getter;
@@ -21,7 +23,7 @@ public class Intake {
   public enum IntakeState {
     STOW(() -> RackConstants.STOW_EXTENSION, () -> RollerConstants.IDLE_VELOCITY),
     INTAKE(() -> RackConstants.DEPLOY_EXTENSION, () -> RollerConstants.INTAKE_VELOCITY),
-    AGITATE(() -> RackConstants.DEPLOY_EXTENSION, () -> RollerConstants.INTAKE_VELOCITY),
+    AGITATE(() -> RackConstants.STOW_EXTENSION, () -> RollerConstants.INTAKE_VELOCITY),
     EJECT(() -> RackConstants.DEPLOY_EXTENSION, () -> RollerConstants.EJECT_VELOCITY);
 
     @Getter private final Supplier<Distance> rackDistance;
@@ -40,14 +42,12 @@ public class Intake {
     this.rack = rack;
     this.roller = roller;
 
-    // rack.setDefaultCommand(
-    //     Commands.either(
-    //         Commands.repeatingSequence(
-    //             rack.setExtension(RackConstants.AGITATE_EXTENSION).until(rack.atSetpoint()),
-    //             rack.setExtension(RackConstants.DEPLOY_EXTENSION).until(rack.atSetpoint())),
-    //         rack.setExtension(() -> state.getRackDistance().get()),
-    //         () -> state == IntakeState.AGITATE));
-    rack.setDefaultCommand(rack.setExtension(() -> state.getRackDistance().get()));
+    rack.setDefaultCommand(
+        Commands.either(
+            rack.setExtension(() -> state.getRackDistance().get(), AGITATE_CONSTRAINTS),
+            rack.setExtension(() -> state.getRackDistance().get()),
+            () -> state == IntakeState.AGITATE));
+    // rack.setDefaultCommand(rack.setExtension(() -> state.getRackDistance().get()));
     roller.setDefaultCommand(
         roller.setVelocity(() -> RotationsPerSecond.of(roller.configurableNumber.get())));
   }
