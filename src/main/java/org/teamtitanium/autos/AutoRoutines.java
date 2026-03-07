@@ -20,11 +20,16 @@ public class AutoRoutines {
   private final RobotState robotState = RobotState.getInstance();
 
   private static boolean autoIntake;
+  private static boolean autoIntakeOverride;
   private static boolean autoScore;
 
   @AutoLogOutput(key = "Superstructure/AutoIntake")
   public static Trigger autoIntakeReq =
       new Trigger(() -> autoIntake).and(DriverStation::isAutonomous);
+
+  @AutoLogOutput(key = "Superstructure/AutoIntakeOverride")
+  public static Trigger autoIntakeOverrideReq =
+      new Trigger(() -> autoIntakeOverride).and(DriverStation::isAutonomous);
 
   @AutoLogOutput(key = "Superstructure/AutoScore")
   public static Trigger autoScoreReq =
@@ -90,10 +95,10 @@ public class AutoRoutines {
     boolean deployIntake = path.intakeDeployed;
     return Commands.sequence(
         setAutoScore(true),
-        setAutoIntake(deployIntake),
+        setAutoIntakeOverride(deployIntake),
         trajectory.cmd().until(trajectory.done()),
         setAutoScore(false),
-        setAutoIntake(false));
+        setAutoIntakeOverride(false));
   }
 
   private Command emptyPath(Path path, AutoRoutine routine) {
@@ -103,6 +108,10 @@ public class AutoRoutines {
 
   private Command setAutoIntake(boolean value) {
     return Commands.runOnce(() -> autoIntake = value);
+  }
+
+  private Command setAutoIntakeOverride(boolean value) {
+    return Commands.runOnce(() -> autoIntakeOverride = value);
   }
 
   private Command setAutoScore(boolean value) {
