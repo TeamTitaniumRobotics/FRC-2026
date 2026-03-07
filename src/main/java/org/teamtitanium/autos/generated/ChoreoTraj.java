@@ -24,19 +24,12 @@ public record ChoreoTraj(
     Pose2d initialPoseBlue,
     Pose2d endPoseBlue
 ) {
-    public static final ChoreoTraj RFE_RTSB = new ChoreoTraj(
-        "RFE_RTSB",
+    public static final ChoreoTraj RFME_RTSB = new ChoreoTraj(
+        "RFME_RTSB",
         OptionalInt.empty(),
-        1.35629,
+        1.40581,
         new Pose2d(7.93556, 3.30756, Rotation2d.fromRadians(1.5708)),
         new Pose2d(4.39896, 0.63937, Rotation2d.fromRadians(3.14159))
-    );
-    public static final ChoreoTraj RFS_RFE = new ChoreoTraj(
-        "RFS_RFE",
-        OptionalInt.empty(),
-        1.69336,
-        new Pose2d(7.93556, 0.89456, Rotation2d.fromRadians(1.5708)),
-        new Pose2d(7.93556, 3.30756, Rotation2d.fromRadians(1.5708))
     );
     public static final ChoreoTraj RTSB_ROB = new ChoreoTraj(
         "RTSB_ROB",
@@ -45,12 +38,12 @@ public record ChoreoTraj(
         new Pose2d(4.39896, 0.63937, Rotation2d.fromRadians(3.14159)),
         new Pose2d(0.72708, 0.64572, Rotation2d.fromRadians(3.14159))
     );
-    public static final ChoreoTraj RTS_RFS = new ChoreoTraj(
-        "RTS_RFS",
+    public static final ChoreoTraj RTS_RFME = new ChoreoTraj(
+        "RTS_RFME",
         OptionalInt.empty(),
-        1.29937,
+        2.98414,
         new Pose2d(4.39896, 0.63937, Rotation2d.fromRadians(0)),
-        new Pose2d(7.93556, 0.89456, Rotation2d.fromRadians(1.5708))
+        new Pose2d(7.93556, 3.30756, Rotation2d.fromRadians(1.5708))
     );
 
     /**
@@ -58,10 +51,9 @@ public record ChoreoTraj(
      * This allows for trajectory data to be looked up with strings during runtime.
      */
     public static final Map<String, ChoreoTraj> ALL_TRAJECTORIES = Map.ofEntries(
-        Map.entry("RFE_RTSB", RFE_RTSB),
-        Map.entry("RFS_RFE", RFS_RFE),
+        Map.entry("RFME_RTSB", RFME_RTSB),
         Map.entry("RTSB_ROB", RTSB_ROB),
-        Map.entry("RTS_RFS", RTS_RFS)
+        Map.entry("RTS_RFME", RTS_RFME)
     );
 
     /**

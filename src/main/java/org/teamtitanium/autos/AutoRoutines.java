@@ -48,12 +48,14 @@ public class AutoRoutines {
 
   public Command getOutpostAuto() {
     final AutoRoutine routine = factory.newRoutine("Outpost Score Auto");
-    Path[] paths = new Path[] {Path.RTS_RFS, Path.RFS_RFE, Path.RFE_RTSB, Path.RTSB_ROB};
+    Path[] paths = new Path[] {Path.RTS_RFME, Path.RFME_RTSB, Path.RTSB_ROB};
     Command autoCmd = paths[0].getTrajectory(routine).resetOdometry();
 
     for (Path path : paths) {
       autoCmd = autoCmd.andThen(followPath(path, routine));
     }
+
+    autoCmd = autoCmd.andThen(Commands.sequence(setAutoIntake(true), setAutoScore(true)));
 
     routine.active().onTrue(autoCmd);
 
@@ -77,26 +79,34 @@ public class AutoRoutines {
   private Command intakePath(Path path, AutoRoutine routine) {
     AutoTrajectory trajectory = path.getTrajectory(routine);
     return Commands.sequence(
-        Commands.runOnce(() -> autoIntake = true),
-        Commands.runOnce(() -> autoScore = false),
+        setAutoIntake(true),
+        setAutoScore(false),
         trajectory.cmd().until(trajectory.done()),
-        Commands.runOnce(() -> autoIntake = false));
+        setAutoIntake(false));
   }
 
   private Command scorePath(Path path, AutoRoutine routine) {
     AutoTrajectory trajectory = path.getTrajectory(routine);
     boolean deployIntake = path.intakeDeployed;
     return Commands.sequence(
-        Commands.runOnce(() -> autoScore = true),
-        Commands.runOnce(() -> autoIntake = deployIntake),
+        setAutoScore(true),
+        setAutoIntake(deployIntake),
         trajectory.cmd().until(trajectory.done()),
-        Commands.runOnce(() -> autoScore = false),
-        Commands.runOnce(() -> autoIntake = false));
+        setAutoScore(false),
+        setAutoIntake(false));
   }
 
   private Command emptyPath(Path path, AutoRoutine routine) {
     AutoTrajectory trajectory = path.getTrajectory(routine);
     return trajectory.cmd().until(trajectory.done());
+  }
+
+  private Command setAutoIntake(boolean value) {
+    return Commands.runOnce(() -> autoIntake = value);
+  }
+
+  private Command setAutoScore(boolean value) {
+    return Commands.runOnce(() -> autoScore = value);
   }
 
   public enum PathAction {
@@ -107,18 +117,23 @@ public class AutoRoutines {
 
   /*
    * Naming Scheme:
-   *
+   * First Letter Chain
    * - First letter: Starting side (R = Right, L = Left)
-   * - Second letter: Starting position (T = Trench, B = Bump, H = Hub, O = Outpost)
+   * - Second letter (if followed by M): (C = Close, M = Middle, F = Far)
+   * - Second/Third letter: Starting position (T = Trench, B = Bump, M = Middle, H = Hub, O = Outpost)
+   * - Third/Fourth letter (if present): (S = Start, E = End)
+   * - Third/Fourth letter (if present): Starting rotation (F = Facing forward, B = Facing backward)
    *
-   * - Third letter: Ending side (R = Right, L = Left)
-   * - Fourth letter: Ending position (T = Trench, B = Bump, H = Hub, O = Outpost)
-   * - Fifth letter (if present): Final pose (F = Facing forward, B = Facing backward)
+   * Second Letter Chain
+   * - First letter: Ending side (R = Right, L = Left)
+   * - Second letter (if followed by M): (C = Close, M = Middle, F = Far)
+   * - Second/Third letter: Ending position (T = Trench, B = Bump, M = Middle, H = Hub, O = Outpost)
+   * - Third/Fourth letter (if present): (S = Start, E = End)
+   * - Third/Fourth letter (if present): Final pose (F = Facing forward, B = Facing backward)
    */
   public enum Path {
-    RTS_RFS(PathAction.INTAKE),
-    RFS_RFE(PathAction.INTAKE),
-    RFE_RTSB(PathAction.NOTHING),
+    RTS_RFME(PathAction.INTAKE),
+    RFME_RTSB(PathAction.NOTHING),
     RTSB_ROB(PathAction.SCORE, true);
 
     private final PathAction action;
