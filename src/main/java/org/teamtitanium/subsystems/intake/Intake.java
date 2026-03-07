@@ -1,6 +1,5 @@
 package org.teamtitanium.subsystems.intake;
 
-import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static org.teamtitanium.subsystems.intake.IntakeConstants.RackConstants.AGITATE_CONSTRAINTS;
 
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -48,8 +47,9 @@ public class Intake {
             rack.setExtension(() -> state.getRackDistance().get()),
             () -> state == IntakeState.AGITATE));
     // rack.setDefaultCommand(rack.setExtension(() -> state.getRackDistance().get()));
-    roller.setDefaultCommand(
-        roller.setVelocity(() -> RotationsPerSecond.of(roller.configurableNumber.get())));
+    roller.setDefaultCommand(roller.setVelocity(() -> state.getIntakeVelocity().get()));
+    // roller.setDefaultCommand(
+    //     roller.setVelocity(() -> RotationsPerSecond.of(roller.configurableNumber.get())));
   }
 
   public Trigger atSetpoint() {

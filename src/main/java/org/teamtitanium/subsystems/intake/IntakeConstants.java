@@ -20,8 +20,8 @@ public class IntakeConstants {
 
     public static final boolean ROLLER_INVERTED = false;
 
-    public static final AngularVelocity IDLE_VELOCITY = RotationsPerSecond.of(0.0);
-    public static final AngularVelocity INTAKE_VELOCITY = RotationsPerSecond.of(30.0);
+    public static final AngularVelocity IDLE_VELOCITY = RotationsPerSecond.of(12.0);
+    public static final AngularVelocity INTAKE_VELOCITY = RotationsPerSecond.of(36.0);
     public static final AngularVelocity EJECT_VELOCITY = RotationsPerSecond.of(-24.0);
 
     public static final double STATOR_CURRENT_LIMIT = 60.0;
