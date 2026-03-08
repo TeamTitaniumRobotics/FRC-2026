@@ -62,7 +62,7 @@ public class ShotCalculator {
 
   public ShotParameters getParameters() {
     boolean passing =
-        RobotState.getInstance().getEstimatedPose().getX()
+        AllianceFlipUtil.applyX(RobotState.getInstance().getEstimatedPose().getX())
             > AllianceFlipUtil.applyX(FieldConstants.LinesVertical.hubCenter);
 
     if (latestParameters != null) {

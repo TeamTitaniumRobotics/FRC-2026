@@ -69,7 +69,7 @@ public class IntakeConstants {
 
     // Extension limits
     public static final Distance MIN_EXTENSION = Inches.of(0.0);
-    public static final Distance STOW_EXTENSION = Inches.of(0.0); // Add 4 inches normal stow
+    public static final Distance STOW_EXTENSION = Inches.of(4.0); // Add 4 inches normal stow
     public static final Distance AGITATE_EXTENSION = Inches.of(6.0);
     public static final Distance DEPLOY_EXTENSION = Inches.of(11.5);
     public static final Distance MAX_EXTENSION = Inches.of(12.0);
