@@ -39,6 +39,7 @@ import org.teamtitanium.subsystems.Superstructure;
 import org.teamtitanium.subsystems.climber.Climber;
 import org.teamtitanium.subsystems.climber.ClimberIO;
 import org.teamtitanium.subsystems.climber.ClimberIOSim;
+import org.teamtitanium.subsystems.climber.ClimberIOTalonFX;
 import org.teamtitanium.subsystems.feeder.Feeder;
 import org.teamtitanium.subsystems.genericroller.GenericRollerIO;
 import org.teamtitanium.subsystems.genericroller.GenericRollerIOSim;
@@ -245,7 +246,7 @@ public class Robot extends LoggedRobot {
         intakeRack = new IntakeRack(new IntakeRackIOTalonFX());
         intakeRoller =
             new IntakeRoller(new GenericRollerIOTalonFX(IntakeConstants.RollerConstants.CONSTANTS));
-        climber = new Climber(new ClimberIO() {});
+        climber = new Climber(new ClimberIOTalonFX());
 
         vision =
             new Vision(
@@ -442,8 +443,8 @@ public class Robot extends LoggedRobot {
     driver.x().whileTrue(spindexer.setVoltage(() -> -spindexer.configurableNumber.get()));
     driver.b().whileTrue(spindexer.setVoltage(() -> spindexer.configurableNumber.get()));
 
-    // driver.povUp().whileTrue(climber.setVoltage(() -> climber.configClimberNumber1.get()));
-    // driver.povDown().whileTrue(climber.setVoltage(() -> -climber.configClimberNumber1.get()));
+    driver.povUp().whileTrue(climber.setVoltage(() -> climber.configClimberNumber1.get()));
+    driver.povDown().whileTrue(climber.setVoltage(() -> -climber.configClimberNumber1.get()));
 
     // driver
     //     .rightBumper()

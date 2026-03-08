@@ -45,7 +45,7 @@ public class DriveCommands {
     double linearMagnitude = MathUtil.applyDeadband(Math.hypot(x, y), DEADBAND);
     Rotation2d linearDirection = new Rotation2d(x, y);
 
-    // linearMagnitude = linearMagnitude * linearMagnitude;
+    linearMagnitude = linearMagnitude * linearMagnitude;
 
     return new Pose2d(Translation2d.kZero, linearDirection)
         .transformBy(new Transform2d(linearMagnitude, 0.0, Rotation2d.kZero))

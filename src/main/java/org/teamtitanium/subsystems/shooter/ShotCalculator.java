@@ -57,13 +57,23 @@ public class ShotCalculator {
     shotMap.put(4.5, new ShotData(3600, 14));
     shotMap.put(5.0, new ShotData(3700, 16));
 
-    passingMap.put(4.5, new ShotData(4000, 16));
+    passingMap.put(4.5, new ShotData(4250, 22.5));
   }
 
   public ShotParameters getParameters() {
-    boolean passing =
-        AllianceFlipUtil.applyX(RobotState.getInstance().getEstimatedPose().getX())
-            > AllianceFlipUtil.applyX(FieldConstants.LinesVertical.hubCenter);
+    boolean passing;
+    if (AllianceFlipUtil.shouldFlip()) {
+      passing =
+          RobotState.getInstance().getEstimatedPose().getX()
+              < AllianceFlipUtil.applyX(FieldConstants.LinesVertical.hubCenter);
+    } else {
+      passing =
+          RobotState.getInstance().getEstimatedPose().getX()
+              > FieldConstants.LinesVertical.hubCenter;
+    }
+    // boolean passing =
+    //     AllianceFlipUtil.applyX(RobotState.getInstance().getEstimatedPose().getX())
+    //         > AllianceFlipUtil.applyX(FieldConstants.LinesVertical.hubCenter);
 
     if (latestParameters != null) {
       return latestParameters;
@@ -80,13 +90,21 @@ public class ShotCalculator {
 
     Translation2d target =
         AllianceFlipUtil.apply(FieldConstants.Hub.topCenterPoint.toTranslation2d());
-    // if (passing) {
-    //   target =
-    //       RobotState.getInstance().getEstimatedPose().getY() >
-    // FieldConstants.LinesHorizontal.center
-    //           ? FieldConstants.PassingTargets.depotTarget
-    //           : FieldConstants.PassingTargets.outpostTarget;
-    // }
+    if (passing) {
+      if (AllianceFlipUtil.shouldFlip()) {
+        target =
+            RobotState.getInstance().getEstimatedPose().getY()
+                    < FieldConstants.LinesHorizontal.center
+                ? AllianceFlipUtil.apply(FieldConstants.PassingTargets.depotTarget)
+                : AllianceFlipUtil.apply(FieldConstants.PassingTargets.outpostTarget);
+      } else {
+        target =
+            RobotState.getInstance().getEstimatedPose().getY()
+                    > FieldConstants.LinesHorizontal.center
+                ? AllianceFlipUtil.apply(FieldConstants.PassingTargets.depotTarget)
+                : AllianceFlipUtil.apply(FieldConstants.PassingTargets.outpostTarget);
+      }
+    }
 
     Logger.recordOutput("ShotCalculator/TargetPose", new Pose2d(target, Rotation2d.kZero));
 
@@ -101,9 +119,9 @@ public class ShotCalculator {
             RobotState.getInstance().getRotation());
 
     double tof =
-        // passing
-        // ? passingMap.get(targetToTurretDistance).tof()
-        shotMap.get(targetToTurretDistance).tof();
+        passing
+            ? passingMap.get(targetToTurretDistance).tof()
+            : shotMap.get(targetToTurretDistance).tof();
     Pose2d predictedTurretPose = turretPosition;
     double predictedDistance = targetToTurretDistance;
 
