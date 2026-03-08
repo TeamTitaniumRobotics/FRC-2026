@@ -31,6 +31,7 @@ import edu.wpi.first.units.measure.Mass;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import java.util.Arrays;
@@ -308,28 +309,18 @@ public class Swerve extends SubsystemBase {
   public void runVelocity(ChassisSpeeds speeds) {
     velocityMode = true;
     ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(speeds, Constants.loopPeriodSecs);
-    SwerveModuleState[] setpointStatesUnoptimized = kinematics.toSwerveModuleStates(discreteSpeeds);
-    SwerveModuleState[] setpointStates = setpointStatesUnoptimized;
-    // if (useSwerveSetpointGenerator.get()) {
-    //   currentSetpoint =
-    //       swerveSetpointGenerator.generateSetpoint(
-    //           moduleLimitsFree, currentSetpoint, discreteSpeeds, Constants.loopPeriodSecs);
-    //   setpointStates = currentSetpoint.moduleStates();
-    //   Logger.recordOutput("Swerve/SwerveChassisSpeeds/Setpoints",
-    // currentSetpoint.chassisSpeeds());
-    // }
+    SwerveModuleState[] setpointStates = kinematics.toSwerveModuleStates(discreteSpeeds);
+    SwerveDriveKinematics.desaturateWheelSpeeds(
+        setpointStates, TunerConstants.kSpeedAt12Volts.in(MetersPerSecond));
 
-    Logger.recordOutput("Swerve/SwerveStates/SetpointsUnoptimized", setpointStatesUnoptimized);
     Logger.recordOutput("Swerve/SwerveStates/Setpoints", setpointStates);
+    Logger.recordOutput("Swerve/SwerveChassisSpeeds/Setpoints", discreteSpeeds);
 
-    SwerveModuleState[] moduleStates = getModuleStates();
     for (int i = 0; i < 4; i++) {
-      Rotation2d wheelAngle = moduleStates[i].angle;
-      setpointStates[i].optimize(wheelAngle);
-      setpointStates[i].cosineScale(wheelAngle);
-
       swerveModules[i].runSetpoint(setpointStates[i]);
     }
+
+    Logger.recordOutput("Swerve/SwerveStates/SetpointsOptimized", setpointStates);
   }
 
   public void runVelocity(ChassisSpeeds speeds, List<Vector<N2>> moduleForces) {
@@ -369,6 +360,31 @@ public class Swerve extends SubsystemBase {
     }
   }
 
+  public void followChoreoTrajectory(SwerveSample sample) {
+    Pose2d pose = RobotState.getInstance().getEstimatedPose();
+
+    ChassisSpeeds speeds =
+        new ChassisSpeeds(
+            sample.vx + xPosController.calculate(pose.getX(), sample.x),
+            sample.vy + yPosController.calculate(pose.getY(), sample.y),
+            sample.omega
+                + headingController.calculate(pose.getRotation().getRadians(), sample.heading));
+
+    runVelocity(speeds);
+  }
+
+  /** Returns a command to run a quasistatic test in the specified direction. */
+  public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
+    return run(() -> runCharacterization(0.0))
+        .withTimeout(1.0)
+        .andThen(sysId.quasistatic(direction));
+  }
+
+  /** Returns a command to run a dynamic test in the specified direction. */
+  public Command sysIdDynamic(SysIdRoutine.Direction direction) {
+    return run(() -> runCharacterization(0.0)).withTimeout(1.0).andThen(sysId.dynamic(direction));
+  }
+
   public void stop() {
     runVelocity(new ChassisSpeeds());
   }
@@ -398,23 +414,6 @@ public class Swerve extends SubsystemBase {
     brakeModeEnabled = enabled;
   }
 
-  public void followChoreoTrajectory(SwerveSample sample) {
-    Pose2d pose =
-        RobotState.getInstance()
-            .getEstimatedPose(); // Ensure odometry is up to date by getting pose
-
-    // Generate the desired speeds to follow that trajectory
-    ChassisSpeeds speeds =
-        new ChassisSpeeds(
-            sample.vx + xPosController.calculate(pose.getX(), sample.x),
-            sample.vy + yPosController.calculate(pose.getY(), sample.y),
-            sample.omega
-                + headingController.calculate(pose.getRotation().getRadians(), sample.heading));
-
-    // Apply those calculated speeds.
-    runVelocity(speeds);
-  }
-
   @AutoLogOutput(key = "Swerve/SwerveStates/Measured")
   private SwerveModuleState[] getModuleStates() {
     SwerveModuleState[] states = new SwerveModuleState[4];
@@ -435,6 +434,15 @@ public class Swerve extends SubsystemBase {
 
   public static double getMaxAngularVelocityRadPerSec() {
     return TunerConstants.kSpeedAt12Volts.in(MetersPerSecond) / DRIVE_BASE_RADIUS;
+  }
+
+  /** Returns the average velocity of the modules in rotations/sec (Phoenix native units). */
+  public double getFFCharacterizationVelocity() {
+    double output = 0.0;
+    for (int i = 0; i < 4; i++) {
+      output += swerveModules[i].getFFCharacterizationVelocity() / 4.0;
+    }
+    return output;
   }
 
   public static Translation2d[] getModuleTranslations() {

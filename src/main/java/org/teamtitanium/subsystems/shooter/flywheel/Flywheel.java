@@ -158,8 +158,11 @@ public class Flywheel extends SubsystemBase {
   }
 
   /** Stops the flywheel motors. */
-  public void stop() {
-    targetVelocityRps = 0.0;
-    io.setVoltage(0.0);
+  public Command stop() {
+    return runOnce(
+        () -> {
+          targetVelocityRps = 0.0;
+          io.setVoltage(0.0);
+        });
   }
 }

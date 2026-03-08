@@ -137,6 +137,7 @@ public class ShotCalculator {
                     -1.0,
                     1.0)));
     Rotation2d turretAngle = robotToTarget.minus(robotPose.getRotation()).minus(targetAngle);
+
     return turretAngle;
   }
 
