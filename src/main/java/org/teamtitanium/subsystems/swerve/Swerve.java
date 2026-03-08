@@ -11,8 +11,6 @@ import com.ctre.phoenix6.CANBus;
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
-import edu.wpi.first.math.VecBuilder;
-import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -23,7 +21,6 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
@@ -35,7 +32,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -313,8 +309,8 @@ public class Swerve extends SubsystemBase {
     SwerveDriveKinematics.desaturateWheelSpeeds(
         setpointStates, TunerConstants.kSpeedAt12Volts.in(MetersPerSecond));
 
+    Logger.recordOutput("Swerve/ChassisSpeeds/Setpoints", speeds);
     Logger.recordOutput("Swerve/SwerveStates/Setpoints", setpointStates);
-    Logger.recordOutput("Swerve/SwerveChassisSpeeds/Setpoints", discreteSpeeds);
 
     for (int i = 0; i < 4; i++) {
       swerveModules[i].runSetpoint(setpointStates[i]);
@@ -323,35 +319,37 @@ public class Swerve extends SubsystemBase {
     Logger.recordOutput("Swerve/SwerveStates/SetpointsOptimized", setpointStates);
   }
 
-  public void runVelocity(ChassisSpeeds speeds, List<Vector<N2>> moduleForces) {
-    velocityMode = true;
-    ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(speeds, Constants.loopPeriodSecs);
-    SwerveModuleState[] setpointStatesUnoptimized = kinematics.toSwerveModuleStates(discreteSpeeds);
-    currentSetpoint =
-        swerveSetpointGenerator.generateSetpoint(
-            moduleLimitsFree, currentSetpoint, discreteSpeeds, Constants.loopPeriodSecs);
-    SwerveModuleState[] setpointStates = currentSetpoint.moduleStates();
+  // public void runVelocity(ChassisSpeeds speeds, List<Vector<N2>> moduleForces) {
+  //   velocityMode = true;
+  //   ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(speeds, Constants.loopPeriodSecs);
+  //   SwerveModuleState[] setpointStatesUnoptimized =
+  // kinematics.toSwerveModuleStates(discreteSpeeds);
+  //   currentSetpoint =
+  //       swerveSetpointGenerator.generateSetpoint(
+  //           moduleLimitsFree, currentSetpoint, discreteSpeeds, Constants.loopPeriodSecs);
+  //   SwerveModuleState[] setpointStates = currentSetpoint.moduleStates();
 
-    Logger.recordOutput("Swerve/SwerveStates/SetpointsUnoptimized", setpointStatesUnoptimized);
-    Logger.recordOutput("Swerve/SwerveStates/Setpoints", setpointStates);
-    Logger.recordOutput("Swerve/SwerveChassisSpeeds/Setpoints", currentSetpoint.chassisSpeeds());
+  //   Logger.recordOutput("Swerve/SwerveStates/SetpointsUnoptimized", setpointStatesUnoptimized);
+  //   Logger.recordOutput("Swerve/SwerveStates/Setpoints", setpointStates);
+  //   Logger.recordOutput("Swerve/ChassisSpeeds/Setpoints", currentSetpoint.chassisSpeeds());
 
-    SwerveModuleState[] wheelForces = new SwerveModuleState[4];
-    SwerveModuleState[] moduleStates = getModuleStates();
-    for (int i = 0; i < 4; i++) {
-      Rotation2d wheelAngle = moduleStates[i].angle;
-      setpointStates[i].optimize(wheelAngle);
-      setpointStates[i].cosineScale(wheelAngle);
+  //   SwerveModuleState[] wheelForces = new SwerveModuleState[4];
+  //   SwerveModuleState[] moduleStates = getModuleStates();
+  //   for (int i = 0; i < 4; i++) {
+  //     Rotation2d wheelAngle = moduleStates[i].angle;
+  //     setpointStates[i].optimize(wheelAngle);
+  //     setpointStates[i].cosineScale(wheelAngle);
 
-      var wheelForce = moduleForces.get(i);
-      Vector<N2> wheelDirection = VecBuilder.fill(wheelAngle.getCos(), wheelAngle.getSin());
-      double wheelTorqueNm = wheelForce.dot(wheelDirection) * TunerConstants.FrontLeft.WheelRadius;
-      swerveModules[i].runSetpoint(setpointStates[i], wheelTorqueNm);
+  //     var wheelForce = moduleForces.get(i);
+  //     Vector<N2> wheelDirection = VecBuilder.fill(wheelAngle.getCos(), wheelAngle.getSin());
+  //     double wheelTorqueNm = wheelForce.dot(wheelDirection) *
+  // TunerConstants.FrontLeft.WheelRadius;
+  //     swerveModules[i].runSetpoint(setpointStates[i], wheelTorqueNm);
 
-      wheelForces[i] = new SwerveModuleState(wheelTorqueNm, setpointStates[i].angle);
-    }
-    Logger.recordOutput("Swerve/SwerveStates/ModuleForces", wheelForces);
-  }
+  //     wheelForces[i] = new SwerveModuleState(wheelTorqueNm, setpointStates[i].angle);
+  //   }
+  //   Logger.recordOutput("Swerve/SwerveStates/ModuleForces", wheelForces);
+  // }
 
   public void runCharacterization(double output) {
     velocityMode = false;

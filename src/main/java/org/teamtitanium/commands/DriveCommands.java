@@ -1,7 +1,5 @@
 package org.teamtitanium.commands;
 
-import static edu.wpi.first.units.Units.Radians;
-
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -24,6 +22,7 @@ import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
 import org.teamtitanium.RobotState;
 import org.teamtitanium.subsystems.swerve.Swerve;
+import org.teamtitanium.utils.AllianceFlipUtil;
 import org.teamtitanium.utils.FieldConstants;
 
 public class DriveCommands {
@@ -33,7 +32,7 @@ public class DriveCommands {
   private static final double WHEEL_RADIUS_MAX_VELOCITY = 0.25;
   private static final double WHEEL_RADIUS_RAMP_RATE = 0.05;
 
-  private static final PIDController TRENCH_CONTROLLER = new PIDController(8.0, 0.0, 0.05);
+  private static final PIDController TRENCH_CONTROLLER = new PIDController(5.0, 0.0, 0.0);
   private static final PIDController ROTATIONAL_CONTROLLER = new PIDController(5.0, 0.0, 0.0);
 
   static {
@@ -122,16 +121,20 @@ public class DriveCommands {
                       trenchOutput,
                       omega);
 
-              boolean isFlipped =
-                  DriverStation.getAlliance().isPresent()
-                      && DriverStation.getAlliance().get() == Alliance.Red;
+              boolean isFlipped = AllianceFlipUtil.shouldFlip();
+              speeds.vxMetersPerSecond *= isFlipped ? -1.0 : 1.0;
+
+              Pose2d targetPose =
+                  new Pose2d(
+                      RobotState.getInstance().getEstimatedPose().getX(),
+                      TRENCH_CONTROLLER.getSetpoint(),
+                      new Rotation2d(getTrenchAngleRad()));
+              Logger.recordOutput("AutoAlign/Trench/TargetPose", targetPose);
+              Logger.recordOutput("AutoAlign/Trench/TargetSpeeds", speeds);
 
               swerve.runVelocity(
                   ChassisSpeeds.fromFieldRelativeSpeeds(
-                      speeds,
-                      isFlipped
-                          ? RobotState.getInstance().getRotation().plus(Rotation2d.kPi)
-                          : RobotState.getInstance().getRotation()));
+                      speeds, RobotState.getInstance().getRotation()));
             },
             swerve)
         .beforeStarting(
@@ -153,8 +156,6 @@ public class DriveCommands {
 
     int nearestQuarter = (int) Math.round(angle / (Math.PI / 2.0)) % 4;
     double nearestAngle = nearestQuarter * (Math.PI / 2.0);
-
-    Logger.recordOutput("Swerve/Trench/NearestAngle", Radians.of(nearestAngle));
 
     if (nearestAngle < -Math.PI) {
       nearestAngle += 2 * Math.PI;
