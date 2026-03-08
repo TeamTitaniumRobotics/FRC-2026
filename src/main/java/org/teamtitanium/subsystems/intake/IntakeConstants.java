@@ -69,14 +69,14 @@ public class IntakeConstants {
 
     // Extension limits
     public static final Distance MIN_EXTENSION = Inches.of(0.0);
-    public static final Distance STOW_EXTENSION = Inches.of(0.0);
+    public static final Distance STOW_EXTENSION = Inches.of(0.0); // Add 4 inches normal stow
     public static final Distance AGITATE_EXTENSION = Inches.of(6.0);
-    public static final Distance DEPLOY_EXTENSION = Inches.of(12.0);
+    public static final Distance DEPLOY_EXTENSION = Inches.of(11.5);
     public static final Distance MAX_EXTENSION = Inches.of(12.0);
     public static final Distance EXTENSION_TOLERANCE = Inches.of(2.0);
 
     // Gains
-    public static final Gains RACK_GAINS = new Gains(0.25, 0.0, 0.0, 0.275, 0.45, 0.0, 0.0);
+    public static final Gains RACK_GAINS = new Gains(16.0, 0.0, 0.0, 0.275, 0.475, 0.0, 0.02);
 
     // Motion constraints (converted to motor rotations per second)
     private static final double MAX_LINEAR_VELOCITY_MPS = 1.2;

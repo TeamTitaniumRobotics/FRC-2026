@@ -105,7 +105,11 @@ public class DriveCommands {
         swerve);
   }
 
-  public static Command trenchDrive(Swerve swerve, DoubleSupplier xSupplier) {
+  public static Command trenchDrive(
+      Swerve swerve,
+      DoubleSupplier xSupplier,
+      DoubleSupplier ySupplier,
+      DoubleSupplier omegaSupplier) {
     return Commands.run(
             () -> {
               double trenchOutput =

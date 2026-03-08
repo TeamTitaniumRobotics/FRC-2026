@@ -42,8 +42,10 @@ public class IntakeRack extends SubsystemBase {
   private final LoggedTunableNumber rackMaxAcceleration =
       new LoggedTunableNumber("Intake/Rack/MaxAcceleration", RACK_CONSTRAINTS.maxAcceleration());
 
-  public final LoggedTunableNumber configRackNumber =
-      new LoggedTunableNumber("Intake/Rack/ConfigNumber", 0.0);
+  public static final LoggedTunableNumber configRackNumber1 =
+      new LoggedTunableNumber("Intake/Rack/ConfigNumber1", 0.0);
+  public static final LoggedTunableNumber configRackNumber2 =
+      new LoggedTunableNumber("Intake/Rack/ConfigNumber2", 0.0);
 
   private final IntakeRackIO io;
   private final IntakeRackIOInputsAutoLogged inputs = new IntakeRackIOInputsAutoLogged();

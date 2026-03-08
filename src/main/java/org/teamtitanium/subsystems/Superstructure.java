@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import lombok.Getter;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
+import org.teamtitanium.RobotState;
 import org.teamtitanium.subsystems.feeder.Feeder;
 import org.teamtitanium.subsystems.feeder.Feeder.FeederState;
 import org.teamtitanium.subsystems.intake.Intake;
@@ -103,7 +104,6 @@ public class Superstructure extends VirtualSubsystem {
       Feeder feeder,
       Spindexer spindexer,
       Intake intake,
-      Trigger trenchStowOverride,
       CommandXboxController driver) {
     this.shooter = shooter;
     this.feeder = feeder;
@@ -120,7 +120,7 @@ public class Superstructure extends VirtualSubsystem {
 
     // Modifier triggers — backed by simple booleans toggled via commands
     intakeDeployed = new Trigger(() -> intakeDeployedValue);
-    this.trenchStowOverride = trenchStowOverride;
+    this.trenchStowOverride = RobotState.getInstance().underTrench;
 
     // Pass the hood-stow override trigger into Shooter so it can respect it
     shooter.setHoodStowOverride(this.trenchStowOverride);

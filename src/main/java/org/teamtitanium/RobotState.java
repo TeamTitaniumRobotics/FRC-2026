@@ -176,21 +176,7 @@ public class RobotState {
     // vision measurement and then applying the transform from the sampled pose to the odometry pose
     // to account for the difference between the sampled pose and the current odometry pose.
     estimatedPose = estimateAtTime.plus(scaledTransform).plus(sampledToOdometryTransform);
-
-    // poseEstimator.addVisionMeasurement(
-    //     observation.visionPose.toPose2d(), observation.timestamp, observation.visionStdDevs);
-    // estimatedPose = poseEstimator.getEstimatedPosition();
   }
-
-  // @AutoLogOutput(key = "RobotState/EstimatedPose")
-  // public Pose2d getEstimatedPose() {
-  //   return poseEstimator.getEstimatedPosition();
-  // }
-
-  // public void setEstimatedPose(Pose2d pose) {
-  //   estimatedPose = pose;
-  //   poseEstimator.resetPosition(pose.getRotation(), lastWheelPositions, pose);
-  // }
 
   public Trigger inAllianceZone =
       new Trigger(
@@ -205,8 +191,13 @@ public class RobotState {
   // TODO: Add a check for if robot is driving towards trench at speed and if so, stow hood and
   // align drivetrain with the trench. Also add an override on driver's controller to override the
   // function. Also add drivetrain auto rotate for bump with same override
+  @AutoLogOutput(key = "RobotState/UnderTrench")
   public Trigger underTrench =
-      new Trigger(() -> false); // TODO: Replace with actual logic to determine if under trench
+      new Trigger(
+          () ->
+              FieldConstants.Zones.leftTrenchZone.contains(getEstimatedPose().getTranslation())
+                  || FieldConstants.Zones.rightTrenchZone.contains(
+                      getEstimatedPose().getTranslation()));
 
   public Rotation2d getRotation() {
     return estimatedPose.getRotation();

@@ -1,6 +1,7 @@
 package org.teamtitanium.subsystems.intake;
 
-import static org.teamtitanium.subsystems.intake.IntakeConstants.RackConstants.AGITATE_CONSTRAINTS;
+import static edu.wpi.first.units.Units.Inches;
+import static org.teamtitanium.subsystems.intake.IntakeConstants.RackConstants.*;
 
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
@@ -20,9 +21,11 @@ public class Intake {
   /** Independent states for the intake subsystem group. */
   @RequiredArgsConstructor
   public enum IntakeState {
-    STOW(() -> RackConstants.STOW_EXTENSION, () -> RollerConstants.IDLE_VELOCITY),
-    INTAKE(() -> RackConstants.DEPLOY_EXTENSION, () -> RollerConstants.INTAKE_VELOCITY),
-    AGITATE(() -> RackConstants.STOW_EXTENSION, () -> RollerConstants.INTAKE_VELOCITY),
+    STOW(() -> Inches.of(IntakeRack.configRackNumber2.get()), () -> RollerConstants.IDLE_VELOCITY),
+    INTAKE(
+        () -> Inches.of(IntakeRack.configRackNumber1.get()), () -> RollerConstants.INTAKE_VELOCITY),
+    AGITATE(
+        () -> Inches.of(IntakeRack.configRackNumber2.get()), () -> RollerConstants.INTAKE_VELOCITY),
     EJECT(() -> RackConstants.DEPLOY_EXTENSION, () -> RollerConstants.EJECT_VELOCITY);
 
     @Getter private final Supplier<Distance> rackDistance;

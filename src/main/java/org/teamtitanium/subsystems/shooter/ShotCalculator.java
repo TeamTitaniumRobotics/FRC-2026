@@ -43,21 +43,26 @@ public class ShotCalculator {
       new InterpolatingTreeMap<>(InverseInterpolator.forDouble(), ShotData::interpolate);
 
   static {
-    shotMap.put(1.35, new ShotData(2450, 3));
-    shotMap.put(1.50, new ShotData(2580, 4));
+    shotMap.put(1.35, new ShotData(2350, 3));
+    shotMap.put(1.50, new ShotData(2400, 4));
     shotMap.put(2.00, new ShotData(2600, 6));
-    shotMap.put(2.55, new ShotData(2800, 8));
-    shotMap.put(2.75, new ShotData(2850, 9));
-    shotMap.put(3.05, new ShotData(2900, 10));
-    shotMap.put(3.5, new ShotData(3100, 12));
-    shotMap.put(4.05, new ShotData(3250, 14));
-    shotMap.put(4.5, new ShotData(3450, 16));
-    shotMap.put(5.0, new ShotData(3550, 18));
+    shotMap.put(2.50, new ShotData(2875, 8));
+    shotMap.put(2.75, new ShotData(2900, 9));
+    shotMap.put(3.05, new ShotData(3000, 10));
+    shotMap.put(3.25, new ShotData(3100, 11));
+    shotMap.put(3.50, new ShotData(3100, 12));
+    shotMap.put(3.75, new ShotData(3225, 13));
+    shotMap.put(4.05, new ShotData(3350, 13));
+    shotMap.put(4.35, new ShotData(3500, 13));
+    shotMap.put(4.5, new ShotData(3600, 14));
+    shotMap.put(5.0, new ShotData(3700, 16));
+
+    passingMap.put(4.5, new ShotData(4000, 16));
   }
 
   public ShotParameters getParameters() {
     boolean passing =
-        AllianceFlipUtil.applyX(RobotState.getInstance().getEstimatedPose().getX())
+        RobotState.getInstance().getEstimatedPose().getX()
             > AllianceFlipUtil.applyX(FieldConstants.LinesVertical.hubCenter);
 
     if (latestParameters != null) {
@@ -75,6 +80,16 @@ public class ShotCalculator {
 
     Translation2d target =
         AllianceFlipUtil.apply(FieldConstants.Hub.topCenterPoint.toTranslation2d());
+    // if (passing) {
+    //   target =
+    //       RobotState.getInstance().getEstimatedPose().getY() >
+    // FieldConstants.LinesHorizontal.center
+    //           ? FieldConstants.PassingTargets.depotTarget
+    //           : FieldConstants.PassingTargets.outpostTarget;
+    // }
+
+    Logger.recordOutput("ShotCalculator/TargetPose", new Pose2d(target, Rotation2d.kZero));
+
     Pose2d turretPosition = estimatedPose.transformBy(TURRET_TO_ROBOT.toTransform2d());
     double targetToTurretDistance = target.getDistance(turretPosition.getTranslation());
 
@@ -85,7 +100,10 @@ public class ShotCalculator {
             TURRET_TO_ROBOT.getTranslation().toTranslation2d(),
             RobotState.getInstance().getRotation());
 
-    double tof = shotMap.get(targetToTurretDistance).tof(); // TODO: Add passing tof when we have it
+    double tof =
+        // passing
+        // ? passingMap.get(targetToTurretDistance).tof()
+        shotMap.get(targetToTurretDistance).tof();
     Pose2d predictedTurretPose = turretPosition;
     double predictedDistance = targetToTurretDistance;
 
@@ -115,7 +133,7 @@ public class ShotCalculator {
             hoodAngleRots,
             flywheelRPM,
             flywheelIdleRPM,
-            targetToTurretDistance,
+            predictedDistance,
             targetToTurretDistance,
             tof,
             passing);
