@@ -163,7 +163,7 @@ public class Superstructure extends VirtualSubsystem {
     bindTransition(
         SuperstructureState.SCORE,
         SuperstructureState.SPIN_UP_SCORE,
-        scoreReq.or(shooter.atSetpoint().debounce(0.25)));
+        scoreReq.and(shooter.atSetpoint().negate().debounce(0.25)));
     bindTransition(SuperstructureState.SPIN_UP_SCORE, SuperstructureState.IDLE, scoreReq.negate());
     bindTransition(SuperstructureState.SCORE, SuperstructureState.IDLE, scoreReq.negate());
 
