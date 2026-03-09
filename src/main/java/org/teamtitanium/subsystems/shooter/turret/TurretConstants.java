@@ -40,19 +40,19 @@ public class TurretConstants {
       CANCODER_COMMON_RATIO
           * (CANCODER_DRIVE_GEAR_TEETH / (double) CANCODER_2_GEAR_TEETH); // 21.25:1 reduction
   // Mechanical Limits
-  public static final Angle MIN_ANGLE = Degrees.of(-315.0); // -315 degrees
-  public static final Angle MAX_ANGLE = Degrees.of(45.0); // 45 degrees
-  public static final Angle TURRET_RANGE = MAX_ANGLE.minus(MIN_ANGLE); // 360 degrees
+  public static final Angle MIN_ANGLE = Degrees.of(-360.0);
+  public static final Angle MAX_ANGLE = Degrees.of(45.0);
+  public static final Angle TURRET_RANGE = MAX_ANGLE.minus(MIN_ANGLE); // 445 degrees
 
   // Tolerance
   public static final double ANGLE_TOLERANCE_ROTS = Units.degreesToRotations(3.5);
 
   // Motion Magic Constraints
   public static final Constraints TURRET_CONSTRAINTS =
-      new Constraints(1.0, 8.0); // Max velocity (rps), accel (rps^2)
+      new Constraints(0.75, 4.0); // Max velocity (rps), accel (rps^2)
 
   // PID Gains
-  public static final Gains TURRET_GAINS = new Gains(100.0, 0.0, 0.0, 0.35, 3.5, 0.0, 0.0);
+  public static final Gains TURRET_GAINS = new Gains(75.0, 0.0, 0.0, 0.35, 3.5, 0.0, 0.0);
 
   // Current Limits
   public static final double STATOR_CURRENT_LIMIT = 60.0;

@@ -247,6 +247,7 @@ public class Robot extends LoggedRobot {
         intakeRoller =
             new IntakeRoller(new GenericRollerIOTalonFX(IntakeConstants.RollerConstants.CONSTANTS));
         climber = new Climber(new ClimberIOTalonFX());
+
         vision =
             new Vision(
                 new VisionIOPhoton(
@@ -325,9 +326,7 @@ public class Robot extends LoggedRobot {
 
     intake = new Intake(intakeRack, intakeRoller);
     shooter = new Shooter(flywheel, hood, turret);
-    superstructure =
-        new Superstructure(
-            shooter, feeder, spindexer, intake, RobotState.getInstance().underTrench, driver);
+    superstructure = new Superstructure(shooter, feeder, spindexer, intake, driver);
 
     configureButtonBindings();
   }
@@ -425,8 +424,8 @@ public class Robot extends LoggedRobot {
     swerve.setDefaultCommand(
         DriveCommands.joystickDrive(
             swerve,
-            () -> -driver.getLeftY() * 0.75,
-            () -> -driver.getLeftX() * 0.75,
+            () -> -driver.getLeftY() * 0.65,
+            () -> -driver.getLeftX() * 0.65,
             () -> -driver.getRightX() * 0.75,
             () -> false));
 
@@ -438,8 +437,8 @@ public class Robot extends LoggedRobot {
 
     // driver.leftBumper().whileTrue(turret.setVoltage(() -> turret.turretConfigNumber2.get()));
     // driver.rightBumper().whileTrue(turret.setVoltage(() -> -turret.turretConfigNumber2.get()));
-    driver.y().whileTrue(intakeRack.setVoltage(() -> intakeRack.configRackNumber.get()));
-    driver.a().whileTrue(intakeRack.setVoltage(() -> -intakeRack.configRackNumber.get()));
+    driver.y().whileTrue(intakeRack.setVoltage(() -> IntakeRack.configRackNumber1.get()));
+    driver.a().whileTrue(intakeRack.setVoltage(() -> -IntakeRack.configRackNumber1.get()));
 
     driver.x().whileTrue(spindexer.setVoltage(() -> -spindexer.configurableNumber.get()));
     driver.b().whileTrue(spindexer.setVoltage(() -> spindexer.configurableNumber.get()));
@@ -447,7 +446,14 @@ public class Robot extends LoggedRobot {
     driver.povUp().whileTrue(climber.setVoltage(() -> climber.configClimberNumber1.get()));
     driver.povDown().whileTrue(climber.setVoltage(() -> -climber.configClimberNumber1.get()));
 
-    // driver.rightBumper().whileTrue(DriveCommands.trenchDrive(swerve, () -> -driver.getLeftY()));
+    // driver
+    //     .rightBumper()
+    //     .whileTrue(
+    //         DriveCommands.trenchDrive(
+    //             swerve,
+    //             () -> -driver.getLeftY(),
+    //             () -> -driver.getLeftX(),
+    //             () -> -driver.getRightX()));
 
     // driver.leftBumper().onTrue(Commands.runOnce(() -> intake.setState(IntakeState.INTAKE)));
     // driver.rightBumper().onTrue(Commands.runOnce(() -> intake.setState(IntakeState.STOW)));
