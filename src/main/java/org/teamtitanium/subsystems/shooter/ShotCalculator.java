@@ -16,8 +16,8 @@ import org.littletonrobotics.junction.Logger;
 import org.teamtitanium.RobotState;
 import org.teamtitanium.utils.AllianceFlipUtil;
 import org.teamtitanium.utils.FieldConstants;
-import org.teamtitanium.utils.GeomUtil;
 import org.teamtitanium.utils.LoggedTunableNumber;
+import org.teamtitanium.utils.math.GeomUtil;
 
 @ExtensionMethod({GeomUtil.class})
 public class ShotCalculator {

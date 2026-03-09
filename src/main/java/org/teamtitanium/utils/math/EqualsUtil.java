@@ -5,7 +5,7 @@
 // license that can be found in the LICENSE file at
 // the root directory of this project.
 
-package org.teamtitanium.utils;
+package org.teamtitanium.utils.math;
 
 import edu.wpi.first.math.geometry.Twist2d;
 
