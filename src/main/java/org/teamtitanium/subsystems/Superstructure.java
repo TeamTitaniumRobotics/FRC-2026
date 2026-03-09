@@ -118,8 +118,8 @@ public class Superstructure extends VirtualSubsystem {
 
     hasFuel = spindexer.hasFuel.or(feeder.hasFuel);
 
-    // Modifier triggers — backed by simple booleans toggled via commands
-    intakeDeployed = new Trigger(() -> intakeDeployedValue);
+    // Modifier triggers - backed by simple booleans toggled via commands
+    intakeDeployed = new Trigger(() -> intakeDeployedValue).or(intakeReq);
     this.trenchStowOverride = RobotState.getInstance().underTrench;
 
     // Pass the hood-stow override trigger into Shooter so it can respect it
@@ -163,7 +163,7 @@ public class Superstructure extends VirtualSubsystem {
     bindTransition(
         SuperstructureState.SCORE,
         SuperstructureState.SPIN_UP_SCORE,
-        scoreReq.and(shooter.atSetpoint().negate().debounce(0.25)));
+        scoreReq.or(shooter.atSetpoint().debounce(0.25)));
     bindTransition(SuperstructureState.SPIN_UP_SCORE, SuperstructureState.IDLE, scoreReq.negate());
     bindTransition(SuperstructureState.SCORE, SuperstructureState.IDLE, scoreReq.negate());
 

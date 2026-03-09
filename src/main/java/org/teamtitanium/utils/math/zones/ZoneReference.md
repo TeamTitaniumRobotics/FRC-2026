@@ -1,6 +1,6 @@
 
 
-I'll research your codebase to understand the current zone implementation and then explain how the post's concepts apply. 
+I'll research your codebase to understand the current zone implementation and then explain how the post's concepts apply.
 
 Searched codebase for "zone trigger contains robot position field zone checking", 10 results
 
@@ -10,13 +10,13 @@ Read [](file:///e%3A/Robotics/Code/2026/FRC-2026/src/main/java/org/teamtitanium/
 
 Read [](file:///e%3A/Robotics/Code/2026/FRC-2026/src/main/java/org/teamtitanium/subsystems/Superstructure.java#180-180), lines 180 to 295
 
-Now let me look at how the `Shooter` uses the trench stow override: 
+Now let me look at how the `Shooter` uses the trench stow override:
 
 Searched text for `hoodStowOverride|trenchStow|setHoodStowOverride`, 7 results
 
 Read [](file:///e%3A/Robotics/Code/2026/FRC-2026/src/main/java/org/teamtitanium/subsystems/shooter/Shooter.java#40-40), lines 40 to 95
 
-Now I have a thorough understanding of your current implementation. Let me also check the `AllianceFlipUtil` to understand how you handle alliance flipping for zones: 
+Now I have a thorough understanding of your current implementation. Let me also check the `AllianceFlipUtil` to understand how you handle alliance flipping for zones:
 
 Searched text for `apply.*Rectangle2d|Rectangle2d.*apply` (`**/AllianceFlipUtil.java`), 1 result
 

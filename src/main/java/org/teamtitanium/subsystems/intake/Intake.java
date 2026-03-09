@@ -6,6 +6,7 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import java.util.Map;
 import java.util.function.Supplier;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ public class Intake {
   /** Independent states for the intake subsystem group. */
   @RequiredArgsConstructor
   public enum IntakeState {
+    CLIMB_STOW(() -> RackConstants.CLIMB_STOW_EXTENSION, () -> RollerConstants.IDLE_VELOCITY),
     STOW(() -> RackConstants.STOW_EXTENSION, () -> RollerConstants.IDLE_VELOCITY),
     INTAKE(() -> RackConstants.DEPLOY_EXTENSION, () -> RollerConstants.INTAKE_VELOCITY),
     AGITATE(() -> RackConstants.STOW_EXTENSION, () -> RollerConstants.INTAKE_VELOCITY),
@@ -42,14 +44,33 @@ public class Intake {
     this.roller = roller;
 
     rack.setDefaultCommand(
-        Commands.either(
-            rack.setExtension(() -> state.getRackDistance().get(), AGITATE_CONSTRAINTS),
-            rack.setExtension(() -> state.getRackDistance().get()),
-            () -> state == IntakeState.AGITATE));
+        Commands.select(
+            Map.ofEntries(
+                Map.entry(
+                    IntakeState.CLIMB_STOW, rack.setExtension(() -> state.getRackDistance().get())),
+                Map.entry(IntakeState.STOW, rack.stow()),
+                Map.entry(
+                    IntakeState.INTAKE, rack.setExtension(() -> state.getRackDistance().get())),
+                Map.entry(IntakeState.AGITATE, rack.stow()),
+                // rack.setExtension(() -> state.getRackDistance().get(), AGITATE_CONSTRAINTS)),
+                Map.entry(
+                    IntakeState.EJECT, rack.setExtension(() -> state.getRackDistance().get()))),
+            () -> state));
+
+    // rack.setDefaultCommand(
+    //     Commands.either(
+    //         rack.setExtension(() -> state.getRackDistance().get(), AGITATE_CONSTRAINTS),
+    //         rack.setExtension(() -> state.getRackDistance().get()),
+    //         () -> state == IntakeState.AGITATE));
     // rack.setDefaultCommand(rack.setExtension(() -> state.getRackDistance().get()));
-    roller.setDefaultCommand(roller.setVelocity(() -> state.getIntakeVelocity().get()));
+    // roller.setDefaultCommand(roller.setVelocity(() -> state.getIntakeVelocity().get()));
     // roller.setDefaultCommand(
     //     roller.setVelocity(() -> RotationsPerSecond.of(roller.configurableNumber.get())));
+    roller.setDefaultCommand(
+        Commands.either(
+            roller.setVelocity(() -> RollerConstants.INTAKE_VELOCITY),
+            roller.setVelocity(() -> state.getIntakeVelocity().get()),
+            () -> state == IntakeState.STOW && rack.atSetpoint().negate().getAsBoolean()));
   }
 
   public Trigger atSetpoint() {

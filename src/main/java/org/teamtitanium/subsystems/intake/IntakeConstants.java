@@ -20,12 +20,12 @@ public class IntakeConstants {
 
     public static final boolean ROLLER_INVERTED = false;
 
-    public static final AngularVelocity IDLE_VELOCITY = RotationsPerSecond.of(12.0);
+    public static final AngularVelocity IDLE_VELOCITY = RotationsPerSecond.of(16.0);
     public static final AngularVelocity INTAKE_VELOCITY = RotationsPerSecond.of(36.0);
     public static final AngularVelocity EJECT_VELOCITY = RotationsPerSecond.of(-24.0);
 
-    public static final double STATOR_CURRENT_LIMIT = 60.0;
-    public static final double SUPPLY_CURRENT_LIMIT = 40.0;
+    public static final double STATOR_CURRENT_LIMIT = 40.0;
+    public static final double SUPPLY_CURRENT_LIMIT = 30.0;
 
     public static final double ROLLER_GEAR_RATIO = (18.0 / 12.0);
 
@@ -58,7 +58,7 @@ public class IntakeConstants {
     public static final boolean RACK_INVERTED = true;
 
     // Current limits
-    public static final double STATOR_CURRENT_LIMIT = 60.0;
+    public static final double STATOR_CURRENT_LIMIT = 70.0;
     public static final double SUPPLY_CURRENT_LIMIT = 40.0;
 
     // Gearbox + mechanism geometry
@@ -69,11 +69,14 @@ public class IntakeConstants {
 
     // Extension limits
     public static final Distance MIN_EXTENSION = Inches.of(0.0);
-    public static final Distance STOW_EXTENSION = Inches.of(4.0); // Add 4 inches normal stow
-    public static final Distance AGITATE_EXTENSION = Inches.of(6.0);
+    public static final Distance CLIMB_STOW_EXTENSION = Inches.of(0.0);
+    public static final Distance STOW_EXTENSION = Inches.of(4.0);
     public static final Distance DEPLOY_EXTENSION = Inches.of(11.5);
     public static final Distance MAX_EXTENSION = Inches.of(12.0);
     public static final Distance EXTENSION_TOLERANCE = Inches.of(2.0);
+
+    public static final double STOW_STALL_CURRENT_THRESHOLD = 60.0;
+    public static final double STOW_CURRENT_DEBOUNCE_TIME_SECS = 0.25;
 
     // Gains
     public static final Gains RACK_GAINS = new Gains(16.0, 0.0, 0.0, 0.275, 0.475, 0.0, 0.02);
