@@ -4,6 +4,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.util.function.Supplier;
+import org.littletonrobotics.junction.Logger;
 import org.teamtitanium.utils.AllianceFlipUtil;
 
 /**
@@ -71,5 +72,25 @@ public class CircleZone implements IZone {
   /** Returns the radius of this zone in meters. */
   public double getRadiusMeters() {
     return radiusMeters;
+  }
+
+  /**
+   * Visualizes this zone as a set of points along the circumference of the circle. The center is
+   * not included since it may be alliance-flipped.
+   *
+   * <p>The points are recorded under the key "{prefix}Points" as an array of {@link Translation2d}.
+   *
+   * @param prefix the prefix for the logged keys (e.g. "IntakeZone/") to log the points under
+   */
+  @Override
+  public void visualize(String prefix) {
+    Translation2d[] points = new Translation2d[16];
+    for (int i = 0; i < points.length; i++) {
+      double angle = 2 * Math.PI * i / points.length;
+      points[i] =
+          center.plus(
+              new Translation2d(radiusMeters * Math.cos(angle), radiusMeters * Math.sin(angle)));
+    }
+    Logger.recordOutput(prefix + "Points", points);
   }
 }

@@ -7,7 +7,9 @@ import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -21,6 +23,7 @@ import java.util.Optional;
 import lombok.Getter;
 import lombok.Setter;
 import org.littletonrobotics.junction.AutoLogOutput;
+import org.teamtitanium.subsystems.shooter.turret.TurretConstants;
 import org.teamtitanium.subsystems.swerve.Swerve;
 import org.teamtitanium.utils.FieldConstants;
 
@@ -188,7 +191,17 @@ public class RobotState {
   // function. Also add drivetrain auto rotate for bump with same override
   @AutoLogOutput(key = "RobotState/UnderTrench")
   public Trigger underTrench =
-      FieldConstants.Zones.TRENCH_ZONE.contains(() -> getEstimatedPose().getTranslation());
+      FieldConstants.Zones.TRENCH_ZONES.doesOrWillContain(
+          () -> getTurretPosition().getTranslation().toTranslation2d(),
+          this::getFieldVelocity,
+          0.5);
+
+  @AutoLogOutput(key = "RobotState/TurretPosition")
+  public Transform3d getTurretPosition() {
+    return new Transform3d(
+        new Pose3d(estimatedPose).plus(TurretConstants.TURRET_TO_ROBOT).getTranslation(),
+        new Rotation3d(getRotation()));
+  }
 
   public Rotation2d getRotation() {
     return estimatedPose.getRotation();

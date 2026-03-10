@@ -61,19 +61,16 @@ public class ShotCalculator {
   }
 
   public ShotParameters getParameters() {
-    boolean passing;
-    if (AllianceFlipUtil.shouldFlip()) {
-      passing =
-          RobotState.getInstance().getEstimatedPose().getX()
-              < AllianceFlipUtil.applyX(FieldConstants.LinesVertical.hubCenter);
-    } else {
-      passing =
-          RobotState.getInstance().getEstimatedPose().getX()
-              > FieldConstants.LinesVertical.hubCenter;
-    }
-    // boolean passing =
-    //     AllianceFlipUtil.applyX(RobotState.getInstance().getEstimatedPose().getX())
-    //         > AllianceFlipUtil.applyX(FieldConstants.LinesVertical.hubCenter);
+    boolean passing = RobotState.getInstance().inAllianceZone.negate().getAsBoolean();
+    // if (AllianceFlipUtil.shouldFlip()) {
+    //   passing =
+    //       RobotState.getInstance().getEstimatedPose().getX()
+    //           < AllianceFlipUtil.applyX(FieldConstants.LinesVertical.hubCenter);
+    // } else {
+    //   passing =
+    //       RobotState.getInstance().getEstimatedPose().getX()
+    //           > FieldConstants.LinesVertical.hubCenter;
+    // }
 
     if (latestParameters != null) {
       return latestParameters;

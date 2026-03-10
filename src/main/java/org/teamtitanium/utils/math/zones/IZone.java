@@ -11,7 +11,7 @@ public interface IZone {
    * Returns a {@link Trigger} that is true when the given point (e.g. robot center) is inside this
    * zone.
    */
-  Trigger contains(Supplier<Translation2d> translationSupplier);
+  public Trigger contains(Supplier<Translation2d> translationSupplier);
 
   /**
    * Returns a {@link Trigger} that is true if the given point will be inside this zone after {@code
@@ -20,16 +20,25 @@ public interface IZone {
    * <p>The point is projected forward by applying the linear velocity offset {@code (vx·dt, vy·dt)}
    * and then tested with {@link #containsPoint}.
    */
-  default Trigger willContain(
+  public default Trigger willContain(
       Supplier<Translation2d> translationSupplier, Supplier<ChassisSpeeds> fieldSpeeds, double dt) {
     return new Trigger(() -> willContainPoint(translationSupplier.get(), fieldSpeeds, dt));
+  }
+
+  /**
+   * Returns a {@link Trigger} that is true if the given point is currently inside this zone OR will
+   * be inside within {@code dt} seconds.
+   */
+  public default Trigger doesOrWillContain(
+      Supplier<Translation2d> translationSupplier, Supplier<ChassisSpeeds> fieldSpeeds, double dt) {
+    return contains(translationSupplier).or(willContain(translationSupplier, fieldSpeeds, dt));
   }
 
   /**
    * Returns a {@link Trigger} that is true when <em>any corner of the robot bumper</em> is inside
    * this zone. Uses {@link RobotFootprint} to derive the four bumper corners from the pose.
    */
-  default Trigger containsRobot(Supplier<Pose2d> poseSupplier, boolean fullyContains) {
+  public default Trigger containsRobot(Supplier<Pose2d> poseSupplier, boolean fullyContains) {
     return new Trigger(
         () -> {
           if (fullyContains) {
@@ -56,7 +65,7 @@ public interface IZone {
    * #containsRobot}: when {@code true}, ALL corners must be inside; when {@code false}, ANY corner
    * is sufficient.
    */
-  default Trigger willContainRobot(
+  public default Trigger willContainRobot(
       Supplier<Pose2d> poseSupplier,
       Supplier<ChassisSpeeds> fieldSpeeds,
       double dt,
@@ -84,9 +93,9 @@ public interface IZone {
    * Low-level point-in-zone test used internally and by {@link #containsRobot}. Does NOT perform
    * alliance flipping — that is handled by each concrete implementation.
    */
-  boolean containsPoint(Translation2d point);
+  public boolean containsPoint(Translation2d point);
 
-  default boolean willContainPoint(
+  public default boolean willContainPoint(
       Translation2d point, Supplier<ChassisSpeeds> fieldSpeeds, double dt) {
     ChassisSpeeds speeds = fieldSpeeds.get();
     Translation2d projected =
@@ -97,12 +106,12 @@ public interface IZone {
   // ── Set operations ────────────────────────────────────────────────────────
 
   /** Returns a new zone representing the union (A OR B) of this zone and {@code other}. */
-  default IZone union(IZone other) {
+  public default IZone union(IZone other) {
     return new CompositeZone(this, other, CompositeZone.Operation.UNION);
   }
 
   /** Returns a new zone representing the intersection (A AND B) of this zone and {@code other}. */
-  default IZone intersection(IZone other) {
+  public default IZone intersection(IZone other) {
     return new CompositeZone(this, other, CompositeZone.Operation.INTERSECTION);
   }
 
@@ -110,12 +119,15 @@ public interface IZone {
    * Returns a new zone representing the set difference (A AND NOT B): points in this zone but NOT
    * in {@code other}.
    */
-  default IZone difference(IZone other) {
+  public default IZone difference(IZone other) {
     return new CompositeZone(this, other, CompositeZone.Operation.DIFFERENCE);
   }
 
   /** Returns a new zone representing the complement (NOT A): everywhere except this zone. */
-  default IZone complement() {
+  public default IZone complement() {
     return new CompositeZone(this, null, CompositeZone.Operation.COMPLEMENT);
   }
+
+  /** Visualizes this zone with the given name. */
+  public void visualize(String name);
 }

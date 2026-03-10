@@ -6,6 +6,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.util.function.Supplier;
+import org.littletonrobotics.junction.Logger;
 import org.teamtitanium.utils.AllianceFlipUtil;
 
 /**
@@ -69,6 +70,17 @@ public class RectangleZone implements IZone {
   }
 
   /**
+   * Checks if the given point is within this zone, applying alliance flipping if necessary or
+   * forced by mirroring.
+   */
+  public boolean containsPoint(Translation2d point, boolean mirrored) {
+    if (mirrored) {
+      return rectangle.contains(point) || AllianceFlipUtil.apply(rectangle, true).contains(point);
+    }
+    return AllianceFlipUtil.apply(rectangle).contains(point);
+  }
+
+  /**
    * {@inheritDoc}
    *
    * <p>The rectangle is alliance-flipped before testing so blue-alliance constants work on both
@@ -76,7 +88,7 @@ public class RectangleZone implements IZone {
    */
   @Override
   public boolean containsPoint(Translation2d point) {
-    return AllianceFlipUtil.apply(rectangle).contains(point);
+    return containsPoint(point, false);
   }
 
   @Override
@@ -91,5 +103,37 @@ public class RectangleZone implements IZone {
    */
   public Rectangle2d getRectangle() {
     return rectangle;
+  }
+
+  /**
+   * Visualizes this zone by recording the rectangle corners to the logger with the given name.
+   *
+   * @param name the name to use for logging
+   */
+  @Override
+  public void visualize(String name) {
+    Translation2d[] corners = new Translation2d[5];
+    corners[0] =
+        rectangle
+            .getCenter()
+            .getTranslation()
+            .plus(new Translation2d(rectangle.getXWidth() / 2, rectangle.getYWidth() / 2));
+    corners[1] =
+        rectangle
+            .getCenter()
+            .getTranslation()
+            .plus(new Translation2d(rectangle.getXWidth() / 2, -rectangle.getYWidth() / 2));
+    corners[2] =
+        rectangle
+            .getCenter()
+            .getTranslation()
+            .plus(new Translation2d(-rectangle.getXWidth() / 2, -rectangle.getYWidth() / 2));
+    corners[3] =
+        rectangle
+            .getCenter()
+            .getTranslation()
+            .plus(new Translation2d(-rectangle.getXWidth() / 2, rectangle.getYWidth() / 2));
+    corners[4] = corners[0]; // Close the loop
+    Logger.recordOutput(name, corners);
   }
 }

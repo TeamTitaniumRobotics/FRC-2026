@@ -53,4 +53,12 @@ public class CompositeZone implements IZone {
   public Trigger contains(Supplier<Translation2d> translationSupplier) {
     return new Trigger(() -> containsPoint(translationSupplier.get()));
   }
+
+  @Override
+  public void visualize(String prefix) {
+    left.visualize(prefix + "Left/");
+    if (right != null) {
+      right.visualize(prefix + "Right/");
+    }
+  }
 }

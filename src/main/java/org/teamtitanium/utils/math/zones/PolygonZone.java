@@ -4,6 +4,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.util.Arrays;
 import java.util.function.Supplier;
+import org.littletonrobotics.junction.Logger;
 import org.teamtitanium.utils.AllianceFlipUtil;
 
 /**
@@ -112,5 +113,11 @@ public class PolygonZone implements IZone {
   private static double isLeft(Translation2d a, Translation2d b, Translation2d p) {
     return (b.getX() - a.getX()) * (p.getY() - a.getY())
         - (p.getX() - a.getX()) * (b.getY() - a.getY());
+  }
+
+  /** Visualizes this zone by logging its vertices under the key "{prefix}Vertices". */
+  @Override
+  public void visualize(String prefix) {
+    Logger.recordOutput(prefix + "Vertices", vertices);
   }
 }
