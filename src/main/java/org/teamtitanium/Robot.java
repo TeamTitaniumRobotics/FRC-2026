@@ -80,6 +80,7 @@ import org.teamtitanium.subsystems.vision.VisionIOSim;
 import org.teamtitanium.utils.CanivoreReader;
 import org.teamtitanium.utils.Constants;
 import org.teamtitanium.utils.Constants.Mode;
+import org.teamtitanium.utils.HubTracker;
 import org.teamtitanium.utils.LoggedTracer;
 import org.teamtitanium.utils.NTClientLogger;
 import org.teamtitanium.utils.PhoenixUtil;
@@ -343,7 +344,7 @@ public class Robot extends LoggedRobot {
 
     // Run the CommandScheduler
     CommandScheduler.getInstance().run();
-    LoggedTracer.record("Commands");
+    LoggedTracer.record("Robot/Commands");
 
     if (autonomousCommand != null) {
       if (!autonomousCommand.isScheduled() && !autoMessagePrinted) {
@@ -412,12 +413,15 @@ public class Robot extends LoggedRobot {
     // Initialization Alert
     initializationAlert.set(isInitializing());
 
+    // Log hub state
+    Logger.recordOutput("HubTracker/Official", HubTracker.getOfficialShiftInfo());
+    Logger.recordOutput("HubTracker/Offset", HubTracker.getOffsetShiftInfo());
+
+    // Log shot parameters
     Logger.recordOutput("ShotCalculator/Parameters", shotCalculator.getParameters());
     shotCalculator.resetShotParameters();
 
-    LoggedTracer.record("RobotPeriodic");
-
-    MechanismVisualizer.getInstance().log("MechanismVisualizer");
+    LoggedTracer.record("Robot/Periodic");
   }
 
   private void configureButtonBindings() {
