@@ -435,9 +435,9 @@ public class Robot extends LoggedRobot {
 
     driver.start().onTrue(Commands.runOnce(() -> swerve.setGyroAngle(Rotations.of(0.0))));
     // driver.start().onTrue(Commands.runOnce(() -> turret.zeroMotor()));
-    driver.start().onTrue(Commands.runOnce(() -> intakeRack.zero()));
+    // driver.start().onTrue(Commands.runOnce(() -> intakeRack.zero()));
 
-    driver.back().onTrue(hood.zeroHood());
+    driver.back().onTrue(hood.zeroHood().alongWith(intakeRack.zeroIntake()));
 
     // driver.leftBumper().whileTrue(turret.setVoltage(() -> turret.turretConfigNumber2.get()));
     // driver.rightBumper().whileTrue(turret.setVoltage(() -> -turret.turretConfigNumber2.get()));

@@ -170,4 +170,9 @@ public class IntakeRackIOTalonFX implements IntakeRackIO {
   public void setMotorPosition(double positionRots) {
     rackMotor.setPosition(positionRots);
   }
+
+  @Override
+  public void stop() {
+    rackMotor.stopMotor();
+  }
 }
