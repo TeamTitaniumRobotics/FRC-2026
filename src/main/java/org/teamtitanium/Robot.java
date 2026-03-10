@@ -437,8 +437,8 @@ public class Robot extends LoggedRobot {
 
     // driver.leftBumper().whileTrue(turret.setVoltage(() -> turret.turretConfigNumber2.get()));
     // driver.rightBumper().whileTrue(turret.setVoltage(() -> -turret.turretConfigNumber2.get()));
-    driver.y().whileTrue(intakeRack.setVoltage(() -> IntakeRack.configRackNumber1.get()));
-    driver.a().whileTrue(intakeRack.setVoltage(() -> -IntakeRack.configRackNumber1.get()));
+    driver.y().whileTrue(intakeRack.setVoltage(() -> IntakeRack.configRackNumber2.get()));
+    driver.a().whileTrue(intakeRack.setVoltage(() -> -IntakeRack.configRackNumber2.get()));
 
     driver.x().whileTrue(spindexer.setVoltage(() -> -spindexer.configurableNumber.get()));
     driver.b().whileTrue(spindexer.setVoltage(() -> spindexer.configurableNumber.get()));

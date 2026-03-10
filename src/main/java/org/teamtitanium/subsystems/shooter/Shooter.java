@@ -13,6 +13,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.littletonrobotics.junction.AutoLogOutput;
+import org.teamtitanium.RobotState;
 import org.teamtitanium.subsystems.shooter.flywheel.Flywheel;
 import org.teamtitanium.subsystems.shooter.flywheel.FlywheelConstants;
 import org.teamtitanium.subsystems.shooter.hood.Hood;
@@ -55,7 +56,9 @@ public class Shooter {
    * Override trigger: when active, the hood will stow regardless of the current shooter state. Used
    * for auto-stow when going under the trench, etc.
    */
-  @Setter private Trigger hoodStowOverride = new Trigger(() -> false); // TODO: Set this up
+  @AutoLogOutput(key = "Shooter/HoodStowOverride")
+  @Setter
+  private Trigger hoodStowOverride = RobotState.getInstance().underTrench;
 
   /**
    * Creates a new Shooter subsystem with the given flywheel, hood, and turret.
@@ -75,9 +78,9 @@ public class Shooter {
     // hood.setDefaultCommand(hood.setPosition(() -> Degrees.of(hood.hoodConfigNumber1.get())));
     hood.setDefaultCommand(
         Commands.either(
-            hood.setPosition(HoodConstants.STOW_ANGLE),
+            hood.setPosition(() -> HoodConstants.STOW_ANGLE),
             hood.setPosition(() -> state.getHoodAngle().get()),
-            hoodStowOverride));
+            () -> hoodStowOverride.getAsBoolean()));
     // turret.setDefaultCommand(
     //     turret.setPosition(() -> Degrees.of(turret.turretConfigNumber1.get())));
     turret.setDefaultCommand(turret.setPosition(() -> state.getTurretAngle().get()));
