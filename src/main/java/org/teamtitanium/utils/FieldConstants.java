@@ -100,10 +100,6 @@ public class FieldConstants {
             new Translation2d(LinesVertical.hubCenter, fieldWidth / 2.0 - Hub.width / 2.0));
   }
 
-  static {
-    Zones.TRENCH_ZONES.visualize("FieldConstants/TrenchZone");
-  }
-
   /**
    * Officially defined and relevant vertical lines found on the field (defined by X-axis offset)
    */

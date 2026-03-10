@@ -80,7 +80,7 @@ public class Shooter {
         Commands.either(
             hood.setPosition(() -> HoodConstants.STOW_ANGLE),
             hood.setPosition(() -> state.getHoodAngle().get()),
-            hoodStowOverride));
+            () -> hoodStowOverride.getAsBoolean()));
     // turret.setDefaultCommand(
     //     turret.setPosition(() -> Degrees.of(turret.turretConfigNumber1.get())));
     turret.setDefaultCommand(turret.setPosition(() -> state.getTurretAngle().get()));

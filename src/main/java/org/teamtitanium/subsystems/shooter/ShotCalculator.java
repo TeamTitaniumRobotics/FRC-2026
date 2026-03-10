@@ -61,7 +61,7 @@ public class ShotCalculator {
   }
 
   public ShotParameters getParameters() {
-    boolean passing = RobotState.getInstance().inAllianceZone.negate().getAsBoolean();
+    boolean passing = !RobotState.getInstance().inAllianceZone.getAsBoolean();
     // if (AllianceFlipUtil.shouldFlip()) {
     //   passing =
     //       RobotState.getInstance().getEstimatedPose().getX()
