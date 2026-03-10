@@ -19,6 +19,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.teamtitanium.utils.math.zones.IZone;
+import org.teamtitanium.utils.math.zones.RectangleZone;
 
 /**
  * Contains information for location of field element and other useful reference points.
@@ -47,23 +49,24 @@ public class FieldConstants {
    */
   public static class Zones {
     // General Zones
-    public static final Rectangle2d neutralZone =
-        new Rectangle2d(
+    public static final RectangleZone NEUTRAL_ZONE =
+        new RectangleZone(
             new Translation2d(LinesVertical.neutralZoneNear, fieldWidth),
             new Translation2d(LinesVertical.neutralZoneFar, 0));
-    public static final Rectangle2d allianceZone =
-        new Rectangle2d(
+    public static final RectangleZone ALLIANCE_ZONE =
+        new RectangleZone(
             new Translation2d(LinesVertical.allianceZone, fieldWidth), new Translation2d(0, 0));
 
     // Trench Zones
-    public static final Rectangle2d leftTrenchZone =
-        new Rectangle2d(
+    private static final RectangleZone LEFT_TRENCH_ZONE =
+        new RectangleZone(
             new Translation2d(LinesVertical.neutralZoneNear, LinesHorizontal.leftTrenchOpenStart),
             new Translation2d(LinesVertical.starting, LinesHorizontal.leftTrenchOpenEnd));
-    public static final Rectangle2d rightTrenchZone =
-        new Rectangle2d(
+    private static final RectangleZone RIGHT_TRENCH_ZONE =
+        new RectangleZone(
             new Translation2d(LinesVertical.neutralZoneNear, LinesHorizontal.rightTrenchOpenStart),
             new Translation2d(LinesVertical.starting, LinesHorizontal.rightTrenchOpenEnd));
+    public static final IZone TRENCH_ZONE = LEFT_TRENCH_ZONE.union(RIGHT_TRENCH_ZONE);
 
     // Bump Zones
     public static final Rectangle2d leftBumpZone =
