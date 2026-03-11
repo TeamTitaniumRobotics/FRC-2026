@@ -17,10 +17,10 @@ import org.teamtitanium.utils.virtualsubsystem.VirtualSubsystem;
 
 public class Leds extends VirtualSubsystem {
   private static Leds instance = null;
-  private final Dimensionless BRIGHTNESS = Percent.of(50);
-  private final Frequency SCROLLSPEED = Percent.per(Seconds).of(100);
+  private static final Dimensionless BRIGHTNESS = Percent.of(50);
+  private static final Frequency SCROLLSPEED = Percent.per(Seconds).of(100);
   private final Map<SuperstructureState, LEDStates> mappedStates = new HashMap<>();
-  private final SuperstructureState currentState;
+  private SuperstructureState heldState;
   private final AddressableLED led =
       new AddressableLED(0); // TODO: Make sure this is the right PWM port
   private final int LENGTH = 10; // TODO: set to number of leds
@@ -34,14 +34,14 @@ public class Leds extends VirtualSubsystem {
   }
 
   private Leds() {
-    currentState = Superstructure.getState();
+    heldState = Superstructure.getState();
     if (SuperstructureState.values().length == LEDStates.values().length) {
       for (int i = 0; i < SuperstructureState.values().length; i++) {
         mappedStates.put(SuperstructureState.values()[i], LEDStates.values()[i]);
       }
     } else {
       System.out.println(
-          "The number of LEDStates is not the same as the number of SuperstructureStates.");
+          "The number of LEDStates doesn't match the number of SuperstructureStates. Please modify LEDStates so they match in length and the states match in name."); // There is probably a better way display/log this but idk
     }
     led.setLength(LENGTH);
     led.start();
@@ -51,50 +51,50 @@ public class Leds extends VirtualSubsystem {
     IDLE(null),
     INTAKE(
         LEDPattern.solid(Color.kOrange)
-            .scrollAtRelativeSpeed(instance.SCROLLSPEED)
-            .atBrightness(instance.BRIGHTNESS)),
-    SPIN_UP_SCORE(LEDPattern.solid(Color.kBlue).atBrightness(instance.BRIGHTNESS)),
+            .scrollAtRelativeSpeed(SCROLLSPEED)
+            .atBrightness(BRIGHTNESS)),
+    SPIN_UP_SCORE(LEDPattern.solid(Color.kBlue).atBrightness(BRIGHTNESS)),
     SCORE(
         LEDPattern.steps(Map.of(0.00, Color.kGreen, 0.50, Color.kYellow))
-            .scrollAtRelativeSpeed(instance.SCROLLSPEED)
-            .atBrightness(instance.BRIGHTNESS)),
-    SPIN_UP_PASS(LEDPattern.solid(Color.kBlue).atBrightness(instance.BRIGHTNESS)),
+            .scrollAtRelativeSpeed(SCROLLSPEED)
+            .atBrightness(BRIGHTNESS)),
+    SPIN_UP_PASS(LEDPattern.solid(Color.kBlue).atBrightness(BRIGHTNESS)),
     PASS(
         LEDPattern.steps(Map.of(0.00, Color.kBlack, 0.50, Color.kYellow))
-            .scrollAtRelativeSpeed(instance.SCROLLSPEED)
-            .atBrightness(instance.BRIGHTNESS)),
-    EJECT(LEDPattern.solid(Color.kRed).blink(Seconds.of(2)).atBrightness(instance.BRIGHTNESS)),
-    PREP_CLIMB(LEDPattern.solid(Color.kBlue).atBrightness(instance.BRIGHTNESS)),
-    CLIMB(LEDPattern.solid(Color.kGold).atBrightness(instance.BRIGHTNESS)),
-    CLIMB_L1(LEDPattern.solid(Color.kGold).atBrightness(instance.BRIGHTNESS)),
-    DE_CLIMB_L1(LEDPattern.solid(Color.kBrown).atBrightness(instance.BRIGHTNESS));
+            .scrollAtRelativeSpeed(SCROLLSPEED)
+            .atBrightness(BRIGHTNESS)),
+    EJECT(LEDPattern.solid(Color.kRed).blink(Seconds.of(2)).atBrightness(BRIGHTNESS)),
+    PREP_CLIMB(LEDPattern.solid(Color.kBlue).atBrightness(BRIGHTNESS)),
+    CLIMB(LEDPattern.solid(Color.kGold).atBrightness(BRIGHTNESS)),
+    CLIMB_L1(LEDPattern.solid(Color.kGold).atBrightness(BRIGHTNESS)),
+    DE_CLIMB_L1(LEDPattern.solid(Color.kBrown).atBrightness(BRIGHTNESS));
 
     @Getter private LEDPattern animation;
 
     private LEDStates(LEDPattern animation) {
       this.animation =
           (animation == null)
-              ? LEDPattern.solid(Color.kRed)
-                  .breathe(Seconds.of(3))
-                  .atBrightness(instance.BRIGHTNESS)
+              ? LEDPattern.solid(Color.kRed).breathe(Seconds.of(3)).atBrightness(BRIGHTNESS)
               : animation;
     }
   }
 
   @Override
   public void periodic() {
-    if (currentState.toString() != Superstructure.getState().toString()) {
-      try {
-        mappedStates.get(Superstructure.getState()).getAnimation().applyTo(buffer);
-        led.setData(buffer);
-      } catch (Exception e) {
-        System.out.println(e);
+    SuperstructureState currentState = Superstructure.getState();
+    if (heldState != currentState) {
+      LEDStates mapped = mappedStates.get(currentState);
+      if (mapped != null) {
+        try {
+          mapped.getAnimation().applyTo(buffer);
+          led.setData(buffer);
+        } catch (Exception e) {
+          System.out.println(
+              "Leds periodic error:"); // There is probably a better way display/log this but idk
+          e.printStackTrace();
+        }
       }
+      heldState = currentState;
     }
   }
-
-  // public void simulationPeriodic() {
-
-  // }
-
 }
