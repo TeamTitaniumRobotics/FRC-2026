@@ -427,9 +427,9 @@ public class Robot extends LoggedRobot {
     swerve.setDefaultCommand(
         DriveCommands.joystickDrive(
             swerve,
-            () -> -driver.getLeftY() * 0.65,
-            () -> -driver.getLeftX() * 0.65,
-            () -> -driver.getRightX() * 0.75,
+            () -> -driver.getLeftY() * 1.0,
+            () -> -driver.getLeftX() * 1.0,
+            () -> -driver.getRightX() * 1.0,
             () -> false));
 
     // driver.start().onTrue(Commands.runOnce(() -> swerve.setGyroAngle(Rotations.of(0.0))));
