@@ -51,9 +51,25 @@ public class AutoRoutines {
             });
   }
 
-  public Command getOutpostAuto() {
-    final AutoRoutine routine = factory.newRoutine("Outpost Score Auto");
+  public Command getRightOutpostAuto() {
+    final AutoRoutine routine = factory.newRoutine("Right Outpost Score Auto");
     Path[] paths = new Path[] {Path.RTS_RFME, Path.RFME_RTSB, Path.RTSB_ROB};
+    Command autoCmd = paths[0].getTrajectory(routine).resetOdometry();
+
+    for (Path path : paths) {
+      autoCmd = autoCmd.andThen(followPath(path, routine));
+    }
+
+    autoCmd = autoCmd.andThen(Commands.sequence(setAutoIntake(true), setAutoScore(true)));
+
+    routine.active().onTrue(autoCmd);
+
+    return routine.cmd();
+  }
+
+  public Command getLeftOutpostAuto() {
+    final AutoRoutine routine = factory.newRoutine("Left Outpost Score Auto");
+    Path[] paths = new Path[] {Path.LTS_LFME, Path.LFME_LTSB, Path.LTSB_LOB};
     Command autoCmd = paths[0].getTrajectory(routine).resetOdometry();
 
     for (Path path : paths) {
@@ -143,7 +159,13 @@ public class AutoRoutines {
   public enum Path {
     RTS_RFME(PathAction.INTAKE),
     RFME_RTSB(PathAction.NOTHING),
-    RTSB_ROB(PathAction.SCORE, true);
+    RTSB_ROB(PathAction.SCORE, true),
+    LTS_LFME(PathAction.INTAKE),
+    LFME_LTSB(PathAction.NOTHING),
+    LTSB_LOB(
+        PathAction.SCORE,
+        true); // Not sure exactly what to name this one since it kinda ends in the somewhere around
+    // the depot
 
     private final PathAction action;
     private final boolean intakeDeployed;

@@ -86,8 +86,8 @@
    }
   },
   "mass":{
-   "exp":"150 lbs",
-   "val":68.0388555
+   "exp":"115 lbs",
+   "val":52.16312255
   },
   "inertia":{
    "exp":"6 kg m ^ 2",
@@ -134,7 +134,7 @@
  },
  "generationFeatures":[],
  "codegen":{
-  "root":"../../java/org/teamtitanium/autos/generated",
+  "root":"..\\..\\java\\org\\teamtitanium\\autos\\generated",
   "genVars":true,
   "genTrajData":true,
   "useChoreoLib":true

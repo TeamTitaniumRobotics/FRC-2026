@@ -320,7 +320,8 @@ public class Robot extends LoggedRobot {
     superstructure = new Superstructure(shooter, feeder, spindexer, intake, driver);
 
     autoRoutines = new AutoRoutines(swerve);
-    autoChooser.addCmd("Outpost Trench", autoRoutines::getOutpostAuto);
+    autoChooser.addCmd("Right Outpost Trench", autoRoutines::getRightOutpostAuto);
+    autoChooser.addCmd("Left Outpost Trench", autoRoutines::getLeftOutpostAuto);
 
     SmartDashboard.putData("Autos/AutoChooser", autoChooser);
 

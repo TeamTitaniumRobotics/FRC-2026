@@ -1,4 +1,4 @@
-// spotless:off
+
 package org.teamtitanium.autos.generated;
 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -6,10 +6,10 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import java.util.Map;
 import java.util.OptionalInt;
 
+// If these imports cause errors because you're not using ChoreoLib,
+// turn off "Include ChoreoLib-specific Helpers" in Choreo's codegen settings.
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
-// If the 2 imports above cause errors because you're not using ChoreoLib,
-// turn off "Include ChoreoLib-specific Helpers" in Choreo's codegen settings.
 
 /**
  * A class containing the name, start pose, end pose, and total time of every Choreo trajectory.
@@ -25,35 +25,59 @@ public record ChoreoTraj(
     Pose2d endPoseBlue
 ) {
     public static final ChoreoTraj RFME_RTSB = new ChoreoTraj(
-        "RFME_RTSB",
-        OptionalInt.empty(),
-        1.40581,
-        new Pose2d(7.93556, 3.30756, Rotation2d.fromRadians(1.5708)),
-        new Pose2d(4.39896, 0.63937, Rotation2d.fromRadians(3.14159))
-    );
-    public static final ChoreoTraj RTSB_ROB = new ChoreoTraj(
-        "RTSB_ROB",
-        OptionalInt.empty(),
-        1.94811,
-        new Pose2d(4.39896, 0.63937, Rotation2d.fromRadians(3.14159)),
-        new Pose2d(0.72708, 0.64572, Rotation2d.fromRadians(3.14159))
-    );
-    public static final ChoreoTraj RTS_RFME = new ChoreoTraj(
-        "RTS_RFME",
-        OptionalInt.empty(),
-        2.98414,
-        new Pose2d(4.39896, 0.63937, Rotation2d.fromRadians(0)),
-        new Pose2d(7.93556, 3.30756, Rotation2d.fromRadians(1.5708))
-    );
+	    "RFME_RTSB",
+	    OptionalInt.empty(),
+	    1.40581,
+	    new Pose2d(7.936, 3.308, Rotation2d.fromRadians(1.571)),
+	    new Pose2d(4.399, 0.639, Rotation2d.fromRadians(3.142))
+	);
+	public static final ChoreoTraj RTSB_ROB = new ChoreoTraj(
+	    "RTSB_ROB",
+	    OptionalInt.empty(),
+	    1.94811,
+	    new Pose2d(4.399, 0.639, Rotation2d.fromRadians(3.142)),
+	    new Pose2d(0.727, 0.646, Rotation2d.fromRadians(3.142))
+	);
+	public static final ChoreoTraj RTS_RFME = new ChoreoTraj(
+	    "RTS_RFME",
+	    OptionalInt.empty(),
+	    2.98414,
+	    new Pose2d(4.399, 0.639, Rotation2d.fromRadians(0)),
+	    new Pose2d(7.936, 3.308, Rotation2d.fromRadians(1.571))
+	);
+	public static final ChoreoTraj LTS_LFME = new ChoreoTraj(
+	    "LTS_LFME",
+	    OptionalInt.empty(),
+	    2.89398,
+	    new Pose2d(4.399, 7.43, Rotation2d.fromRadians(0)),
+	    new Pose2d(7.936, 4.762, Rotation2d.fromRadians(-1.571))
+	);
+	public static final ChoreoTraj LFME_LTSB = new ChoreoTraj(
+	    "LFME_LTSB",
+	    OptionalInt.empty(),
+	    1.32113,
+	    new Pose2d(7.936, 4.762, Rotation2d.fromRadians(-1.571)),
+	    new Pose2d(4.399, 7.43, Rotation2d.fromRadians(3.142))
+	);
+	public static final ChoreoTraj LTSB_LOB = new ChoreoTraj(
+	    "LTSB_LOB",
+	    OptionalInt.empty(),
+	    1.92291,
+	    new Pose2d(4.399, 7.43, Rotation2d.fromRadians(3.142)),
+	    new Pose2d(0.727, 7.43, Rotation2d.fromRadians(3.142))
+	);
 
     /**
      * A map between trajectory names and their corresponding data.
      * This allows for trajectory data to be looked up with strings during runtime.
      */
     public static final Map<String, ChoreoTraj> ALL_TRAJECTORIES = Map.ofEntries(
-        Map.entry("RFME_RTSB", RFME_RTSB),
-        Map.entry("RTSB_ROB", RTSB_ROB),
-        Map.entry("RTS_RFME", RTS_RFME)
+    	Map.entry("RFME_RTSB", RFME_RTSB),
+		Map.entry("RTSB_ROB", RTSB_ROB),
+		Map.entry("RTS_RFME", RTS_RFME),
+		Map.entry("LTS_LFME", LTS_LFME),
+		Map.entry("LFME_LTSB", LFME_LTSB),
+		Map.entry("LTSB_LOB", LTSB_LOB)
     );
 
     /**
@@ -80,4 +104,3 @@ public record ChoreoTraj(
         return routine.trajectory(this.name);
     }
 }
-// spotless:on
