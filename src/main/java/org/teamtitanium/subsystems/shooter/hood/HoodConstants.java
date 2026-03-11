@@ -32,14 +32,15 @@ public class HoodConstants {
 
   // Motion Magic Constraints
   public static final Constraints HOOD_MOTION_CONSTRAINTS =
-      new Constraints(2.0, 3.0); // Max velocity (rps), accel (rps^2)
+      new Constraints(1.5, 2.5); // Max velocity (rps), accel (rps^2)
 
   // PID Gains
-  public static final Gains HOOD_GAINS = new Gains(24.0, 0.0, 0.0, 0.3125, 5.25, 0.0, 0.0);
+  public static final Gains HOOD_GAINS = new Gains(225.0, 0.0, 0.5, 0.3125, 5.25, 0.0, 0.01);
 
   // Current Limits
   public static final double STATOR_CURRENT_LIMIT = 60.0;
   public static final double SUPPLY_CURRENT_LIMIT = 40.0;
+  public static final double ZERO_CURRENT_LIMIT = 35.0;
 
   // Simulation
   public static final DCMotor HOOD_GEARBOX = DCMotor.getKrakenX44(1);

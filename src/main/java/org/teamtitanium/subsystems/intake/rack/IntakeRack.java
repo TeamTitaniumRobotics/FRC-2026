@@ -1,5 +1,6 @@
 package org.teamtitanium.subsystems.intake.rack;
 
+import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static org.teamtitanium.subsystems.intake.IntakeConstants.RackConstants.*;
 
@@ -9,6 +10,7 @@ import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -42,8 +44,10 @@ public class IntakeRack extends SubsystemBase {
   private final LoggedTunableNumber rackMaxAcceleration =
       new LoggedTunableNumber("Intake/Rack/MaxAcceleration", RACK_CONSTRAINTS.maxAcceleration());
 
-  public final LoggedTunableNumber configRackNumber =
-      new LoggedTunableNumber("Intake/Rack/ConfigNumber", 0.0);
+  public static final LoggedTunableNumber configRackNumber1 =
+      new LoggedTunableNumber("Intake/Rack/ConfigNumber1", 0.0);
+  public static final LoggedTunableNumber configRackNumber2 =
+      new LoggedTunableNumber("Intake/Rack/ConfigNumber2", 0.0);
 
   private final IntakeRackIO io;
   private final IntakeRackIOInputsAutoLogged inputs = new IntakeRackIOInputsAutoLogged();
@@ -63,6 +67,14 @@ public class IntakeRack extends SubsystemBase {
           () ->
               Math.abs(inputs.positionMeters - targetExtensionMeters)
                   < EXTENSION_TOLERANCE.in(Meters));
+
+  private final Debouncer stowCurrentDebouncer =
+      new Debouncer(STOW_CURRENT_DEBOUNCE_TIME_SECS, DebounceType.kRising);
+  private final Trigger stowCurrentTrigger =
+      new Trigger(
+          () ->
+              stowCurrentDebouncer.calculate(
+                  Math.abs(inputs.torqueCurrentAmps) >= STOW_STALL_CURRENT_THRESHOLD));
 
   private final Debouncer homeCurrentDebouncer =
       new Debouncer(HOMING_DEBOUNCE_TIME_SECS, DebounceType.kRising);
@@ -112,6 +124,10 @@ public class IntakeRack extends SubsystemBase {
   }
 
   public Command setExtension(Supplier<Distance> positionSupplier) {
+    return setExtension(() -> positionSupplier.get(), RACK_CONSTRAINTS);
+  }
+
+  public Command setExtension(Supplier<Distance> positionSupplier, Constraints constraints) {
     return run(() -> {
           double requestedMeters =
               MathUtil.clamp(
@@ -119,13 +135,17 @@ public class IntakeRack extends SubsystemBase {
                   MIN_EXTENSION.in(Meters),
                   MAX_EXTENSION.in(Meters));
           targetExtensionMeters = requestedMeters;
-          io.setPosition(metersToMotorRotations(requestedMeters));
+          io.setPosition(metersToMotorRotations(requestedMeters), constraints);
         })
         .withName("IntakeRack.SetExtension");
   }
 
   public Command setExtension(Distance position) {
     return setExtension(() -> position);
+  }
+
+  public Command setExtensionEnd(Distance position) {
+    return setExtension(position).until(atSetpoint(position));
   }
 
   public Command setVoltage(DoubleSupplier voltageSupplier) {
@@ -137,16 +157,34 @@ public class IntakeRack extends SubsystemBase {
     return setVoltage(() -> volts);
   }
 
+  public Command stow() {
+    return Commands.repeatingSequence(
+            setExtension(STOW_EXTENSION).until(stowStallCurrent()),
+            setExtensionEnd(getExtension().plus(Inches.of(2.0))).withTimeout(2.0))
+        .until(atSetpoint(STOW_EXTENSION));
+  }
+
   public Command stop() {
     return setVoltage(0.0).withName("IntakeRack.Stop");
   }
 
-  public double getExtensionMeters() {
-    return inputs.positionMeters;
+  public Distance getExtension() {
+    return Meters.of(inputs.positionMeters);
   }
 
   public Trigger atSetpoint() {
     return atSetpoint;
+  }
+
+  private Trigger atSetpoint(Distance targetDistance) {
+    return new Trigger(
+        () ->
+            Math.abs(inputs.positionMeters - targetDistance.in(Meters))
+                < EXTENSION_TOLERANCE.in(Meters));
+  }
+
+  public Trigger stowStallCurrent() {
+    return stowCurrentTrigger;
   }
 
   public void setBrakeMode(boolean enabled) {

@@ -1,6 +1,10 @@
 package org.teamtitanium.utils;
 
+import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.Meters;
+
 import com.ctre.phoenix6.CANBus;
+import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.RobotBase;
 
 public class Constants {
@@ -8,6 +12,11 @@ public class Constants {
   public static final double simLoopPeriodSecs = 0.002;
   public static final boolean tuningMode = true;
   public static final boolean disableHAL = false;
+
+  public static final Distance BUMPER_HALF_LENGTH =
+      Meters.of(TunerConstants.FrontLeft.LocationX).plus(Inches.of(3.5));
+  public static final Distance BUMPER_HALF_WIDTH =
+      Meters.of(TunerConstants.FrontLeft.LocationY).plus(Inches.of(3.5));
 
   private static final Mode simMode = Mode.SIM;
 

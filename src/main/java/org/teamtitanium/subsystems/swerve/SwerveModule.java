@@ -153,6 +153,9 @@ public class SwerveModule {
    * @param state The desired state of the module.
    */
   public void runSetpoint(SwerveModuleState state) {
+    state.optimize(getAngle());
+    state.cosineScale(getAngle());
+
     double speedRadPerSec = state.speedMetersPerSecond / constants.WheelRadius;
     io.setDriveVelocity(speedRadPerSec);
     io.setTurnPosition(state.angle.getRadians());

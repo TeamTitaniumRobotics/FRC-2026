@@ -36,6 +36,10 @@ import org.teamtitanium.autos.*;
 import org.teamtitanium.commands.DriveCommands;
 import org.teamtitanium.subsystems.Leds;
 import org.teamtitanium.subsystems.Superstructure;
+import org.teamtitanium.subsystems.climber.Climber;
+import org.teamtitanium.subsystems.climber.ClimberIO;
+import org.teamtitanium.subsystems.climber.ClimberIOSim;
+import org.teamtitanium.subsystems.climber.ClimberIOTalonFX;
 import org.teamtitanium.subsystems.feeder.Feeder;
 import org.teamtitanium.subsystems.genericroller.GenericRollerIO;
 import org.teamtitanium.subsystems.genericroller.GenericRollerIOSim;
@@ -45,6 +49,7 @@ import org.teamtitanium.subsystems.intake.IntakeConstants;
 import org.teamtitanium.subsystems.intake.rack.IntakeRack;
 import org.teamtitanium.subsystems.intake.rack.IntakeRackIO;
 import org.teamtitanium.subsystems.intake.rack.IntakeRackIOSim;
+import org.teamtitanium.subsystems.intake.rack.IntakeRackIOTalonFX;
 import org.teamtitanium.subsystems.intake.roller.IntakeRoller;
 import org.teamtitanium.subsystems.shooter.Shooter;
 import org.teamtitanium.subsystems.shooter.ShotCalculator;
@@ -102,6 +107,7 @@ public class Robot extends LoggedRobot {
   private final Intake intake;
   private final IntakeRack intakeRack;
   private final IntakeRoller intakeRoller;
+  private final Climber climber;
   private final Superstructure superstructure;
   private final Vision vision;
 
@@ -237,10 +243,11 @@ public class Robot extends LoggedRobot {
         turret = new Turret(new TurretIOTalonFX());
         feeder = new Feeder(new GenericRollerIOTalonFX(Feeder.CONSTANTS));
         spindexer = new Spindexer(new GenericRollerIOTalonFX(Spindexer.CONSTANTS));
-        intakeRack = new IntakeRack(new IntakeRackIO() {});
-
+        intakeRack = new IntakeRack(new IntakeRackIOTalonFX());
         intakeRoller =
             new IntakeRoller(new GenericRollerIOTalonFX(IntakeConstants.RollerConstants.CONSTANTS));
+        climber = new Climber(new ClimberIOTalonFX());
+
         vision =
             new Vision(
                 new VisionIOPhoton(
@@ -275,6 +282,7 @@ public class Robot extends LoggedRobot {
                     IntakeConstants.RollerConstants.CONSTANTS,
                     IntakeConstants.RollerConstants.ROLLER_MOTOR_GEARBOX,
                     IntakeConstants.RollerConstants.ROLLER_MOI));
+        climber = new Climber(new ClimberIOSim());
         vision =
             new Vision(
                 new VisionIOSim(
@@ -301,6 +309,7 @@ public class Robot extends LoggedRobot {
         spindexer = new Spindexer(new GenericRollerIO() {});
         intakeRack = new IntakeRack(new IntakeRackIO() {});
         intakeRoller = new IntakeRoller(new GenericRollerIO() {});
+        climber = new Climber(new ClimberIO() {});
         vision = new Vision(new VisionIO() {});
       }
     }
@@ -317,9 +326,7 @@ public class Robot extends LoggedRobot {
 
     intake = new Intake(intakeRack, intakeRoller);
     shooter = new Shooter(flywheel, hood, turret);
-    superstructure =
-        new Superstructure(
-            shooter, feeder, spindexer, intake, RobotState.getInstance().underTrench, driver);
+    superstructure = new Superstructure(shooter, feeder, spindexer, intake, driver);
 
     configureButtonBindings();
   }
@@ -417,13 +424,36 @@ public class Robot extends LoggedRobot {
     swerve.setDefaultCommand(
         DriveCommands.joystickDrive(
             swerve,
-            () -> -driver.getLeftY() * 0.75,
-            () -> -driver.getLeftX() * 0.75,
+            () -> -driver.getLeftY() * 0.65,
+            () -> -driver.getLeftX() * 0.65,
             () -> -driver.getRightX() * 0.75,
             () -> false));
 
     driver.start().onTrue(Commands.runOnce(() -> swerve.setGyroAngle(Rotations.of(0.0))));
+    // driver.start().onTrue(Commands.runOnce(() -> turret.zeroMotor()));
     driver.start().onTrue(Commands.runOnce(() -> intakeRack.zero()));
+
+    driver.back().onTrue(hood.zeroHood());
+
+    // driver.leftBumper().whileTrue(turret.setVoltage(() -> turret.turretConfigNumber2.get()));
+    // driver.rightBumper().whileTrue(turret.setVoltage(() -> -turret.turretConfigNumber2.get()));
+    driver.y().whileTrue(intakeRack.setVoltage(() -> IntakeRack.configRackNumber2.get()));
+    driver.a().whileTrue(intakeRack.setVoltage(() -> -IntakeRack.configRackNumber2.get()));
+
+    driver.x().whileTrue(spindexer.setVoltage(() -> -spindexer.configurableNumber.get()));
+    driver.b().whileTrue(spindexer.setVoltage(() -> spindexer.configurableNumber.get()));
+
+    driver.povUp().whileTrue(climber.setVoltage(() -> climber.configClimberNumber1.get()));
+    driver.povDown().whileTrue(climber.setVoltage(() -> -climber.configClimberNumber1.get()));
+
+    // driver
+    //     .rightBumper()
+    //     .whileTrue(
+    //         DriveCommands.trenchDrive(
+    //             swerve,
+    //             () -> -driver.getLeftY(),
+    //             () -> -driver.getLeftX(),
+    //             () -> -driver.getRightX()));
 
     // driver.leftBumper().onTrue(Commands.runOnce(() -> intake.setState(IntakeState.INTAKE)));
     // driver.rightBumper().onTrue(Commands.runOnce(() -> intake.setState(IntakeState.STOW)));

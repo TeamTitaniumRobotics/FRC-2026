@@ -6,7 +6,7 @@ import static org.teamtitanium.subsystems.intake.IntakeConstants.RackConstants.*
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.MotionMagicVoltage;
+import com.ctre.phoenix6.controls.DynamicMotionMagicVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -25,7 +25,9 @@ public class IntakeRackIOTalonFX implements IntakeRackIO {
 
   private final TalonFXConfiguration motorConfig = new TalonFXConfiguration();
 
-  private final MotionMagicVoltage motionMagicVoltage = new MotionMagicVoltage(0.0);
+  private final DynamicMotionMagicVoltage motionMagicVoltage =
+      new DynamicMotionMagicVoltage(
+          0.0, RACK_CONSTRAINTS.maxVelocity(), RACK_CONSTRAINTS.maxAcceleration());
   private final VoltageOut voltageOut = new VoltageOut(0.0);
 
   private final StatusSignal<Angle> position;
@@ -34,7 +36,7 @@ public class IntakeRackIOTalonFX implements IntakeRackIO {
   private final StatusSignal<Current> supplyCurrent;
   private final StatusSignal<Current> torqueCurrent;
   private final StatusSignal<Temperature> temperature;
-  protected final StatusSignal<Double> targetSetpoint;
+  private final StatusSignal<Double> targetSetpoint;
 
   public IntakeRackIOTalonFX() {
     rackMotor = new TalonFX(RACK_MOTOR_ID, RACK_CAN_BUS);
@@ -117,7 +119,20 @@ public class IntakeRackIOTalonFX implements IntakeRackIO {
 
   @Override
   public void setPosition(double positionRots) {
-    rackMotor.setControl(motionMagicVoltage.withPosition(positionRots));
+    rackMotor.setControl(
+        motionMagicVoltage
+            .withPosition(positionRots)
+            .withVelocity(RACK_CONSTRAINTS.maxVelocity())
+            .withAcceleration(RACK_CONSTRAINTS.maxAcceleration()));
+  }
+
+  @Override
+  public void setPosition(double positionRots, Constraints constraints) {
+    rackMotor.setControl(
+        motionMagicVoltage
+            .withPosition(positionRots)
+            .withVelocity(constraints.maxVelocity())
+            .withAcceleration(constraints.maxAcceleration()));
   }
 
   @Override

@@ -31,8 +31,8 @@ public class FlywheelIOTalonFX implements FlywheelIO {
   private final TalonFXConfiguration config = new TalonFXConfiguration();
 
   private final MotionMagicVelocityVoltage motionMagicVelocityVoltage =
-      new MotionMagicVelocityVoltage(0.0);
-  private final VoltageOut voltageOut = new VoltageOut(0.0);
+      new MotionMagicVelocityVoltage(0.0).withEnableFOC(true);
+  private final VoltageOut voltageOut = new VoltageOut(0.0).withEnableFOC(true);
 
   private final StatusSignal<Angle> position;
   private final StatusSignal<AngularVelocity> velocity;
@@ -47,7 +47,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
     rightMotor = new TalonFX(FLYWHEEL_RIGHT_MOTOR_ID, Constants.RIO_CAN_BUS);
 
     // Configure motors
-    config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+    config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     config.MotorOutput.NeutralMode = NeutralModeValue.Coast; // Coast for flywheels
 
     // Current limits
@@ -74,6 +74,9 @@ public class FlywheelIOTalonFX implements FlywheelIO {
     // Voltage compensation
     config.Voltage.PeakForwardVoltage = 12.0;
     config.Voltage.PeakReverseVoltage = -12.0;
+
+    config.TorqueCurrent.PeakForwardTorqueCurrent = STATOR_CURRENT_LIMIT;
+    config.TorqueCurrent.PeakReverseTorqueCurrent = -STATOR_CURRENT_LIMIT;
 
     // Apply to both motors
     PhoenixUtil.tryUntilOk(5, () -> leftMotor.getConfigurator().apply(config));

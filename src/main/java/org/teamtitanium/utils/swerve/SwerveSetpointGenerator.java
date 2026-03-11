@@ -7,7 +7,7 @@
 
 package org.teamtitanium.utils.swerve;
 
-import static org.teamtitanium.utils.EqualsUtil.*;
+import static org.teamtitanium.utils.math.EqualsUtil.*;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -21,8 +21,8 @@ import java.util.Optional;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.ExtensionMethod;
-import org.teamtitanium.utils.EqualsUtil;
-import org.teamtitanium.utils.GeomUtil;
+import org.teamtitanium.utils.math.EqualsUtil;
+import org.teamtitanium.utils.math.GeomUtil;
 
 @Builder
 @RequiredArgsConstructor

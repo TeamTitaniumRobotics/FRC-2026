@@ -7,7 +7,9 @@ import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -21,8 +23,8 @@ import java.util.Optional;
 import lombok.Getter;
 import lombok.Setter;
 import org.littletonrobotics.junction.AutoLogOutput;
+import org.teamtitanium.subsystems.shooter.turret.TurretConstants;
 import org.teamtitanium.subsystems.swerve.Swerve;
-import org.teamtitanium.utils.AllianceFlipUtil;
 import org.teamtitanium.utils.FieldConstants;
 
 public class RobotState {
@@ -176,37 +178,30 @@ public class RobotState {
     // vision measurement and then applying the transform from the sampled pose to the odometry pose
     // to account for the difference between the sampled pose and the current odometry pose.
     estimatedPose = estimateAtTime.plus(scaledTransform).plus(sampledToOdometryTransform);
-
-    // poseEstimator.addVisionMeasurement(
-    //     observation.visionPose.toPose2d(), observation.timestamp, observation.visionStdDevs);
-    // estimatedPose = poseEstimator.getEstimatedPosition();
   }
 
-  // @AutoLogOutput(key = "RobotState/EstimatedPose")
-  // public Pose2d getEstimatedPose() {
-  //   return poseEstimator.getEstimatedPosition();
-  // }
-
-  // public void setEstimatedPose(Pose2d pose) {
-  //   estimatedPose = pose;
-  //   poseEstimator.resetPosition(pose.getRotation(), lastWheelPositions, pose);
-  // }
-
   public Trigger inAllianceZone =
-      new Trigger(
-          () ->
-              AllianceFlipUtil.apply(FieldConstants.Zones.allianceZone)
-                  .contains(getEstimatedPose().getTranslation()));
+      FieldConstants.Zones.ALLIANCE_ZONE.containsRobot(this::getEstimatedPose, false);
 
   public Trigger inNeutralZone =
-      new Trigger(
-          () -> FieldConstants.Zones.neutralZone.contains(getEstimatedPose().getTranslation()));
+      FieldConstants.Zones.NEUTRAL_ZONE.containsRobot(this::getEstimatedPose, true);
 
   // TODO: Add a check for if robot is driving towards trench at speed and if so, stow hood and
   // align drivetrain with the trench. Also add an override on driver's controller to override the
   // function. Also add drivetrain auto rotate for bump with same override
+  @AutoLogOutput(key = "RobotState/UnderTrench")
   public Trigger underTrench =
-      new Trigger(() -> false); // TODO: Replace with actual logic to determine if under trench
+      FieldConstants.Zones.TRENCH_ZONES.doesOrWillContain(
+          () -> getTurretPosition().getTranslation().toTranslation2d(),
+          this::getFieldVelocity,
+          0.5);
+
+  @AutoLogOutput(key = "RobotState/TurretPosition")
+  public Transform3d getTurretPosition() {
+    return new Transform3d(
+        new Pose3d(estimatedPose).plus(TurretConstants.TURRET_TO_ROBOT).getTranslation(),
+        new Rotation3d(getRotation()));
+  }
 
   public Rotation2d getRotation() {
     return estimatedPose.getRotation();

@@ -26,6 +26,7 @@ public class TurretIOSim extends TurretIOTalonFX {
     inputs.cancoder2Connected = true;
 
     var motorSimState = turretMotor.getSimState();
+    // motorSimState.Orientation = ChassisReference.Clockwise_Positive;
     motorSimState.setSupplyVoltage(RobotController.getBatteryVoltage());
 
     // Update simulation
