@@ -5,7 +5,6 @@
 package org.teamtitanium;
 
 import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.Rotations;
 
 import choreo.auto.AutoChooser;
 import com.ctre.phoenix6.SignalLogger;
@@ -433,11 +432,12 @@ public class Robot extends LoggedRobot {
             () -> -driver.getRightX() * 0.75,
             () -> false));
 
-    driver.start().onTrue(Commands.runOnce(() -> swerve.setGyroAngle(Rotations.of(0.0))));
+    // driver.start().onTrue(Commands.runOnce(() -> swerve.setGyroAngle(Rotations.of(0.0))));
     // driver.start().onTrue(Commands.runOnce(() -> turret.zeroMotor()));
     // driver.start().onTrue(Commands.runOnce(() -> intakeRack.zero()));
 
-    driver.back().onTrue(hood.zeroHood().alongWith(intakeRack.zeroIntake()));
+    driver.back().onTrue(hood.zeroHood());
+    driver.start().onTrue(intakeRack.zeroIntake());
 
     // driver.leftBumper().whileTrue(turret.setVoltage(() -> turret.turretConfigNumber2.get()));
     // driver.rightBumper().whileTrue(turret.setVoltage(() -> -turret.turretConfigNumber2.get()));

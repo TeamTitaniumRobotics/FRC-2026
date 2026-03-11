@@ -1,6 +1,5 @@
 package org.teamtitanium.subsystems.intake;
 
-import static edu.wpi.first.units.Units.Inches;
 import static org.teamtitanium.subsystems.intake.IntakeConstants.RackConstants.*;
 
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -24,8 +23,7 @@ public class Intake {
   public enum IntakeState {
     CLIMB_STOW(() -> RackConstants.CLIMB_STOW_EXTENSION, () -> RollerConstants.IDLE_VELOCITY),
     STOW(() -> RackConstants.STOW_EXTENSION, () -> RollerConstants.IDLE_VELOCITY),
-    INTAKE(
-        () -> Inches.of(IntakeRack.configRackNumber1.get()), () -> RollerConstants.INTAKE_VELOCITY),
+    INTAKE(() -> RackConstants.DEPLOY_EXTENSION, () -> RollerConstants.INTAKE_VELOCITY),
     AGITATE(() -> RackConstants.STOW_EXTENSION, () -> RollerConstants.INTAKE_VELOCITY),
     EJECT(() -> RackConstants.DEPLOY_EXTENSION, () -> RollerConstants.EJECT_VELOCITY);
 
