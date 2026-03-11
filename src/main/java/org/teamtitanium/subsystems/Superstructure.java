@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import lombok.Getter;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
+import org.teamtitanium.RobotState;
 import org.teamtitanium.autos.AutoRoutines;
 import org.teamtitanium.subsystems.feeder.Feeder;
 import org.teamtitanium.subsystems.feeder.Feeder.FeederState;
@@ -39,7 +40,6 @@ public class Superstructure extends VirtualSubsystem {
   public enum SuperstructureState {
     IDLE,
     INTAKE,
-    // PREPPED,
     SPIN_UP_SCORE,
     SCORE,
     SPIN_UP_PASS,
@@ -65,14 +65,14 @@ public class Superstructure extends VirtualSubsystem {
 
   private final Timer stateTimer = new Timer();
 
-  // ───────────────────────────── Subsystems ───────────────────────────────────
+  // ----------------------------- Subsystems -----------------------------------
 
   private final Shooter shooter;
   private final Feeder feeder;
   private final Spindexer spindexer;
   private final Intake intake;
 
-  // ───────────────────────────── Driver inputs ────────────────────────────────
+  // ----------------------------- Driver inputs --------------------------------
 
   private final Trigger intakeReq;
   private final Trigger scoreReq;
@@ -81,8 +81,8 @@ public class Superstructure extends VirtualSubsystem {
   private final Trigger stowReq;
   private final Trigger hasFuel;
 
-  // ───────────────────────────── Modifier triggers ────────────────────────────
-  //
+  // ----------------------------- Modifier triggers --------------------------------
+
   // These are orthogonal to the game state and persist across state transitions
   // unless explicitly reset inside setState().
 
@@ -98,14 +98,13 @@ public class Superstructure extends VirtualSubsystem {
   @Getter
   private final Trigger trenchStowOverride;
 
-  // ───────────────────────────── Construction ─────────────────────────────────
+  // ----------------------------- Construction --------------------------------
 
   public Superstructure(
       Shooter shooter,
       Feeder feeder,
       Spindexer spindexer,
       Intake intake,
-      Trigger trenchStowOverride,
       CommandXboxController driver) {
     this.shooter = shooter;
     this.feeder = feeder;
@@ -120,9 +119,9 @@ public class Superstructure extends VirtualSubsystem {
 
     hasFuel = spindexer.hasFuel.or(feeder.hasFuel);
 
-    // Modifier triggers — backed by simple booleans toggled via commands
-    intakeDeployed = new Trigger(() -> intakeDeployedValue);
-    this.trenchStowOverride = trenchStowOverride;
+    // Modifier triggers - backed by simple booleans toggled via commands
+    intakeDeployed = new Trigger(() -> intakeDeployedValue).or(intakeReq);
+    this.trenchStowOverride = RobotState.getInstance().underTrench;
 
     // Pass the hood-stow override trigger into Shooter so it can respect it
     shooter.setHoodStowOverride(this.trenchStowOverride);
@@ -145,7 +144,7 @@ public class Superstructure extends VirtualSubsystem {
     Logger.recordOutput("Superstructure/TurretPose", turretPose);
   }
 
-  // ───────────────────────────── State transitions ────────────────────────────
+  // ----------------------------- State transitions --------------------------------
 
   private void bindTransitions() {
     // IDLE <--> INTAKE
@@ -184,7 +183,7 @@ public class Superstructure extends VirtualSubsystem {
         SuperstructureState.IDLE,
         passReq.negate().and(() -> stateTimer.hasElapsed(0.5)));
 
-    // EJECT (from IDLE or PREPPED)
+    // IDLE -> EJECT (spit fuel out the front)
     bindTransition(SuperstructureState.IDLE, SuperstructureState.EJECT, spitReq);
     // Return to the state we were in before ejecting
     SuperstructureState.EJECT
@@ -204,7 +203,7 @@ public class Superstructure extends VirtualSubsystem {
     from.getTrigger().and(transitionTrigger).onTrue(setStateCommand(to));
   }
 
-  // ───────────────────────────── Modifier toggle bindings ─────────────────────
+  // ----------------------------- Modifier toggle bindings --------------------------------
 
   private void bindModifierToggles(CommandXboxController driver) {
     // Toggle intake deployed on left bumper press
@@ -216,7 +215,7 @@ public class Superstructure extends VirtualSubsystem {
                 .withName("ToggleIntakeDeployed"));
   }
 
-  // ──────────────── Central resolution: (game state + modifiers) -> sub states ─
+  // -------------- Central resolution: (game state + modifiers) -> sub states --------------
 
   /**
    * Returns a command that should be scheduled once and kept running for the lifetime of
@@ -237,11 +236,11 @@ public class Superstructure extends VirtualSubsystem {
       case EJECT -> intake.setState(IntakeState.EJECT);
       case SPIN_UP_SCORE, SPIN_UP_PASS -> {
         // If intake deployed override is active, keep intaking; else agitate
-        intake.setState(intakeDeployed.getAsBoolean() ? IntakeState.INTAKE : IntakeState.STOW);
+        intake.setState(intakeDeployed.getAsBoolean() ? IntakeState.INTAKE : IntakeState.AGITATE);
       }
       case SCORE, PASS -> {
         // If intake deployed override is active, keep intaking; else stow
-        intake.setState(intakeDeployed.getAsBoolean() ? IntakeState.INTAKE : IntakeState.STOW);
+        intake.setState(intakeDeployed.getAsBoolean() ? IntakeState.INTAKE : IntakeState.AGITATE);
       }
       default -> {
         // IDLE / PREPPED / CLIMB states
@@ -263,7 +262,7 @@ public class Superstructure extends VirtualSubsystem {
     }
   }
 
-  // ───────────────────────────── setState helpers ─────────────────────────────
+  // ----------------------------- setState helpers --------------------------------
 
   /**
    * Sets the game state and optionally resets modifiers atomically.

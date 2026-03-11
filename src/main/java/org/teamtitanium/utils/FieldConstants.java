@@ -10,7 +10,6 @@ package org.teamtitanium.utils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rectangle2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
@@ -19,6 +18,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.teamtitanium.utils.math.zones.IZone;
+import org.teamtitanium.utils.math.zones.RectangleZone;
 
 /**
  * Contains information for location of field element and other useful reference points.
@@ -47,33 +48,56 @@ public class FieldConstants {
    */
   public static class Zones {
     // General Zones
-    public static final Rectangle2d neutralZone =
-        new Rectangle2d(
+    public static final RectangleZone NEUTRAL_ZONE =
+        new RectangleZone(
             new Translation2d(LinesVertical.neutralZoneNear, fieldWidth),
             new Translation2d(LinesVertical.neutralZoneFar, 0));
-    public static final Rectangle2d allianceZone =
-        new Rectangle2d(
+    public static final RectangleZone ALLIANCE_ZONE =
+        new RectangleZone(
             new Translation2d(LinesVertical.allianceZone, fieldWidth), new Translation2d(0, 0));
 
     // Trench Zones
-    public static final Rectangle2d leftTrenchZone =
-        new Rectangle2d(
+    private static final RectangleZone LEFT_TRENCH_ZONE =
+        new RectangleZone(
             new Translation2d(LinesVertical.neutralZoneNear, LinesHorizontal.leftTrenchOpenStart),
             new Translation2d(LinesVertical.starting, LinesHorizontal.leftTrenchOpenEnd));
-    public static final Rectangle2d rightTrenchZone =
-        new Rectangle2d(
+    private static final RectangleZone RIGHT_TRENCH_ZONE =
+        new RectangleZone(
             new Translation2d(LinesVertical.neutralZoneNear, LinesHorizontal.rightTrenchOpenStart),
             new Translation2d(LinesVertical.starting, LinesHorizontal.rightTrenchOpenEnd));
+    private static final IZone ALLIANCE_TRENCH_ZONE = LEFT_TRENCH_ZONE.union(RIGHT_TRENCH_ZONE);
+    private static final RectangleZone OPP_LEFT_TRENCH_ZONE =
+        new RectangleZone(
+            new Translation2d(
+                AllianceFlipUtil.applyX(LinesVertical.starting, true),
+                LinesHorizontal.oppLeftTrenchOpenStart),
+            new Translation2d(LinesVertical.neutralZoneFar, LinesHorizontal.oppLeftTrenchOpenEnd));
+    private static final RectangleZone OPP_RIGHT_TRENCH_ZONE =
+        new RectangleZone(
+            new Translation2d(
+                AllianceFlipUtil.applyX(LinesVertical.starting, true),
+                LinesHorizontal.oppRightTrenchOpenStart),
+            new Translation2d(LinesVertical.neutralZoneFar, LinesHorizontal.oppRightTrenchOpenEnd));
+    private static final IZone OPP_ALLIANCE_TRENCH_ZONE =
+        OPP_LEFT_TRENCH_ZONE.union(OPP_RIGHT_TRENCH_ZONE);
+    public static final IZone TRENCH_ZONES = ALLIANCE_TRENCH_ZONE.union(OPP_ALLIANCE_TRENCH_ZONE);
 
     // Bump Zones
-    public static final Rectangle2d leftBumpZone =
-        new Rectangle2d(
+    private static final RectangleZone LEFT_BUMP_ZONE =
+        new RectangleZone(
             new Translation2d(LinesVertical.neutralZoneNear, LinesHorizontal.leftBumpStart),
             new Translation2d(LinesVertical.starting, LinesHorizontal.leftBumpEnd));
-    public static final Rectangle2d rightBumpZone =
-        new Rectangle2d(
+    private static final RectangleZone RIGHT_BUMP_ZONE =
+        new RectangleZone(
             new Translation2d(LinesVertical.neutralZoneNear, LinesHorizontal.rightBumpStart),
             new Translation2d(LinesVertical.starting, LinesHorizontal.rightBumpEnd));
+    public static final IZone BUMP_ZONE = LEFT_BUMP_ZONE.union(RIGHT_BUMP_ZONE);
+
+    // No-Pass Zone (area directly in front of the hub)
+    public static final RectangleZone NO_PASS_ZONE =
+        new RectangleZone(
+            new Translation2d(LinesVertical.center - Hub.width, fieldWidth / 2.0 + Hub.width / 2.0),
+            new Translation2d(LinesVertical.hubCenter, fieldWidth / 2.0 - Hub.width / 2.0));
   }
 
   /**
@@ -111,12 +135,25 @@ public class FieldConstants {
     public static final double rightTrenchOpenMiddle = RightTrench.openingWidth / 2.0;
     public static final double rightTrenchOpenEnd = 0;
 
+    public static final double oppRightBumpStart = Hub.oppNearRightCorner.getY();
+    public static final double oppRightBumpEnd = oppRightBumpStart - RightBump.width;
+    public static final double oppRightTrenchOpenStart =
+        oppRightBumpEnd - Units.inchesToMeters(12.0);
+    public static final double oppRightTrenchOpenMiddle = RightTrench.openingWidth / 2.0;
+    public static final double oppRightTrenchOpenEnd = 0;
+
     // Left of hub
     public static final double leftBumpEnd = Hub.nearLeftCorner.getY();
     public static final double leftBumpStart = leftBumpEnd + LeftBump.width;
     public static final double leftTrenchOpenEnd = leftBumpStart + Units.inchesToMeters(12.0);
     public static final double leftTrenchOpenMiddle = fieldWidth - LeftTrench.openingWidth / 2.0;
     public static final double leftTrenchOpenStart = fieldWidth;
+
+    public static final double oppLeftBumpEnd = Hub.oppNearLeftCorner.getY();
+    public static final double oppLeftBumpStart = oppLeftBumpEnd + LeftBump.width;
+    public static final double oppLeftTrenchOpenEnd = oppLeftBumpStart + Units.inchesToMeters(12.0);
+    public static final double oppLeftTrenchOpenMiddle = fieldWidth - LeftTrench.openingWidth / 2.0;
+    public static final double oppLeftTrenchOpenStart = fieldWidth;
   }
 
   /** Hub related constants */
@@ -346,6 +383,13 @@ public class FieldConstants {
     // Relevant reference points on alliance side
     public static final Translation2d centerPoint =
         new Translation2d(0, AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(29).get().getY());
+  }
+
+  public static class PassingTargets {
+    public static final Translation2d outpostTarget =
+        new Translation2d(Outpost.centerPoint.getX() + 0.75, Outpost.centerPoint.getY() + 0.75);
+    public static final Translation2d depotTarget =
+        new Translation2d(outpostTarget.getX(), FieldConstants.fieldWidth - outpostTarget.getY());
   }
 
   @RequiredArgsConstructor

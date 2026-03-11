@@ -27,6 +27,8 @@ public interface IntakeRackIO {
   /** Sets the rack to the given motor rotations via Motion Magic. */
   public default void setPosition(double positionRots) {}
 
+  public default void setPosition(double positionRots, Constraints constraints) {}
+
   /** Runs the rack open loop at the requested voltage. */
   public default void setVoltage(double volts) {}
 
