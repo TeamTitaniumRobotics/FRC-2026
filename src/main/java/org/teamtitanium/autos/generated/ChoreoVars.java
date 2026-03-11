@@ -1,3 +1,4 @@
+// spotless:off
 package org.teamtitanium.autos.generated;
 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -24,3 +25,4 @@ public final class ChoreoVars {
 
     private ChoreoVars() {}
 }
+// spotless:on

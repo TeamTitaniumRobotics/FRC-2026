@@ -1,4 +1,4 @@
-
+// spotless:off
 package org.teamtitanium.autos.generated;
 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -104,3 +104,4 @@ public record ChoreoTraj(
         return routine.trajectory(this.name);
     }
 }
+// spotless:on
