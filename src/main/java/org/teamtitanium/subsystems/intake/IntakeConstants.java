@@ -58,7 +58,7 @@ public class IntakeConstants {
     public static final boolean RACK_INVERTED = true;
 
     // Current limits
-    public static final double STATOR_CURRENT_LIMIT = 70.0;
+    public static final double STATOR_CURRENT_LIMIT = 50.0;
     public static final double SUPPLY_CURRENT_LIMIT = 40.0;
 
     // Gearbox + mechanism geometry

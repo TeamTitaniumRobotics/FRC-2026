@@ -12,7 +12,7 @@ import org.teamtitanium.utils.Constants.Gains;
 
 public class HoodConstants {
   public static final Angle STOW_ANGLE = Degrees.of(0.0);
-  public static final Angle EJECT_ANGLE = Degrees.of(30.0);
+  public static final Angle EJECT_ANGLE = Degrees.of(0.0);
 
   // CAN IDs
   public static final int HOOD_MOTOR_ID = 18;
