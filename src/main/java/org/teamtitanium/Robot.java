@@ -322,6 +322,13 @@ public class Robot extends LoggedRobot {
     autoRoutines = new AutoRoutines(swerve);
     autoChooser.addCmd("Right Outpost Trench", autoRoutines::getRightOutpostAuto);
     autoChooser.addCmd("Left Outpost Trench", autoRoutines::getLeftOutpostAuto);
+    autoChooser.addCmd("Straight Test", autoRoutines::straightTuningAuto);
+
+    autoChooser.addCmd(
+        "Swerve FF Characterization", () -> DriveCommands.feedforwardCharacterization(swerve));
+    autoChooser.addCmd(
+        "Swerve Wheel Radius Characterization",
+        () -> DriveCommands.wheelRadiusCharacterization(swerve));
 
     SmartDashboard.putData("Autos/AutoChooser", autoChooser);
 

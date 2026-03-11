@@ -51,6 +51,18 @@ public class AutoRoutines {
             });
   }
 
+  public Command straightTuningAuto() {
+    final AutoRoutine routine = factory.newRoutine("Straight Tuning Auto");
+    var trajectory = ChoreoTraj.StraightPath.asAutoTraj(routine);
+
+    Command autoCmd =
+        Commands.sequence(trajectory.resetOdometry(), Commands.waitSeconds(1.0), trajectory.cmd());
+
+    routine.active().onTrue(autoCmd);
+
+    return routine.cmd();
+  }
+
   public Command getRightOutpostAuto() {
     final AutoRoutine routine = factory.newRoutine("Right Outpost Score Auto");
     Path[] paths = new Path[] {Path.RTS_RFME, Path.RFME_RTSB, Path.RTSB_ROB};

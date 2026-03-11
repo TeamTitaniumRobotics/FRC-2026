@@ -117,9 +117,9 @@ public class Swerve extends SubsystemBase {
 
   @AutoLogOutput private boolean velocityMode = false;
 
-  private final PIDController xPosController = new PIDController(5.0, 0.0, 0.0);
-  private final PIDController yPosController = new PIDController(5.0, 0.0, 0.0);
-  private final PIDController headingController = new PIDController(5.0, 0.0, 0.0);
+  private final PIDController xPosController = new PIDController(10.0, 0.0, 0.0);
+  private final PIDController yPosController = new PIDController(10.0, 0.0, 0.0);
+  private final PIDController headingController = new PIDController(7.75, 0.0, 0.0);
 
   public Swerve(
       GyroIO gyroIO,
@@ -324,6 +324,29 @@ public class Swerve extends SubsystemBase {
   //   Logger.recordOutput("Swerve/SwerveStates/ModuleForces", wheelForces);
   // }
 
+  /** Follows a Choreo trajectory. */
+  public void followChoreoTrajectory(SwerveSample sample) {
+    Pose2d pose = RobotState.getInstance().getEstimatedPose();
+
+    Logger.recordOutput("Swerve/Choreo/Sample", sample);
+    Logger.recordOutput("Swerve/Choreo/ErrorX", sample.x - pose.getX());
+    Logger.recordOutput("Swerve/Choreo/ErrorY", sample.y - pose.getY());
+    Logger.recordOutput(
+        "Swerve/Choreo/ErrorTheta", sample.heading - pose.getRotation().getRadians());
+
+    ChassisSpeeds fieldRelativeSpeeds =
+        new ChassisSpeeds(
+            sample.vx + xPosController.calculate(pose.getX(), sample.x),
+            sample.vy + yPosController.calculate(pose.getY(), sample.y),
+            sample.omega
+                + headingController.calculate(pose.getRotation().getRadians(), sample.heading));
+
+    ChassisSpeeds robotRelativeSpeeds =
+        ChassisSpeeds.fromFieldRelativeSpeeds(fieldRelativeSpeeds, pose.getRotation());
+
+    runVelocity(robotRelativeSpeeds);
+  }
+
   public void runCharacterization(double output) {
     velocityMode = false;
     for (var swerveModule : swerveModules) {
@@ -372,27 +395,6 @@ public class Swerve extends SubsystemBase {
     brakeModeEnabled = enabled;
   }
 
-  public void followChoreoTrajectory(SwerveSample sample) {
-    Pose2d pose =
-        RobotState.getInstance()
-            .getEstimatedPose(); // Ensure odometry is up to date by getting pose
-
-    // Generate desired FIELD-relative speeds from trajectory + feedback.
-    ChassisSpeeds fieldRelativeSpeeds =
-        new ChassisSpeeds(
-            sample.vx + xPosController.calculate(pose.getX(), sample.x),
-            sample.vy + yPosController.calculate(pose.getY(), sample.y),
-            sample.omega
-                + headingController.calculate(pose.getRotation().getRadians(), sample.heading));
-
-    // Convert field-relative to robot relative
-    ChassisSpeeds robotRelativeSpeeds =
-        ChassisSpeeds.fromFieldRelativeSpeeds(fieldRelativeSpeeds, pose.getRotation());
-
-    // Apply those calculated speeds.
-    runVelocity(robotRelativeSpeeds);
-  }
-
   @AutoLogOutput(key = "Swerve/SwerveStates/Measured")
   private SwerveModuleState[] getModuleStates() {
     SwerveModuleState[] states = new SwerveModuleState[4];
@@ -424,6 +426,16 @@ public class Swerve extends SubsystemBase {
     return output;
   }
 
+  /** Returns the positions of the modules in radians for wheel radius characterization. */
+  public double[] getWheelRadiusCharacterizationPositions() {
+    double[] positions = new double[4];
+    for (int i = 0; i < 4; i++) {
+      positions[i] = swerveModules[i].getWheelRadiusCharacterizationPosition();
+    }
+    return positions;
+  }
+
+  /** Returns the translations of the modules in meters. */
   public static Translation2d[] getModuleTranslations() {
     return new Translation2d[] {
       new Translation2d(TunerConstants.FrontLeft.LocationX, TunerConstants.FrontLeft.LocationY),

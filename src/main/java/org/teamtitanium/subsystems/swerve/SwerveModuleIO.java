@@ -22,6 +22,8 @@ public interface SwerveModuleIO {
     public double driveSupplyCurrentAmps = 0.0;
     public double driveTorqueCurrentAmps = 0.0;
     public double driveTempCelcius = 0.0;
+    public double driveVelocitySetpoint = 0.0;
+    public double driveVelocityError = 0.0;
 
     public boolean turnConnected = false;
     public boolean turnCANcoderConnected = false;
@@ -32,6 +34,8 @@ public interface SwerveModuleIO {
     public double turnSupplyCurrentAmps = 0.0;
     public double turnTorqueCurrentAmps = 0.0;
     public double turnTempCelcius = 0.0;
+    public double turnPositionSetpoint = 0.0;
+    public double turnPositionError = 0.0;
 
     public double[] odometryTimestamps = new double[] {};
     public double[] odometryDrivePositionsRad = new double[] {};
