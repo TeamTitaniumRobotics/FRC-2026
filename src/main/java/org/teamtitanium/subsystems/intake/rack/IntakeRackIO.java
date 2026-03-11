@@ -43,4 +43,6 @@ public interface IntakeRackIO {
 
   /** Forces the internal motor encoder to a given rotation value. */
   public default void setMotorPosition(double positionRots) {}
+
+  public default void stop() {}
 }

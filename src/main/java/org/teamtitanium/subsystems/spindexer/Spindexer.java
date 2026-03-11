@@ -22,10 +22,10 @@ public class Spindexer extends GenericRoller {
   @RequiredArgsConstructor
   public enum SpindexerState {
     IDLE(() -> 0.0),
-    AGITATE(() -> 9.0),
-    FEED(() -> 9.0);
+    AGITATE(() -> 10.2),
+    FEED(() -> 10.2);
 
-    @Getter private final Supplier<Double> spindexerVelocity;
+    @Getter private final Supplier<Double> spindexerVoltage;
   }
 
   public static final int SPINDEXER_MOTOR_ID = 35;
@@ -40,7 +40,7 @@ public class Spindexer extends GenericRoller {
   public static final double STATOR_CURRENT_LIMIT = 60.0;
   public static final double SUPPLY_CURRENT_LIMIT = 40.0;
 
-  public static final double SPINDEXER_GEAR_RATIO = (38.0 / 12.0) * (46.0 / 20.0) * (36.0 / 18.0);
+  public static final double SPINDEXER_GEAR_RATIO = (38.0 / 12.0) * (38.0 / 20.0) * (36.0 / 18.0);
 
   public static final Gains SPINDEXER_GAINS = new Gains(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
   public static final Constraints SPINDEXER_CONSTRAINTS = new Constraints(24.0, 36.0);
@@ -67,7 +67,7 @@ public class Spindexer extends GenericRoller {
 
   public Spindexer(GenericRollerIO io) {
     super("Spindexer", io, CONSTANTS);
-    setDefaultCommand(setVoltage(() -> state.getSpindexerVelocity().get()));
+    setDefaultCommand(setVoltage(() -> state.getSpindexerVoltage().get()));
   }
 
   public Trigger hasFuel =

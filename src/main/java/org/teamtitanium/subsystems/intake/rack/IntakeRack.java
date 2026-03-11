@@ -11,7 +11,6 @@ import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.util.function.DoubleSupplier;
@@ -55,9 +54,6 @@ public class IntakeRack extends SubsystemBase {
   @AutoLogOutput(key = "Intake/Rack/TargetExtensionMeters")
   private double targetExtensionMeters = STOW_EXTENSION.in(Meters);
 
-  @AutoLogOutput(key = "Intake/Rack/IsHomed")
-  private boolean isHomed = false;
-
   private final Alert motorDisconnectedAlert =
       new Alert("Intake Rack Motor Disconnected", Alert.AlertType.kWarning);
   private final Debouncer disconnectedDebouncer = new Debouncer(0.5, DebounceType.kFalling);
@@ -80,8 +76,16 @@ public class IntakeRack extends SubsystemBase {
       new Debouncer(HOMING_DEBOUNCE_TIME_SECS, DebounceType.kRising);
   private final Debouncer homeVelocityDebouncer =
       new Debouncer(HOMING_DEBOUNCE_TIME_SECS, DebounceType.kRising);
-
-  private boolean homingSatisfied = false;
+  private final Trigger homeCurrentTrigger =
+      new Trigger(
+          () ->
+              homeCurrentDebouncer.calculate(
+                  Math.abs(inputs.torqueCurrentAmps) >= HOMING_CURRENT_THRESHOLD_AMPS));
+  private final Trigger homeVelocityTrigger =
+      new Trigger(
+          () ->
+              homeVelocityDebouncer.calculate(
+                  Math.abs(inputs.velocityRps) >= HOMING_VELOCITY_THRESHOLD_RPS));
 
   public IntakeRack(IntakeRackIO io) {
     this.io = io;
@@ -149,7 +153,7 @@ public class IntakeRack extends SubsystemBase {
   }
 
   public Command setVoltage(DoubleSupplier voltageSupplier) {
-    return runEnd(() -> io.setVoltage(voltageSupplier.getAsDouble()), () -> io.setVoltage(0.0))
+    return runEnd(() -> io.setVoltage(voltageSupplier.getAsDouble()), () -> io.stop())
         .withName("IntakeRack.SetVoltage");
   }
 
@@ -159,7 +163,7 @@ public class IntakeRack extends SubsystemBase {
 
   public Command stow() {
     return Commands.repeatingSequence(
-            setExtension(STOW_EXTENSION).until(stowStallCurrent()),
+            setExtension(STOW_EXTENSION).until(stowCurrentTrigger),
             setExtensionEnd(getExtension().plus(Inches.of(2.0))).withTimeout(2.0))
         .until(atSetpoint(STOW_EXTENSION));
   }
@@ -183,45 +187,17 @@ public class IntakeRack extends SubsystemBase {
                 < EXTENSION_TOLERANCE.in(Meters));
   }
 
-  public Trigger stowStallCurrent() {
-    return stowCurrentTrigger;
-  }
+  // public Trigger stowStallCurrent() {
+  //   return stowCurrentTrigger;
+  // }
 
   public void setBrakeMode(boolean enabled) {
     io.setBrakeMode(enabled);
   }
 
-  public void zero() {
-    io.setMotorPosition(0.0);
-  }
-
-  public Command home() {
-    return new FunctionalCommand(
-            () -> {
-              homingSatisfied = false;
-              isHomed = false;
-            },
-            () -> {
-              io.setVoltage(HOMING_VOLTAGE_VOLTS);
-              boolean currentReady =
-                  homeCurrentDebouncer.calculate(
-                      inputs.supplyCurrentAmps >= HOMING_CURRENT_THRESHOLD_AMPS);
-              boolean velocityReady =
-                  homeVelocityDebouncer.calculate(
-                      Math.abs(inputs.velocityRps) <= HOMING_VELOCITY_THRESHOLD_RPS);
-              homingSatisfied = currentReady && velocityReady;
-            },
-            interrupted -> io.setVoltage(0.0),
-            () -> homingSatisfied,
-            this)
-        .andThen(
-            runOnce(
-                () -> {
-                  io.setMotorPosition(0.0);
-                  targetExtensionMeters = MIN_EXTENSION.in(Meters);
-                  isHomed = true;
-                }))
-        .andThen(setExtension(MIN_EXTENSION))
-        .withName("IntakeRack.Home");
+  public Command zeroIntake() {
+    return Commands.sequence(
+        setVoltage(HOMING_VOLTAGE_VOLTS).until(homeCurrentTrigger.and(homeVelocityTrigger)),
+        Commands.runOnce(() -> io.setMotorPosition(0.0)));
   }
 }
