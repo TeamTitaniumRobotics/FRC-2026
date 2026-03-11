@@ -331,19 +331,6 @@ public class Swerve extends SubsystemBase {
     }
   }
 
-  public void followChoreoTrajectory(SwerveSample sample) {
-    Pose2d pose = RobotState.getInstance().getEstimatedPose();
-
-    ChassisSpeeds speeds =
-        new ChassisSpeeds(
-            sample.vx + xPosController.calculate(pose.getX(), sample.x),
-            sample.vy + yPosController.calculate(pose.getY(), sample.y),
-            sample.omega
-                + headingController.calculate(pose.getRotation().getRadians(), sample.heading));
-
-    runVelocity(speeds);
-  }
-
   /** Returns a command to run a quasistatic test in the specified direction. */
   public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
     return run(() -> runCharacterization(0.0))
@@ -398,7 +385,7 @@ public class Swerve extends SubsystemBase {
             sample.omega
                 + headingController.calculate(pose.getRotation().getRadians(), sample.heading));
 
-    // Convert field-relative -> robot-relative before module kinematics.
+    // Convert field-relative to robot relative
     ChassisSpeeds robotRelativeSpeeds =
         ChassisSpeeds.fromFieldRelativeSpeeds(fieldRelativeSpeeds, pose.getRotation());
 
