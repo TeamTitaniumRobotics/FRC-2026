@@ -35,7 +35,7 @@ public class HubTracker {
       shiftEndCountDelay + -1 * (maxToF + maxFuelCountDelay);
 
   public static final double autoEndTime = 20.0;
-  public static final double telopDuration = 140.0;
+  public static final double teleopDuration = 140.0;
   private static final boolean[] activeSchedule = {true, true, false, true, false, true};
   private static final boolean[] inactiveSchedule = {true, false, true, false, true, true};
   private static final double timeResetThreshold = 3.0;
