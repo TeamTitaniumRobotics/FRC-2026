@@ -2,6 +2,7 @@ package org.teamtitanium.commands;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
@@ -30,7 +31,7 @@ public class DriveCommands {
   public static final double FF_START_DELAY = 2.0;
   public static final double FF_RAMP_RATE = 0.1;
   private static final double WHEEL_RADIUS_MAX_VELOCITY = 0.25;
-  private static final double WHEEL_RADIUS_RAMP_RATE = 0.05;
+  private static final double WHEEL_RADIUS_RAMP_RATE = 0.1;
 
   private static final PIDController TRENCH_CONTROLLER = new PIDController(5.0, 0.0, 0.0);
   private static final PIDController ROTATIONAL_CONTROLLER = new PIDController(5.0, 0.0, 0.0);
@@ -43,6 +44,12 @@ public class DriveCommands {
 
   public static Translation2d getLinearVelocityFromJoysticks(double x, double y) {
     double linearMagnitude = MathUtil.applyDeadband(Math.hypot(x, y), DEADBAND);
+
+    // Prevent Rotation2d(0, 0) exception when stick is centered / in deadband
+    if (linearMagnitude <= 1e-6) {
+      return Translation2d.kZero;
+    }
+
     Rotation2d linearDirection = new Rotation2d(x, y);
 
     linearMagnitude = linearMagnitude * linearMagnitude;
@@ -231,5 +238,89 @@ public class DriveCommands {
                   System.out.println("\tkS: " + formatter.format(kS));
                   System.out.println("\tkV: " + formatter.format(kV));
                 }));
+  }
+
+  /** Measures the robot's wheel radius by spinning in a circle. */
+  public static Command wheelRadiusCharacterization(Swerve swerve) {
+    SlewRateLimiter limiter = new SlewRateLimiter(WHEEL_RADIUS_RAMP_RATE);
+    WheelRadiusCharacterizationState state = new WheelRadiusCharacterizationState();
+
+    return Commands.parallel(
+        // Drive control sequence
+        Commands.sequence(
+            // Reset acceleration limiter
+            Commands.runOnce(() -> limiter.reset(0.0)),
+
+            // Turn in place, accelerating up to full speed
+            Commands.run(
+                () -> {
+                  double speed = limiter.calculate(WHEEL_RADIUS_MAX_VELOCITY);
+                  swerve.runVelocity(new ChassisSpeeds(0.0, 0.0, speed));
+                },
+                swerve)),
+
+        // Measurement sequence
+        Commands.sequence(
+            // Wait for modules to fully orient before starting measurement
+            Commands.waitSeconds(1.0),
+
+            // Record starting measurement
+            Commands.runOnce(
+                () -> {
+                  state.positions = swerve.getWheelRadiusCharacterizationPositions();
+                  state.lastAngle = RobotState.getInstance().getRotation();
+                  state.gyroDelta = 0.0;
+                }),
+
+            // Update gyro delta
+            Commands.run(
+                    () -> {
+                      var rotation = RobotState.getInstance().getRotation();
+                      state.gyroDelta += Math.abs(rotation.minus(state.lastAngle).getRadians());
+                      state.lastAngle = rotation;
+
+                      double[] positions = swerve.getWheelRadiusCharacterizationPositions();
+                      double wheelDelta = 0.0;
+                      for (int i = 0; i < 4; i++) {
+                        wheelDelta += Math.abs(positions[i] - state.positions[i]) / 4.0;
+                      }
+                      double wheelRadius =
+                          (state.gyroDelta * Swerve.DRIVE_BASE_RADIUS) / wheelDelta;
+
+                      Logger.recordOutput("Swerve/WheelDelta", wheelDelta);
+                      Logger.recordOutput("Swerve/WheelRadius", wheelRadius);
+                    })
+
+                // When cancelled, calculate and print results
+                .finallyDo(
+                    () -> {
+                      double[] positions = swerve.getWheelRadiusCharacterizationPositions();
+                      double wheelDelta = 0.0;
+                      for (int i = 0; i < 4; i++) {
+                        wheelDelta += Math.abs(positions[i] - state.positions[i]) / 4.0;
+                      }
+                      double wheelRadius =
+                          (state.gyroDelta * Swerve.DRIVE_BASE_RADIUS) / wheelDelta;
+
+                      NumberFormat formatter = new DecimalFormat("#0.00000000");
+                      System.out.println(
+                          "********** Wheel Radius Characterization Results **********");
+                      System.out.println(
+                          "\tWheel Delta: " + formatter.format(wheelDelta) + " radians");
+                      System.out.println(
+                          "\tGyro Delta: " + formatter.format(state.gyroDelta) + " radians");
+                      System.out.println(
+                          "\tWheel Radius: "
+                              + formatter.format(wheelRadius)
+                              + " meters, "
+                              + formatter.format(Units.metersToInches(wheelRadius))
+                              + " inches");
+                    })));
+  }
+
+  private static class WheelRadiusCharacterizationState {
+    double[] positions = new double[4];
+    Rotation2d lastAngle = Rotation2d.kZero;
+    double gyroDelta = 0.0;
   }
 }

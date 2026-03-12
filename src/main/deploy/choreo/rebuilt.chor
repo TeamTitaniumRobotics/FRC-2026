@@ -1,0 +1,149 @@
+{
+ "name":"rebuilt",
+ "version":2,
+ "type":"Swerve",
+ "variables":{
+  "expressions":{
+   "FieldL":{
+    "dimension":"Length",
+    "var":{
+     "exp":"651.22 in",
+     "val":16.540988
+    }
+   },
+   "FieldW":{
+    "dimension":"Length",
+    "var":{
+     "exp":"317.6875 in",
+     "val":8.069262499999999
+    }
+   },
+   "TrenchW":{
+    "dimension":"Length",
+    "var":{
+     "exp":"47 in",
+     "val":1.1938
+    }
+   }
+  },
+  "poses":{
+   "RFE":{
+    "x":{
+     "exp":"RFS.x",
+     "val":7.93556325
+    },
+    "y":{
+     "exp":"FieldW / 2 - 12 in - 16.625 in",
+     "val":3.3075562499999993
+    },
+    "heading":{
+     "exp":"RFS.heading",
+     "val":1.5707963267948966
+    }
+   },
+   "RFS":{
+    "x":{
+     "exp":"(324.29875 - 11.875) in",
+     "val":7.93556325
+    },
+    "y":{
+     "exp":"(158.84375 - 95 - 28.625) in",
+     "val":0.8945562499999999
+    },
+    "heading":{
+     "exp":"(PI / 2) rad",
+     "val":1.5707963267948966
+    }
+   },
+   "RTS":{
+    "x":{
+     "exp":"4.398963262 m",
+     "val":4.398963262
+    },
+    "y":{
+     "exp":"0.6393655 m",
+     "val":0.6393655
+    },
+    "heading":{
+     "exp":"0 rad",
+     "val":0.0
+    }
+   }
+  }
+ },
+ "config":{
+  "frontLeft":{
+   "x":{
+    "exp":"9.6875 in",
+    "val":0.2460625
+   },
+   "y":{
+    "exp":"11.875 in",
+    "val":0.301625
+   }
+  },
+  "backLeft":{
+   "x":{
+    "exp":"-9.6875 in",
+    "val":-0.2460625
+   },
+   "y":{
+    "exp":"11.875 in",
+    "val":0.301625
+   }
+  },
+  "mass":{
+   "exp":"140 lbs",
+   "val":63.502931800000006
+  },
+  "inertia":{
+   "exp":"6 kg m ^ 2",
+   "val":6.0
+  },
+  "gearing":{
+   "exp":"6.12",
+   "val":6.12
+  },
+  "radius":{
+   "exp":"2.119 in",
+   "val":0.053822600000000005
+  },
+  "vmax":{
+   "exp":"5800 RPM",
+   "val":607.3745796940267
+  },
+  "tmax":{
+   "exp":"1 N * m",
+   "val":1.0
+  },
+  "cof":{
+   "exp":"1.2",
+   "val":1.2
+  },
+  "bumper":{
+   "front":{
+    "exp":"16 in",
+    "val":0.4064
+   },
+   "side":{
+    "exp":"18 in",
+    "val":0.4572
+   },
+   "back":{
+    "exp":"16 in",
+    "val":0.4064
+   }
+  },
+  "differentialTrackWidth":{
+   "exp":"22 in",
+   "val":0.5588
+  }
+ },
+ "generationFeatures":[],
+ "codegen":{
+  "root":"..\\..\\java\\org\\teamtitanium\\autos\\generated",
+  "genVars":true,
+  "genTrajData":true,
+  "useChoreoLib":true
+ }
+}

@@ -21,6 +21,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
@@ -133,7 +134,7 @@ public class Robot extends LoggedRobot {
       new Alert("Please wait to enable, robot is initializing", Alert.AlertType.kWarning);
 
   private final AutoChooser autoChooser = new AutoChooser();
-  private final AutoRoutines autos;
+  private final AutoRoutines autoRoutines;
 
   public Robot() {
     Leds.getInstance(); // Initialize LED subsystem early
@@ -313,20 +314,25 @@ public class Robot extends LoggedRobot {
         vision = new Vision(new VisionIO() {});
       }
     }
-    if (swerve != null) {
-      autos = new AutoRoutines(swerve, (sample, isStart) -> {});
-
-      // Create an AutoChooser
-      autoChooser.addRoutine("NewAuto", () -> autos.exampleAutoRoutine());
-      // Put the auto chooser on the dashboard
-      SmartDashboard.putData("autos", autoChooser);
-    } else {
-      autos = null;
-    }
 
     intake = new Intake(intakeRack, intakeRoller);
     shooter = new Shooter(flywheel, hood, turret);
     superstructure = new Superstructure(shooter, feeder, spindexer, intake, driver);
+
+    autoRoutines = new AutoRoutines(swerve);
+    autoChooser.addCmd("Right Outpost Trench", autoRoutines::getRightOutpostAuto);
+    autoChooser.addCmd("Left Double Pass", autoRoutines::leftDoublePass);
+    autoChooser.addCmd("Straight Test", autoRoutines::straightTuningAuto);
+
+    autoChooser.addCmd(
+        "Swerve FF Characterization", () -> DriveCommands.feedforwardCharacterization(swerve));
+    autoChooser.addCmd(
+        "Swerve Wheel Radius Characterization",
+        () -> DriveCommands.wheelRadiusCharacterization(swerve));
+
+    SmartDashboard.putData("Autos/AutoChooser", autoChooser);
+
+    RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());
 
     configureButtonBindings();
   }
@@ -629,7 +635,9 @@ public class Robot extends LoggedRobot {
   public void disabledInit() {}
 
   @Override
-  public void disabledPeriodic() {}
+  public void disabledPeriodic() {
+    Logger.recordOutput("Autos/SelectedAuto", autoChooser.selectedCommand().getName());
+  }
 
   @Override
   public void disabledExit() {}
@@ -637,11 +645,6 @@ public class Robot extends LoggedRobot {
   @Override
   public void autonomousInit() {
     autoStartTime = Timer.getTimestamp();
-    autonomousCommand = autoChooser.selectedCommandScheduler();
-
-    if (autonomousCommand != null) {
-      CommandScheduler.getInstance().schedule(autonomousCommand);
-    }
   }
 
   @Override

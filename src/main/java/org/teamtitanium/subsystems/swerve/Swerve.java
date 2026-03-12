@@ -1,9 +1,6 @@
 package org.teamtitanium.subsystems.swerve;
 
-import static edu.wpi.first.units.Units.KilogramSquareMeters;
-import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
-import static edu.wpi.first.units.Units.Pounds;
 import static edu.wpi.first.units.Units.Volts;
 
 import choreo.trajectory.SwerveSample;
@@ -21,10 +18,8 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.units.measure.Mass;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
@@ -36,9 +31,6 @@ import java.util.Optional;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import lombok.Setter;
-import org.ironmaple.simulation.drivesims.COTS;
-import org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig;
-import org.ironmaple.simulation.drivesims.configs.SwerveModuleSimulationConfig;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.teamtitanium.Robot;
@@ -68,25 +60,6 @@ public class Swerve extends SubsystemBase {
           Math.max(
               Math.hypot(TunerConstants.BackLeft.LocationX, TunerConstants.BackLeft.LocationX),
               Math.hypot(TunerConstants.BackRight.LocationX, TunerConstants.BackRight.LocationY)));
-
-  private static final Mass ROBOT_MASS = Pounds.of(150);
-  private static final double WHEEL_COF = 1.2;
-  public static final DriveTrainSimulationConfig mapleSimConfig =
-      DriveTrainSimulationConfig.Default()
-          .withRobotMass(ROBOT_MASS)
-          .withCustomModuleTranslations(getModuleTranslations())
-          .withGyro(COTS.ofPigeon2())
-          .withSwerveModule(
-              new SwerveModuleSimulationConfig(
-                  DCMotor.getKrakenX60(1),
-                  DCMotor.getFalcon500(1),
-                  7.363636363636365,
-                  15.42857142857143,
-                  Volts.of(TunerConstants.FrontLeft.DriveFrictionVoltage),
-                  Volts.of(TunerConstants.FrontLeft.SteerFrictionVoltage),
-                  Meters.of(TunerConstants.FrontLeft.WheelRadius),
-                  KilogramSquareMeters.of(TunerConstants.FrontLeft.SteerInertia),
-                  WHEEL_COF));
 
   public static final Lock odometryLock = new ReentrantLock();
 
@@ -144,9 +117,9 @@ public class Swerve extends SubsystemBase {
 
   @AutoLogOutput private boolean velocityMode = false;
 
-  private final PIDController xPosController = new PIDController(5.0, 0.0, 0.0);
-  private final PIDController yPosController = new PIDController(5.0, 0.0, 0.0);
-  private final PIDController headingController = new PIDController(5.0, 0.0, 0.0);
+  private final PIDController xPosController = new PIDController(10.0, 0.0, 0.0);
+  private final PIDController yPosController = new PIDController(10.0, 0.0, 0.0);
+  private final PIDController headingController = new PIDController(7.5, 0.0, 0.0);
 
   public Swerve(
       GyroIO gyroIO,
@@ -351,24 +324,34 @@ public class Swerve extends SubsystemBase {
   //   Logger.recordOutput("Swerve/SwerveStates/ModuleForces", wheelForces);
   // }
 
-  public void runCharacterization(double output) {
-    velocityMode = false;
-    for (var swerveModule : swerveModules) {
-      swerveModule.runCharacterization(output);
-    }
-  }
-
+  /** Follows a Choreo trajectory. */
   public void followChoreoTrajectory(SwerveSample sample) {
     Pose2d pose = RobotState.getInstance().getEstimatedPose();
 
-    ChassisSpeeds speeds =
+    Logger.recordOutput("Swerve/Choreo/Sample", sample);
+    Logger.recordOutput("Swerve/Choreo/ErrorX", sample.x - pose.getX());
+    Logger.recordOutput("Swerve/Choreo/ErrorY", sample.y - pose.getY());
+    Logger.recordOutput(
+        "Swerve/Choreo/ErrorTheta", sample.heading - pose.getRotation().getRadians());
+
+    ChassisSpeeds fieldRelativeSpeeds =
         new ChassisSpeeds(
             sample.vx + xPosController.calculate(pose.getX(), sample.x),
             sample.vy + yPosController.calculate(pose.getY(), sample.y),
             sample.omega
                 + headingController.calculate(pose.getRotation().getRadians(), sample.heading));
 
-    runVelocity(speeds);
+    ChassisSpeeds robotRelativeSpeeds =
+        ChassisSpeeds.fromFieldRelativeSpeeds(fieldRelativeSpeeds, pose.getRotation());
+
+    runVelocity(robotRelativeSpeeds);
+  }
+
+  public void runCharacterization(double output) {
+    velocityMode = false;
+    for (var swerveModule : swerveModules) {
+      swerveModule.runCharacterization(output);
+    }
   }
 
   /** Returns a command to run a quasistatic test in the specified direction. */
@@ -443,6 +426,16 @@ public class Swerve extends SubsystemBase {
     return output;
   }
 
+  /** Returns the positions of the modules in radians for wheel radius characterization. */
+  public double[] getWheelRadiusCharacterizationPositions() {
+    double[] positions = new double[4];
+    for (int i = 0; i < 4; i++) {
+      positions[i] = swerveModules[i].getWheelRadiusCharacterizationPosition();
+    }
+    return positions;
+  }
+
+  /** Returns the translations of the modules in meters. */
   public static Translation2d[] getModuleTranslations() {
     return new Translation2d[] {
       new Translation2d(TunerConstants.FrontLeft.LocationX, TunerConstants.FrontLeft.LocationY),

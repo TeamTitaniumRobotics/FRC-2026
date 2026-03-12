@@ -13,6 +13,7 @@ import lombok.Getter;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.teamtitanium.RobotState;
+import org.teamtitanium.autos.AutoRoutines;
 import org.teamtitanium.subsystems.feeder.Feeder;
 import org.teamtitanium.subsystems.feeder.Feeder.FeederState;
 import org.teamtitanium.subsystems.intake.Intake;
@@ -110,8 +111,8 @@ public class Superstructure extends VirtualSubsystem {
     this.spindexer = spindexer;
     this.intake = intake;
 
-    intakeReq = driver.leftTrigger();
-    scoreReq = driver.rightTrigger();
+    intakeReq = driver.leftTrigger().or(AutoRoutines.autoIntakeReq);
+    scoreReq = driver.rightTrigger().or(AutoRoutines.autoScoreReq);
     passReq = new Trigger(() -> false);
     stowReq = new Trigger(() -> false);
     spitReq = new Trigger(() -> false);
