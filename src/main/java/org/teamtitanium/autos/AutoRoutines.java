@@ -190,7 +190,14 @@ public class AutoRoutines {
     }
 
     public AutoTrajectory getTrajectory(AutoRoutine routine) {
-      return ChoreoTraj.ALL_TRAJECTORIES.get(this.name()).asAutoTraj(routine);
+      AutoTrajectory desiredTraj =
+          ChoreoTraj.ALL_TRAJECTORIES
+              .getOrDefault(this.name(), ChoreoTraj.StraightPath)
+              .asAutoTraj(routine);
+      if (desiredTraj == null) {
+        desiredTraj = ChoreoTraj.StraightPath.asAutoTraj(routine);
+      }
+      return desiredTraj;
     }
   }
 }
