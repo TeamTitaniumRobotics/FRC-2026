@@ -119,7 +119,7 @@ public class Swerve extends SubsystemBase {
 
   private final PIDController xPosController = new PIDController(10.0, 0.0, 0.0);
   private final PIDController yPosController = new PIDController(10.0, 0.0, 0.0);
-  private final PIDController headingController = new PIDController(7.75, 0.0, 0.0);
+  private final PIDController headingController = new PIDController(7.5, 0.0, 0.0);
 
   public Swerve(
       GyroIO gyroIO,

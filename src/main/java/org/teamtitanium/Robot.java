@@ -321,7 +321,7 @@ public class Robot extends LoggedRobot {
 
     autoRoutines = new AutoRoutines(swerve);
     autoChooser.addCmd("Right Outpost Trench", autoRoutines::getRightOutpostAuto);
-    autoChooser.addCmd("Left Outpost Trench", autoRoutines::getLeftOutpostAuto);
+    autoChooser.addCmd("Left Double Pass", autoRoutines::leftDoublePass);
     autoChooser.addCmd("Straight Test", autoRoutines::straightTuningAuto);
 
     autoChooser.addCmd(

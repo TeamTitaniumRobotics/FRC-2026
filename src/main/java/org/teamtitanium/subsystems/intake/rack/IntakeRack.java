@@ -85,7 +85,7 @@ public class IntakeRack extends SubsystemBase {
       new Trigger(
           () ->
               homeVelocityDebouncer.calculate(
-                  Math.abs(inputs.velocityRps) >= HOMING_VELOCITY_THRESHOLD_RPS));
+                  Math.abs(inputs.velocityRps) <= HOMING_VELOCITY_THRESHOLD_RPS));
 
   public IntakeRack(IntakeRackIO io) {
     this.io = io;

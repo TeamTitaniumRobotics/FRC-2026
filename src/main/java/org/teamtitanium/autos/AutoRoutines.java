@@ -79,8 +79,8 @@ public class AutoRoutines {
     return routine.cmd();
   }
 
-  public Command getLeftOutpostAuto() {
-    final AutoRoutine routine = factory.newRoutine("Left Outpost Score Auto");
+  public Command leftDoublePass() {
+    final AutoRoutine routine = factory.newRoutine("Left Double Pass Auto");
     Path[] paths = new Path[] {Path.LTS_LFME, Path.LFME_LTSB, Path.LTSB_LOB};
     Command autoCmd = paths[0].getTrajectory(routine).resetOdometry();
 
@@ -88,7 +88,7 @@ public class AutoRoutines {
       autoCmd = autoCmd.andThen(followPath(path, routine));
     }
 
-    autoCmd = autoCmd.andThen(Commands.sequence(setAutoIntake(true), setAutoScore(true)));
+    autoCmd = autoCmd.andThen(setAutoScore(true));
 
     routine.active().onTrue(autoCmd);
 
@@ -174,10 +174,7 @@ public class AutoRoutines {
     RTSB_ROB(PathAction.SCORE, true),
     LTS_LFME(PathAction.INTAKE),
     LFME_LTSB(PathAction.NOTHING),
-    LTSB_LOB(
-        PathAction.SCORE,
-        true); // Not sure exactly what to name this one since it kinda ends in the somewhere around
-    // the depot
+    LTSB_LOB(PathAction.NOTHING);
 
     private final PathAction action;
     private final boolean intakeDeployed;
