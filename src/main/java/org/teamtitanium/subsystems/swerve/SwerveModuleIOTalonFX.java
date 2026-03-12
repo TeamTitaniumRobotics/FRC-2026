@@ -264,8 +264,7 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
 
   @Override
   public void setDriveVelocity(double velocityRadPerSec) {
-    double rotationsPerSec =
-        Units.radiansToRotations(velocityRadPerSec) * swerveConstants.DriveMotorGearRatio;
+    double rotationsPerSec = Units.radiansToRotations(velocityRadPerSec);
     driveMotor.setControl(
         switch (swerveConstants.DriveMotorClosedLoopOutput) {
           case Voltage -> voltageOut.withOutput(rotationsPerSec);
@@ -275,8 +274,7 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
 
   @Override
   public void setDriveVelocity(double velocityRadPerSec, double torqueFF) {
-    double rotationsPerSec =
-        Units.radiansToRotations(velocityRadPerSec) * swerveConstants.DriveMotorGearRatio;
+    double rotationsPerSec = Units.radiansToRotations(velocityRadPerSec);
     driveMotor.setControl(
         switch (swerveConstants.DriveMotorClosedLoopOutput) {
           case Voltage -> velocityVoltage.withVelocity(rotationsPerSec);

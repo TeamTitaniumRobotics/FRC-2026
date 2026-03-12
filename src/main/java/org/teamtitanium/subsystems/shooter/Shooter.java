@@ -6,14 +6,12 @@ import static edu.wpi.first.units.Units.Rotations;
 
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.util.function.Supplier;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.littletonrobotics.junction.AutoLogOutput;
-import org.teamtitanium.RobotState;
 import org.teamtitanium.subsystems.shooter.flywheel.Flywheel;
 import org.teamtitanium.subsystems.shooter.flywheel.FlywheelConstants;
 import org.teamtitanium.subsystems.shooter.hood.Hood;
@@ -26,8 +24,8 @@ public class Shooter {
   @RequiredArgsConstructor
   public enum ShooterState {
     STOW(
-        () -> RPM.of(ShotCalculator.getInstance().getParameters().flywheelRPM()),
-        () -> Rotations.of(ShotCalculator.getInstance().getParameters().hoodAngleRots()),
+        () -> RPM.of(ShotCalculator.getInstance().getParameters().flywheelIdleRPM()),
+        () -> HoodConstants.STOW_ANGLE,
         () -> Rotations.of(ShotCalculator.getInstance().getParameters().turretAngleRots())),
     AIM(
         () -> RPM.of(ShotCalculator.getInstance().getParameters().flywheelRPM()),
@@ -52,13 +50,14 @@ public class Shooter {
   @AutoLogOutput(key = "Shooter/State")
   private ShooterState state = ShooterState.STOW;
 
-  /**
-   * Override trigger: when active, the hood will stow regardless of the current shooter state. Used
-   * for auto-stow when going under the trench, etc.
-   */
-  @AutoLogOutput(key = "Shooter/HoodStowOverride")
-  @Setter
-  private Trigger hoodStowOverride = RobotState.getInstance().underTrench;
+  // /**
+  //  * Override trigger: when active, the hood will stow regardless of the current shooter state.
+  // Used
+  //  * for auto-stow when going under the trench, etc.
+  //  */
+  // @AutoLogOutput(key = "Shooter/HoodStowOverride")
+  // @Setter
+  // private Trigger hoodStowOverride = RobotState.getInstance().underTrench;
 
   /**
    * Creates a new Shooter subsystem with the given flywheel, hood, and turret.
@@ -76,11 +75,7 @@ public class Shooter {
     // flywheel.setDefaultCommand(
     //     flywheel.setVelocity(() -> RPM.of(flywheel.flywheelConfigNumber1.get())));
     // hood.setDefaultCommand(hood.setPosition(() -> Degrees.of(hood.hoodConfigNumber1.get())));
-    hood.setDefaultCommand(
-        Commands.either(
-            hood.setPosition(() -> HoodConstants.STOW_ANGLE),
-            hood.setPosition(() -> state.getHoodAngle().get()),
-            () -> hoodStowOverride.getAsBoolean()));
+    hood.setDefaultCommand(hood.setPosition(() -> state.getHoodAngle().get()));
     // turret.setDefaultCommand(
     //     turret.setPosition(() -> Degrees.of(turret.turretConfigNumber1.get())));
     turret.setDefaultCommand(turret.setPosition(() -> state.getTurretAngle().get()));

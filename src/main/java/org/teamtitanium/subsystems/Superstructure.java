@@ -123,7 +123,7 @@ public class Superstructure extends VirtualSubsystem {
     this.trenchStowOverride = RobotState.getInstance().underTrench;
 
     // Pass the hood-stow override trigger into Shooter so it can respect it
-    shooter.setHoodStowOverride(this.trenchStowOverride);
+    // shooter.setHoodStowOverride(this.trenchStowOverride);
 
     bindTransitions();
     bindModifierToggles(driver);
@@ -226,7 +226,8 @@ public class Superstructure extends VirtualSubsystem {
     switch (state) {
       case IDLE -> shooter.setState(ShooterState.STOW);
       case EJECT -> shooter.setState(ShooterState.EJECT);
-      default -> shooter.setState(ShooterState.AIM);
+      default -> shooter.setState(
+          trenchStowOverride.getAsBoolean() ? ShooterState.STOW : ShooterState.AIM);
     }
 
     // --- Resolve Intake state ---

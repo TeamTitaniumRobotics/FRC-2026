@@ -22,9 +22,9 @@ public class Feeder extends GenericRoller {
   @RequiredArgsConstructor
   public enum FeederState {
     IDLE(() -> 0.0),
-    FEED(() -> 6.0);
+    FEED(() -> 9.0);
 
-    @Getter private final Supplier<Double> feederVelocity;
+    @Getter private final Supplier<Double> feederVoltage;
   }
 
   public static final AngularVelocity IDLE_VELOCITY = RotationsPerSecond.of(0.0);
@@ -66,7 +66,7 @@ public class Feeder extends GenericRoller {
 
   public Feeder(GenericRollerIO io) {
     super("Feeder", io, CONSTANTS);
-    setDefaultCommand(setVoltage(() -> state.getFeederVelocity().get()));
+    setDefaultCommand(setVoltage(() -> state.getFeederVoltage().get()));
   }
 
   public Trigger hasFuel =
