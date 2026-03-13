@@ -119,12 +119,31 @@ public class DriveCommands {
       DoubleSupplier omegaSupplier) {
     return Commands.run(
             () -> {
+              double towardsTrenchScale =
+                  MathUtil.clamp(
+                      RobotState.getInstance().getTowardTrenchScaled(0.75)
+                          / Swerve.getMaxLinearSpeedMetersPerSec(),
+                      0.0,
+                      1.0);
+
+              // TODO: Test with towards scale and driver input scale
               double trenchOutput =
-                  TRENCH_CONTROLLER.calculate(RobotState.getInstance().getEstimatedPose().getY());
+                  TRENCH_CONTROLLER.calculate(RobotState.getInstance().getEstimatedPose().getY())
+                      * towardsTrenchScale;
+              trenchOutput =
+                  MathUtil.clamp(
+                      trenchOutput,
+                      -Swerve.getMaxLinearSpeedMetersPerSec(),
+                      Swerve.getMaxLinearSpeedMetersPerSec());
 
               double omega =
                   ROTATIONAL_CONTROLLER.calculate(
                       RobotState.getInstance().getRotation().getRadians());
+              omega =
+                  MathUtil.clamp(
+                      omega,
+                      -Swerve.getMaxAngularVelocityRadPerSec(),
+                      Swerve.getMaxAngularVelocityRadPerSec());
 
               ChassisSpeeds speeds =
                   new ChassisSpeeds(
@@ -150,12 +169,23 @@ public class DriveCommands {
             swerve)
         .beforeStarting(
             () -> {
+              TRENCH_CONTROLLER.reset();
+              ROTATIONAL_CONTROLLER.reset();
+
               TRENCH_CONTROLLER.setSetpoint(
                   RobotState.getInstance().getEstimatedPose().getY()
                           < FieldConstants.fieldWidth / 2.0
                       ? FieldConstants.LinesHorizontal.rightTrenchOpenMiddle
                       : FieldConstants.LinesHorizontal.leftTrenchOpenMiddle);
               ROTATIONAL_CONTROLLER.setSetpoint(getTrenchAngleRad());
+
+              Logger.recordOutput("AutoAlign/Trench/Active", true);
+            })
+        .finallyDo(
+            () -> {
+              Logger.recordOutput("AutoAlign/Trench/Active", false);
+              Logger.recordOutput("AutoAlign/Trench/TargetPose", Pose2d.kZero);
+              Logger.recordOutput("AutoAlign/Trench/TargetSpeeds", new ChassisSpeeds());
             });
   }
 

@@ -456,14 +456,14 @@ public class Robot extends LoggedRobot {
     driver.povUp().whileTrue(climber.setVoltage(() -> climber.configClimberNumber1.get()));
     driver.povDown().whileTrue(climber.setVoltage(() -> -climber.configClimberNumber1.get()));
 
-    // driver
-    //     .rightBumper()
-    //     .whileTrue(
-    //         DriveCommands.trenchDrive(
-    //             swerve,
-    //             () -> -driver.getLeftY(),
-    //             () -> -driver.getLeftX(),
-    //             () -> -driver.getRightX()));
+    RobotState.getInstance()
+        .towardsTrench
+        .whileTrue(
+            DriveCommands.trenchDrive(
+                swerve,
+                () -> -driver.getLeftY(),
+                () -> -driver.getLeftX(),
+                () -> -driver.getRightX()));
 
     // driver.leftBumper().onTrue(Commands.runOnce(() -> intake.setState(IntakeState.INTAKE)));
     // driver.rightBumper().onTrue(Commands.runOnce(() -> intake.setState(IntakeState.STOW)));

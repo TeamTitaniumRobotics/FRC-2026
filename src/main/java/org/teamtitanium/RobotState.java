@@ -1,15 +1,16 @@
 package org.teamtitanium;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.VecBuilder;
-import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -17,6 +18,7 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -30,7 +32,7 @@ import org.teamtitanium.utils.FieldConstants;
 public class RobotState {
   private static final double poseBufferSizeSeconds = 2.0;
   private static final Matrix<N3, N1> odometryStateStdDevs =
-      new Matrix<>(VecBuilder.fill(0.003, 0.003, 0.002));
+      new Matrix<>(VecBuilder.fill(0.05, 0.05, Units.degreesToRadians(5.0)));
 
   private static RobotState instance;
 
@@ -51,7 +53,7 @@ public class RobotState {
 
   // Odometry
   private final SwerveDriveKinematics kinematics;
-  private final SwerveDrivePoseEstimator poseEstimator;
+  // private final SwerveDrivePoseEstimator poseEstimator;
   private SwerveModulePosition[] lastWheelPositions =
       new SwerveModulePosition[] {
         new SwerveModulePosition(),
@@ -68,17 +70,18 @@ public class RobotState {
   @Getter @Setter private Rotation2d pitch = Rotation2d.kZero;
   @Getter @Setter private Rotation2d roll = Rotation2d.kZero;
 
+  private static final double TOWARDS_TRENCH_SPEED_THRESHOLD_MPS = 0.75;
+  private static final double TOWARDS_TRENCH_ON_THRESHOLD = 0.15;
+  private static final double TOWARDS_TRENCH_OFF_THRESHOLD = 0.08;
+  private static final double TOWARDS_TRENCH_MAX_DISTANCE_METERS = Units.feetToMeters(14.0);
+
+  private boolean towardsTrenchEnabled = false;
+
   private RobotState() {
     for (int i = 0; i < 3; i++) {
       qStdDevs.set(i, 0, Math.pow(odometryStateStdDevs.get(i, 0), 2));
     }
     kinematics = new SwerveDriveKinematics(Swerve.getModuleTranslations());
-    poseEstimator =
-        new SwerveDrivePoseEstimator(
-            kinematics, Rotation2d.kZero, lastWheelPositions, Pose2d.kZero
-            // VecBuilder.fill(0.05, 0.05, Math.toRadians(5.0)),
-            // VecBuilder.fill(0.5, 0.5, Math.toRadians(30.0))
-            );
   }
 
   public void addOdometryObservation(OdometryObservation observation) {
@@ -132,9 +135,8 @@ public class RobotState {
 
     // Calculate the transform from the odometry pose to the vision pose
     Transform2d sampledToOdometryTransform = new Transform2d(sampledPose.get(), odometryPose);
-    // Transform2d odometryToSampledTransform = sampledToOdometryTransform.inverse(); // TODO: Test
-    // with inverse
-    Transform2d odometryToSampledTransform = new Transform2d(odometryPose, sampledPose.get());
+    Transform2d odometryToSampledTransform = sampledToOdometryTransform.inverse(); // TODO: Test
+    // Transform2d odometryToSampledTransform = new Transform2d(odometryPose, sampledPose.get());
 
     // Apply the odometry transform to the estimated pose to get the estimated pose
     Pose2d estimateAtTime = estimatedPose.plus(odometryToSampledTransform);
@@ -186,15 +188,80 @@ public class RobotState {
   public Trigger inNeutralZone =
       FieldConstants.Zones.NEUTRAL_ZONE.containsRobot(this::getEstimatedPose, true);
 
-  // TODO: Add a check for if robot is driving towards trench at speed and if so, stow hood and
-  // align drivetrain with the trench. Also add an override on driver's controller to override the
-  // function. Also add drivetrain auto rotate for bump with same override
   @AutoLogOutput(key = "RobotState/UnderTrench")
   public Trigger underTrench =
       FieldConstants.Zones.TRENCH_ZONES.doesOrWillContain(
           () -> getTurretPosition().getTranslation().toTranslation2d(),
           this::getFieldVelocity,
           0.5);
+
+  public Trigger towardsTrench = new Trigger(this::isTowardsTrenchActive);
+
+  private boolean isTowardsTrenchActive() {
+    double distToTrench = getDistToTrench();
+
+    if (distToTrench > TOWARDS_TRENCH_MAX_DISTANCE_METERS) {
+      towardsTrenchEnabled = false;
+      return false;
+    }
+
+    double towardsTrench = getTowardTrenchScaled(TOWARDS_TRENCH_SPEED_THRESHOLD_MPS);
+
+    if (!towardsTrenchEnabled && towardsTrench > TOWARDS_TRENCH_ON_THRESHOLD) {
+      towardsTrenchEnabled = true;
+    } else if (towardsTrenchEnabled && towardsTrench < TOWARDS_TRENCH_OFF_THRESHOLD) {
+      towardsTrenchEnabled = false;
+    }
+
+    return towardsTrenchEnabled;
+  }
+
+  private double getDistToTrench() {
+    Translation2d robotPose = estimatedPose.getTranslation();
+    Translation2d targetTrench =
+        robotPose.getY() < FieldConstants.fieldWidth / 2.0
+            ? FieldConstants.RightTrench.openingTopCenter.toTranslation2d()
+            : FieldConstants.LeftTrench.openingTopCenter.toTranslation2d();
+
+    return robotPose.getDistance(targetTrench);
+  }
+
+  private double getTowardTrenchSpeed() {
+    Translation2d robotPose = estimatedPose.getTranslation();
+    Translation2d targetTrench =
+        robotPose.getY() < FieldConstants.fieldWidth / 2.0
+            ? FieldConstants.RightTrench.openingTopCenter.toTranslation2d()
+            : FieldConstants.LeftTrench.openingTopCenter.toTranslation2d();
+
+    Translation2d toTrench = targetTrench.minus(robotPose);
+    double distToTrench = toTrench.getNorm();
+    if (distToTrench < 1e-6) {
+      return 0.0;
+    }
+
+    Translation2d toTrenchUnit = toTrench.div(distToTrench);
+    ChassisSpeeds fieldVelocity = getFieldVelocity();
+    Translation2d velocityTowardTrench =
+        new Translation2d(fieldVelocity.vxMetersPerSecond, fieldVelocity.vyMetersPerSecond);
+
+    return toTrenchUnit.dot(velocityTowardTrench);
+  }
+
+  public double getTowardTrenchScaled(double speedThreshold) {
+    ChassisSpeeds fieldVelocity = getFieldVelocity();
+    double speedMagnitude =
+        Math.hypot(fieldVelocity.vxMetersPerSecond, fieldVelocity.vyMetersPerSecond);
+    if (speedMagnitude < speedThreshold) {
+      return 0.0;
+    }
+
+    double towardTrench = Math.max(0.0, getTowardTrenchSpeed());
+    double speedScale =
+        MathUtil.clamp(
+            (speedMagnitude - speedThreshold) / Swerve.getMaxLinearSpeedMetersPerSec(), 0.0, 1.0);
+
+    return towardTrench * speedScale;
+  }
 
   @AutoLogOutput(key = "RobotState/TurretPosition")
   public Transform3d getTurretPosition() {
