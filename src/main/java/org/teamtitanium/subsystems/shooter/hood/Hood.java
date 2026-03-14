@@ -9,6 +9,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
@@ -49,17 +50,27 @@ public class Hood extends SubsystemBase {
   private Trigger atSetpoint =
       new Trigger(() -> Math.abs(inputs.positionRots - targetPositionRots) < ANGLE_TOLERANCE_ROTS);
 
+  @AutoLogOutput(key = "Hood/HoodZeroed")
+  private boolean hoodZeroed = false;
+
   private final Debouncer currentDebouncer = new Debouncer(0.1, Debouncer.DebounceType.kRising);
   private final Debouncer velocityDebouncer = new Debouncer(0.05, Debouncer.DebounceType.kRising);
   private final Trigger currentTrigger =
       new Trigger(
           () ->
               currentDebouncer.calculate(
-                  Math.abs(inputs.torqueCurrentAmps) >= HoodConstants.ZERO_CURRENT_LIMIT));
+                      Math.abs(inputs.torqueCurrentAmps) >= HoodConstants.ZERO_CURRENT_LIMIT)
+                  && velocityDebouncer.calculate(
+                      Math.abs(inputs.velocityRps) <= HoodConstants.ZERO_VELOCITY_LIMIT));
 
   /** Creates a new Hood subsystem. */
   public Hood(HoodIO io) {
     this.io = io;
+
+    RobotModeTriggers.teleop()
+        .or(RobotModeTriggers.autonomous())
+        .and(() -> !hoodZeroed)
+        .onTrue(zeroHood());
   }
 
   @Override
@@ -140,7 +151,12 @@ public class Hood extends SubsystemBase {
 
   public Command zeroHood() {
     return Commands.sequence(
-        setVoltage(-1.0).until(currentTrigger), Commands.runOnce(() -> io.setMotorPosition(0.0)));
+        setVoltage(-1.0).until(currentTrigger),
+        Commands.runOnce(
+            () -> {
+              io.setMotorPosition(0.0);
+              hoodZeroed = true;
+            }));
   }
 
   /**

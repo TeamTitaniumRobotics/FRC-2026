@@ -4,11 +4,11 @@
 
 package org.teamtitanium;
 
-import static edu.wpi.first.units.Units.Degrees;
-
 import choreo.auto.AutoChooser;
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.hal.AllianceStationID;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.IterativeRobotBase;
@@ -252,8 +252,8 @@ public class Robot extends LoggedRobot {
         vision =
             new Vision(
                 new VisionIOPhoton(
-                    VisionConstants.forwardCameraName, VisionConstants.forwardCameraPose),
-                new VisionIOPhoton(VisionConstants.leftCameraName, VisionConstants.leftCameraPose));
+                    VisionConstants.frontCameraName, VisionConstants.frontCameraPose),
+                new VisionIOPhoton(VisionConstants.backCameraName, VisionConstants.backCameraPose));
       }
       case SIM -> {
         swerve =
@@ -287,12 +287,12 @@ public class Robot extends LoggedRobot {
         vision =
             new Vision(
                 new VisionIOSim(
-                    VisionConstants.forwardCameraName,
-                    VisionConstants.forwardCameraPose,
+                    VisionConstants.frontCameraName,
+                    VisionConstants.frontCameraPose,
                     () -> RobotState.getInstance().getEstimatedPose()),
                 new VisionIOSim(
-                    VisionConstants.leftCameraName,
-                    VisionConstants.leftCameraPose,
+                    VisionConstants.backCameraName,
+                    VisionConstants.backCameraPose,
                     () -> RobotState.getInstance().getEstimatedPose()));
       }
       default -> {
@@ -433,194 +433,43 @@ public class Robot extends LoggedRobot {
     swerve.setDefaultCommand(
         DriveCommands.joystickDrive(
             swerve,
-            () -> -driver.getLeftY() * 1.0,
-            () -> -driver.getLeftX() * 1.0,
-            () -> -driver.getRightX() * 1.0,
+            () -> -driver.getLeftY(),
+            () -> -driver.getLeftX(),
+            () -> -driver.getRightX(),
             () -> false));
 
-    // driver.start().onTrue(Commands.runOnce(() -> swerve.setGyroAngle(Rotations.of(0.0))));
-    // driver.start().onTrue(Commands.runOnce(() -> turret.zeroMotor()));
-    // driver.start().onTrue(Commands.runOnce(() -> intakeRack.zero()));
+    driver
+        .start()
+        .onTrue(
+            Commands.runOnce(
+                    () ->
+                        RobotState.getInstance()
+                            .setEstimatedPose(
+                                new Pose2d(
+                                    RobotState.getInstance().getEstimatedPose().getTranslation(),
+                                    Rotation2d.kZero)))
+                .ignoringDisable(true));
 
-    driver.back().onTrue(hood.zeroHood());
-    driver.start().onTrue(intakeRack.zeroIntake());
+    driver.back().whileTrue(hood.zeroHood());
+    // driver.back().whileTrue(Commands.parallel(hood.zeroHood(), intakeRack.zeroIntake()));
+    driver.start().whileTrue(intakeRack.zeroIntake());
 
-    // driver.leftBumper().whileTrue(turret.setVoltage(() -> turret.turretConfigNumber2.get()));
-    // driver.rightBumper().whileTrue(turret.setVoltage(() -> -turret.turretConfigNumber2.get()));
+    driver.leftStick().onTrue(Commands.runOnce(() -> swerve.stopWithX(), swerve));
+
     driver.y().whileTrue(intakeRack.setVoltage(() -> IntakeRack.configRackNumber2.get()));
     driver.a().whileTrue(intakeRack.setVoltage(() -> -IntakeRack.configRackNumber2.get()));
 
     driver.x().whileTrue(spindexer.setVoltage(() -> -spindexer.configurableNumber.get()));
     driver.b().whileTrue(spindexer.setVoltage(() -> spindexer.configurableNumber.get()));
 
-    driver.povUp().whileTrue(climber.setVoltage(() -> climber.configClimberNumber1.get()));
-    driver.povDown().whileTrue(climber.setVoltage(() -> -climber.configClimberNumber1.get()));
-
-    RobotState.getInstance()
-        .towardsTrench
+    driver
+        .rightBumper()
         .whileTrue(
             DriveCommands.trenchDrive(
                 swerve,
                 () -> -driver.getLeftY(),
                 () -> -driver.getLeftX(),
                 () -> -driver.getRightX()));
-
-    // driver.leftBumper().onTrue(Commands.runOnce(() -> intake.setState(IntakeState.INTAKE)));
-    // driver.rightBumper().onTrue(Commands.runOnce(() -> intake.setState(IntakeState.STOW)));
-    // driver.a().onTrue(Commands.runOnce(() -> intake.setState(IntakeState.AGITATE)));
-    // driver.b().onTrue(Commands.runOnce(() -> intake.setState(IntakeState.EJECT)));
-
-    // driver.rightTrigger().onTrue(Commands.runOnce(() -> feeder.setState(FeederState.FEED)));
-    // driver.leftTrigger().onTrue(Commands.runOnce(() -> feeder.setState(FeederState.IDLE)));
-
-    // driver.y().onTrue(Commands.runOnce(() -> shooter.setState(ShooterState.AIM)));
-    // driver.a().onTrue(Commands.runOnce(() -> shooter.setState(ShooterState.STOW)));
-
-    // driver
-    //     .leftTrigger()
-    //     .onTrue(Commands.runOnce(() -> intake.setState(IntakeState.INTAKE)))
-    //     .onFalse(Commands.runOnce(() -> intake.setState(IntakeState.STOW)));
-
-    // driver
-    //     .rightTrigger()
-    //     .onTrue(
-    //         Commands.runOnce(
-    //             () -> {
-    //               feeder.setState(FeederState.FEED);
-    //               spindexer.setState(SpindexerState.FEED);
-    //             }))
-    //     .onFalse(
-    //         Commands.runOnce(
-    //             () -> {
-    //               feeder.setState(FeederState.IDLE);
-    //               spindexer.setState(SpindexerState.IDLE);
-    //             }));
-
-    // driver
-    //     .rightBumper()
-    //     .onTrue(intakeRack.setExtension(() -> Inches.of(intakeRack.configRackNumber.get())))
-    //     .onFalse(intakeRack.stop());
-    // driver
-    //     .leftBumper()
-    //     .onTrue(intakeRack.setExtension(() -> Inches.of(0.0)))
-    //     .onFalse(intakeRack.stop());
-
-    // driver
-    //     .rightTrigger()
-    //     .onTrue(
-    //         intakeRoller.setVelocity(
-    //             () -> RotationsPerSecond.of(intakeRoller.configurableNumber.get())))
-    //     .onFalse(intakeRoller.stop());
-    // driver
-    //     .leftTrigger()
-    //     .onTrue(
-    //         intakeRoller.setVelocity(
-    //             () -> RotationsPerSecond.of(-intakeRoller.configurableNumber.get())))
-    //     .onFalse(intakeRoller.stop());
-
-    // driver.rightBumper().onTrue(intakeRack.setVoltage(() -> 2.0)).onFalse(intakeRack.stop());
-    // driver.leftBumper().onTrue(intakeRack.setVoltage(() -> -2.0)).onFalse(intakeRack.stop());
-
-    // driver
-    //     .b()
-    //     .onTrue(intakeRoller.setVoltage(() -> intakeRoller.configurableNumber.get()))
-    //     .onFalse(intakeRoller.stop());
-    // driver
-    //     .x()
-    //     .onTrue(intakeRoller.setVoltage(() -> -intakeRoller.configurableNumber.get()))
-    //     .onFalse(intakeRoller.stop());
-
-    // Feeder
-    // driver
-    //     .pov(0)
-    //     .onTrue(feeder.setVoltage(() -> feeder.configurableNumber.get()))
-    //     .onFalse(feeder.stop());
-    // driver
-    //     .pov(180)
-    //     .onTrue(feeder.setVoltage(() -> -feeder.configurableNumber.get()))
-    //     .onFalse(feeder.stop());
-
-    // driver
-    //     .pov(90)
-    //     .onTrue(feeder.setVelocity(() -> RotationsPerSecond.of(feeder.configurableNumber.get())))
-    //     .onFalse(feeder.stop());
-    // driver
-    //     .pov(270)
-    //     .onTrue(feeder.setVelocity(() ->
-    // RotationsPerSecond.of(-feeder.configurableNumber.get())))
-    //     .onFalse(feeder.stop());
-
-    // Spindexer
-    // driver
-    //     .x()
-    //     .onTrue(spindexer.setVoltage(() -> spindexer.configurableNumber.get()))
-    //     .onFalse(spindexer.stop());
-    // driver
-    //     .b()
-    //     .onTrue(spindexer.setVoltage(() -> -spindexer.configurableNumber.get()))
-    //     .onFalse(spindexer.stop());
-
-    // Hood
-    copilot.start().onTrue(Commands.runOnce(() -> hood.zeroHood()));
-
-    // copilot
-    //     .y()
-    //     .onTrue(hood.setPosition(() -> Degrees.of(hood.hoodConfigNumber1.get())))
-    //     .onFalse(hood.setVoltage(0.0));
-    // copilot.a().onTrue(hood.setPosition(() -> Degrees.of(0.0))).onFalse(hood.setVoltage(0.0));
-
-    copilot
-        .b()
-        .onTrue(hood.setVoltage(() -> hood.hoodConfigNumber2.get()))
-        .onFalse(hood.setVoltage(0.0));
-    copilot
-        .x()
-        .onTrue(hood.setVoltage(() -> -hood.hoodConfigNumber2.get()))
-        .onFalse(hood.setVoltage(0.0));
-
-    // Turet
-    copilot.back().onTrue(Commands.runOnce(() -> turret.zeroMotor()));
-
-    copilot
-        .rightBumper()
-        .onTrue(turret.setPosition(() -> Degrees.of(turret.turretConfigNumber1.get())))
-        .onFalse(turret.setVoltage(0.0));
-    copilot
-        .leftBumper()
-        .onTrue(turret.setPosition(() -> Degrees.of(0.0)))
-        .onFalse(turret.setVoltage(0.0));
-
-    copilot
-        .rightTrigger()
-        .onTrue(turret.setVoltage(() -> turret.turretConfigNumber2.get()))
-        .onFalse(turret.setVoltage(0.0));
-    copilot
-        .leftTrigger()
-        .onTrue(turret.setVoltage(() -> -turret.turretConfigNumber2.get()))
-        .onFalse(turret.setVoltage(0.0));
-
-    // Shooter
-    // copilot
-    //     .pov(90)
-    //     .onTrue(
-    //         flywheel.setVelocity(() ->
-    // RotationsPerSecond.of(flywheel.flywheelConfigNumber1.get())))
-    //     .onFalse(flywheel.setVelocity(RotationsPerSecond.of(0.0)));
-    // copilot
-    //     .pov(270)
-    //     .onTrue(
-    //         flywheel.setVelocity(
-    //             () -> RotationsPerSecond.of(-flywheel.flywheelConfigNumber1.get())))
-    //     .onFalse(flywheel.setVoltage(0.0));
-
-    // copilot
-    //     .pov(0)
-    //     .onTrue(flywheel.setVoltage(() -> flywheel.flywheelConfigNumber2.get()))
-    //     .onFalse(flywheel.setVoltage(0.0));
-    // copilot
-    //     .pov(180)
-    //     .onTrue(flywheel.setVoltage(() -> -flywheel.flywheelConfigNumber2.get()))
-    //     .onFalse(flywheel.setVoltage(0.0));
   }
 
   private void updateAlerts() {}

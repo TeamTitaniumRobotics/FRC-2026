@@ -76,10 +76,8 @@ public class Superstructure extends VirtualSubsystem {
 
   private final Trigger intakeReq;
   private final Trigger scoreReq;
-  private final Trigger passReq;
-  private final Trigger spitReq;
+  private final Trigger ejectReq;
   private final Trigger stowReq;
-  private final Trigger hasFuel;
 
   // ----------------------------- Modifier triggers --------------------------------
 
@@ -113,18 +111,12 @@ public class Superstructure extends VirtualSubsystem {
 
     intakeReq = driver.leftTrigger().or(AutoRoutines.autoIntakeReq);
     scoreReq = driver.rightTrigger().or(AutoRoutines.autoScoreReq);
-    passReq = new Trigger(() -> false);
-    stowReq = new Trigger(() -> false);
-    spitReq = new Trigger(() -> false);
-
-    hasFuel = spindexer.hasFuel.or(feeder.hasFuel);
+    stowReq = driver.povDown();
+    ejectReq = driver.povUp();
 
     // Modifier triggers - backed by simple booleans toggled via commands
     intakeDeployed = new Trigger(() -> intakeDeployedValue).or(intakeReq);
     this.trenchStowOverride = RobotState.getInstance().underTrench;
-
-    // Pass the hood-stow override trigger into Shooter so it can respect it
-    // shooter.setHoodStowOverride(this.trenchStowOverride);
 
     bindTransitions();
     bindModifierToggles(driver);
@@ -168,27 +160,12 @@ public class Superstructure extends VirtualSubsystem {
     bindTransition(SuperstructureState.SPIN_UP_SCORE, SuperstructureState.IDLE, scoreReq.negate());
     bindTransition(SuperstructureState.SCORE, SuperstructureState.IDLE, scoreReq.negate());
 
-    // IDLE -> SPIN_UP_PASS -> PASS
-    bindTransition(SuperstructureState.IDLE, SuperstructureState.SPIN_UP_PASS, passReq);
-    bindTransition(
-        SuperstructureState.SPIN_UP_PASS,
-        SuperstructureState.PASS,
-        shooter.atSetpoint().and(passReq));
-    bindTransition(
-        SuperstructureState.PASS,
-        SuperstructureState.IDLE,
-        passReq.negate().and(() -> stateTimer.hasElapsed(0.5)));
-    bindTransition(
-        SuperstructureState.SPIN_UP_PASS,
-        SuperstructureState.IDLE,
-        passReq.negate().and(() -> stateTimer.hasElapsed(0.5)));
-
     // IDLE -> EJECT (spit fuel out the front)
-    bindTransition(SuperstructureState.IDLE, SuperstructureState.EJECT, spitReq);
+    bindTransition(SuperstructureState.IDLE, SuperstructureState.EJECT, ejectReq);
     // Return to the state we were in before ejecting
     SuperstructureState.EJECT
         .getTrigger()
-        .and(spitReq.negate())
+        .and(ejectReq.negate())
         .onTrue(
             Commands.runOnce(
                     () -> {

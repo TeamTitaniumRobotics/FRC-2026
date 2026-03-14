@@ -98,7 +98,7 @@ public class IntakeConstants {
 
     // Homing parameters
     public static final double HOMING_VOLTAGE_VOLTS = -2.5;
-    public static final double HOMING_CURRENT_THRESHOLD_AMPS = 25.0;
+    public static final double HOMING_CURRENT_THRESHOLD_AMPS = 45.0;
     public static final double HOMING_VELOCITY_THRESHOLD_RPS = 0.05;
     public static final double HOMING_DEBOUNCE_TIME_SECS = 0.2;
 

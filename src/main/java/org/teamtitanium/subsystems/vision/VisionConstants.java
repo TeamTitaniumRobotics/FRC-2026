@@ -10,17 +10,17 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 
 public class VisionConstants {
-  public static final String forwardCameraName = "front";
-  public static final String leftCameraName = "left";
+  public static final String frontCameraName = "front";
+  public static final String backCameraName = "back";
 
-  public static final Transform3d forwardCameraPose =
+  public static final Transform3d frontCameraPose =
       new Transform3d(
-          new Translation3d(-0.012729, 0.03125, 0.54657),
-          new Rotation3d(0.0, Units.degreesToRadians(-6.0), Units.degreesToRadians(-20.0)));
-  public static final Transform3d leftCameraPose =
+          new Translation3d(-0.282414, 0.306387, 0.510389),
+          new Rotation3d(0.0, Units.degreesToRadians(-22.0), Units.degreesToRadians(0.0)));
+  public static final Transform3d backCameraPose =
       new Transform3d(
-          new Translation3d(-0.011051, 0.083184, 0.545662),
-          new Rotation3d(0.0, Units.degreesToRadians(-6.0), Units.degreesToRadians(50.0)));
+          new Translation3d(-0.305759, 0.314325, 0.325498),
+          new Rotation3d(0.0, Units.degreesToRadians(-28.0), Units.degreesToRadians(180.0)));
 
   public static final double maxAmbiguity = 0.3;
   public static final double maxZError = 0.75;
