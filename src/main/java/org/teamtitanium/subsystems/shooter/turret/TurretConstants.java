@@ -55,8 +55,8 @@ public class TurretConstants {
   public static final Gains TURRET_GAINS = new Gains(75.0, 0.0, 0.0, 0.35, 3.5, 0.0, 0.0);
 
   // Current Limits
-  public static final double STATOR_CURRENT_LIMIT = 60.0;
-  public static final double SUPPLY_CURRENT_LIMIT = 40.0;
+  public static final double STATOR_CURRENT_LIMIT = 40.0;
+  public static final double SUPPLY_CURRENT_LIMIT = 30.0;
 
   // Simulation
   public static final DCMotor TURRET_GEARBOX = DCMotor.getKrakenX44(1);

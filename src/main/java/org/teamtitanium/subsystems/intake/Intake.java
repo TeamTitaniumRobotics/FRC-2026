@@ -4,6 +4,7 @@ import static org.teamtitanium.subsystems.intake.IntakeConstants.RackConstants.*
 
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.util.function.Supplier;
@@ -71,6 +72,10 @@ public class Intake {
             roller.setVelocity(() -> RollerConstants.INTAKE_VELOCITY),
             roller.setVelocity(() -> state.getIntakeVelocity().get()),
             () -> state == IntakeState.STOW && rack.atSetpoint().negate().getAsBoolean()));
+  }
+
+  public Command zeroIntake() {
+    return rack.zeroIntake().alongWith(roller.stop());
   }
 
   public Trigger atSetpoint() {

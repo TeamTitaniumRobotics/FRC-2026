@@ -58,6 +58,7 @@ public class IntakeRack extends SubsystemBase {
       new Alert("Intake Rack Motor Disconnected", Alert.AlertType.kWarning);
   private final Debouncer disconnectedDebouncer = new Debouncer(0.5, DebounceType.kFalling);
 
+  @AutoLogOutput(key = "Intake/Rack/AtSetpoint")
   private final Trigger atSetpoint =
       new Trigger(
           () ->
@@ -86,6 +87,7 @@ public class IntakeRack extends SubsystemBase {
           () ->
               homeVelocityDebouncer.calculate(
                   Math.abs(inputs.velocityRps) <= HOMING_VELOCITY_THRESHOLD_RPS));
+  private boolean rackZeroed = false;
 
   public IntakeRack(IntakeRackIO io) {
     this.io = io;
@@ -198,6 +200,10 @@ public class IntakeRack extends SubsystemBase {
   public Command zeroIntake() {
     return Commands.sequence(
         setVoltage(HOMING_VOLTAGE_VOLTS).until(homeCurrentTrigger.and(homeVelocityTrigger)),
-        Commands.runOnce(() -> io.setMotorPosition(0.0)));
+        Commands.runOnce(
+            () -> {
+              io.setMotorPosition(0.0);
+              rackZeroed = true;
+            }));
   }
 }

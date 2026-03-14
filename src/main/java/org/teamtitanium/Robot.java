@@ -183,7 +183,7 @@ public class Robot extends LoggedRobot {
     Logger.start();
 
     // Disable CTRE Phoenix Pro auto logging to reduce overhead
-    SignalLogger.enableAutoLogging(false);
+    SignalLogger.enableAutoLogging(true);
 
     // Adjust loop timing overrun warning timeout
     try {
@@ -450,17 +450,16 @@ public class Robot extends LoggedRobot {
                                     Rotation2d.kZero)))
                 .ignoringDisable(true));
 
-    driver.back().whileTrue(hood.zeroHood());
+    driver.back().whileTrue(hood.zeroHood()); // TODO: Disable roller while zeroing rack
     // driver.back().whileTrue(Commands.parallel(hood.zeroHood(), intakeRack.zeroIntake()));
-    driver.start().whileTrue(intakeRack.zeroIntake());
+    driver.start().whileTrue(intake.zeroIntake());
 
     driver.leftStick().onTrue(Commands.runOnce(() -> swerve.stopWithX(), swerve));
 
-    driver.y().whileTrue(intakeRack.setVoltage(() -> IntakeRack.configRackNumber2.get()));
-    driver.a().whileTrue(intakeRack.setVoltage(() -> -IntakeRack.configRackNumber2.get()));
-
     driver.x().whileTrue(spindexer.setVoltage(() -> -spindexer.configurableNumber.get()));
     driver.b().whileTrue(spindexer.setVoltage(() -> spindexer.configurableNumber.get()));
+
+    copilot.a().whileTrue(spindexer.setVoltage(() -> -6.0));
 
     driver
         .rightBumper()
