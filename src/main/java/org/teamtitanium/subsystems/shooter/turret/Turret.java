@@ -15,6 +15,7 @@ import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
+import org.teamtitanium.Robot;
 import org.teamtitanium.utils.Constants.Constraints;
 import org.teamtitanium.utils.Constants.Gains;
 import org.teamtitanium.utils.LoggedTracer;
@@ -80,9 +81,9 @@ public class Turret extends SubsystemBase {
                 CANCODER_1_GEAR_TEETH,
                 CANCODER_2_GEAR_TEETH)
             .withMechanismRange(MIN_ANGLE, MAX_ANGLE)
-            .withMatchTolerance(Rotations.of(0.06))
-            .withAbsoluteEncoderInversions(false, false)
-            .withAbsoluteEncoderOffsets(Rotations.of(-0.4751), Rotations.of(0.2876))
+            .withMatchTolerance(Rotations.of(0.01))
+            // .withAbsoluteEncoderInversions(true, true)
+            // .withAbsoluteEncoderOffsets(Rotations.of(0.035400), Rotations.of(-0.275635))
             .withCrtGearRecommendationConstraints(1.2, 15, 45, 30);
     this.easyCRT = new EasyCRT(crtConfig);
   }
@@ -117,9 +118,10 @@ public class Turret extends SubsystemBase {
     }
 
     // Attempt to zero the turret
-    // if (!isZeroed && Robot.isInitializing()) {
-    // zeroTurretCRT();
-    // }
+    if (!isZeroed && Robot.isInitializing()) {
+      zeroTurretCRT();
+      // checkCrtValues();
+    }
 
     // Log the turret loop time
     LoggedTracer.record("Turret");
@@ -250,14 +252,18 @@ public class Turret extends SubsystemBase {
 
     Optional<Angle> zeroAngle = easyCRT.getAngleOptional();
     if (zeroAngle.isPresent()) {
-      double zeroRots = zeroAngle.get().in(Rotations);
-      // io.setMotorPosition(zeroRots);
+      double zeroRots = zeroAngle.get().plus(CRT_OFFSET).in(Rotations);
+      io.setMotorPosition(zeroRots);
       isZeroed = true;
       if (crtErrorAlert.get()) {
         crtErrorAlert.set(false);
       }
       Logger.recordOutput("Turret/CRT/ZeroAngleRots", zeroRots);
     } else {
+      crtErrorAlert.set(true);
+      Logger.recordOutput(
+          "Turret/CRT/LastStatus",
+          "CRT failed to find a valid zero angle, check CANcoder readings and CRT configuration!");
       Logger.recordOutput("Turret/CRT/ZeroAngleRots", Double.NaN);
     }
     Logger.recordOutput("Turret/CRT/LastErrorRots", easyCRT.getLastErrorRotations());

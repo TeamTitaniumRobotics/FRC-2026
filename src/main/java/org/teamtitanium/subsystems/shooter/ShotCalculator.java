@@ -62,15 +62,6 @@ public class ShotCalculator {
 
   public ShotParameters getParameters() {
     boolean passing = !RobotState.getInstance().inAllianceZone.getAsBoolean();
-    // if (AllianceFlipUtil.shouldFlip()) {
-    //   passing =
-    //       RobotState.getInstance().getEstimatedPose().getX()
-    //           < AllianceFlipUtil.applyX(FieldConstants.LinesVertical.hubCenter);
-    // } else {
-    //   passing =
-    //       RobotState.getInstance().getEstimatedPose().getX()
-    //           > FieldConstants.LinesVertical.hubCenter;
-    // }
 
     if (latestParameters != null) {
       return latestParameters;
@@ -107,6 +98,7 @@ public class ShotCalculator {
 
     Pose2d turretPosition = estimatedPose.transformBy(TURRET_TO_ROBOT.toTransform2d());
     double targetToTurretDistance = target.getDistance(turretPosition.getTranslation());
+    Logger.recordOutput("ShotCalculator/TurretPose", turretPosition);
 
     ChassisSpeeds fieldVelocity = RobotState.getInstance().getFieldVelocity();
     ChassisSpeeds turretVelocity =
@@ -160,18 +152,21 @@ public class ShotCalculator {
   }
 
   private static Rotation2d getTurretAngle(Pose2d robotPose, Translation2d target) {
-    Rotation2d robotToTarget = target.minus(robotPose.getTranslation()).getAngle();
-    Rotation2d targetAngle =
-        new Rotation2d(
-            Math.asin(
-                MathUtil.clamp(
-                    TURRET_TO_ROBOT.getTranslation().getY()
-                        / target.getDistance(robotPose.getTranslation()),
-                    -1.0,
-                    1.0)));
-    Rotation2d turretAngle = robotToTarget.minus(robotPose.getRotation()).minus(targetAngle);
+    // Rotation2d robotToTarget = target.minus(robotPose.getTranslation()).getAngle();
+    // Rotation2d targetAngle =
+    //     new Rotation2d(
+    //         Math.asin(
+    //             MathUtil.clamp(
+    //                 TURRET_TO_ROBOT.getTranslation().getY()
+    //                     / target.getDistance(robotPose.getTranslation()),
+    //                 -1.0,
+    //                 1.0)));
+    // Rotation2d turretAngle = robotToTarget.minus(robotPose.getRotation()).minus(targetAngle);
+    Pose2d turretPose = robotPose.transformBy(TURRET_TO_ROBOT.toTransform2d());
 
-    return turretAngle;
+    Rotation2d turretToTarget = target.minus(turretPose.getTranslation()).getAngle();
+
+    return turretToTarget.minus(robotPose.getRotation());
   }
 
   public void resetShotParameters() {
