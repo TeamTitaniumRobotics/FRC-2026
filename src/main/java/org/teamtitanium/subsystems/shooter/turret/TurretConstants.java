@@ -54,7 +54,7 @@ public class TurretConstants {
 
   // Motion Magic Constraints
   public static final Constraints TURRET_CONSTRAINTS =
-      new Constraints(0.75, 4.0); // Max velocity (rps), accel (rps^2)
+      new Constraints(1.1, 8.0); // Max velocity (rps), accel (rps^2)
 
   // PID Gains
   public static final Gains TURRET_GAINS = new Gains(75.0, 0.0, 0.0, 0.35, 3.5, 0.0, 0.0);
