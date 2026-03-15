@@ -36,10 +36,6 @@ import org.teamtitanium.autos.*;
 import org.teamtitanium.commands.DriveCommands;
 import org.teamtitanium.subsystems.Leds;
 import org.teamtitanium.subsystems.Superstructure;
-import org.teamtitanium.subsystems.climber.Climber;
-import org.teamtitanium.subsystems.climber.ClimberIO;
-import org.teamtitanium.subsystems.climber.ClimberIOSim;
-import org.teamtitanium.subsystems.climber.ClimberIOTalonFX;
 import org.teamtitanium.subsystems.feeder.Feeder;
 import org.teamtitanium.subsystems.genericroller.GenericRollerIO;
 import org.teamtitanium.subsystems.genericroller.GenericRollerIOSim;
@@ -108,7 +104,6 @@ public class Robot extends LoggedRobot {
   private final Intake intake;
   private final IntakeRack intakeRack;
   private final IntakeRoller intakeRoller;
-  private final Climber climber;
   private final Superstructure superstructure;
   private final Vision vision;
 
@@ -247,13 +242,14 @@ public class Robot extends LoggedRobot {
         intakeRack = new IntakeRack(new IntakeRackIOTalonFX());
         intakeRoller =
             new IntakeRoller(new GenericRollerIOTalonFX(IntakeConstants.RollerConstants.CONSTANTS));
-        climber = new Climber(new ClimberIOTalonFX());
 
         vision =
             new Vision(
                 new VisionIOPhoton(
                     VisionConstants.frontCameraName, VisionConstants.frontCameraPose),
-                new VisionIOPhoton(VisionConstants.backCameraName, VisionConstants.backCameraPose));
+                new VisionIOPhoton(VisionConstants.backCameraName, VisionConstants.backCameraPose),
+                new VisionIOPhoton(VisionConstants.leftCameraName, VisionConstants.leftCameraPose),
+                new VisionIOPhoton(VisionConstants.frCameraName, VisionConstants.frCameraPose));
       }
       case SIM -> {
         swerve =
@@ -283,7 +279,6 @@ public class Robot extends LoggedRobot {
                     IntakeConstants.RollerConstants.CONSTANTS,
                     IntakeConstants.RollerConstants.ROLLER_MOTOR_GEARBOX,
                     IntakeConstants.RollerConstants.ROLLER_MOI));
-        climber = new Climber(new ClimberIOSim());
         vision =
             new Vision(
                 new VisionIOSim(
@@ -293,6 +288,10 @@ public class Robot extends LoggedRobot {
                 new VisionIOSim(
                     VisionConstants.backCameraName,
                     VisionConstants.backCameraPose,
+                    () -> RobotState.getInstance().getEstimatedPose()),
+                new VisionIOSim(
+                    VisionConstants.leftCameraName,
+                    VisionConstants.leftCameraPose,
                     () -> RobotState.getInstance().getEstimatedPose()));
       }
       default -> {
@@ -310,8 +309,7 @@ public class Robot extends LoggedRobot {
         spindexer = new Spindexer(new GenericRollerIO() {});
         intakeRack = new IntakeRack(new IntakeRackIO() {});
         intakeRoller = new IntakeRoller(new GenericRollerIO() {});
-        climber = new Climber(new ClimberIO() {});
-        vision = new Vision(new VisionIO() {});
+        vision = new Vision(new VisionIO() {}, new VisionIO() {}, new VisionIO() {});
       }
     }
 
@@ -454,12 +452,21 @@ public class Robot extends LoggedRobot {
     // driver.back().whileTrue(Commands.parallel(hood.zeroHood(), intakeRack.zeroIntake()));
     driver.start().whileTrue(intake.zeroIntake());
 
-    driver.leftStick().onTrue(Commands.runOnce(() -> swerve.stopWithX(), swerve));
+    driver.leftStick().whileTrue(Commands.runOnce(() -> swerve.stopWithX(), swerve));
 
     driver.x().whileTrue(spindexer.setVoltage(() -> -spindexer.configurableNumber.get()));
     driver.b().whileTrue(spindexer.setVoltage(() -> spindexer.configurableNumber.get()));
 
-    copilot.a().whileTrue(spindexer.setVoltage(() -> -6.0));
+    copilot
+        .a()
+        .whileTrue(spindexer.setVoltage(() -> -6.0).alongWith(feeder.setVoltage(() -> -6.0)));
+
+    copilot
+        .leftBumper()
+        .onTrue(Commands.runOnce(() -> shotCalculator.incrementFlywheelOffset(50.0)));
+    copilot
+        .leftTrigger()
+        .onTrue(Commands.runOnce(() -> shotCalculator.incrementFlywheelOffset(-50.0)));
 
     driver
         .rightBumper()

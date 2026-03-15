@@ -12,6 +12,7 @@ import edu.wpi.first.math.interpolation.InverseInterpolator;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import lombok.experimental.ExtensionMethod;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.teamtitanium.RobotState;
 import org.teamtitanium.utils.AllianceFlipUtil;
@@ -32,6 +33,9 @@ public class ShotCalculator {
 
   public static final LoggedTunableNumber maxFlywheelIdleRPM =
       new LoggedTunableNumber("ShotCalculator/MaxFlywheelIdleRPM", 1800.0);
+
+  @AutoLogOutput(key = "ShotCalculator/FlywheelOffset")
+  private double flywheelOffset = 0.0;
 
   private ShotParameters latestParameters = null;
 
@@ -58,6 +62,7 @@ public class ShotCalculator {
     shotMap.put(5.0, new ShotData(3700, 16));
 
     passingMap.put(4.5, new ShotData(4250, 22.5));
+    passingMap.put(6.5, new ShotData(4500, 27.5));
   }
 
   public ShotParameters getParameters() {
@@ -130,7 +135,7 @@ public class ShotCalculator {
 
     Rotation2d turretAngle = getTurretAngle(predictedRobotPose, target);
     double hoodAngleRots = shotMap.get(predictedDistance).getHoodAngleRots();
-    double flywheelRPM = shotMap.get(predictedDistance).flywheelRPM();
+    double flywheelRPM = shotMap.get(predictedDistance).flywheelRPM() + flywheelOffset;
     double flywheelIdleRPM = MathUtil.clamp(flywheelRPM, 0.0, maxFlywheelIdleRPM.get());
 
     latestParameters =
@@ -171,6 +176,10 @@ public class ShotCalculator {
 
   public void resetShotParameters() {
     latestParameters = null;
+  }
+
+  public void incrementFlywheelOffset(double incrementValue) {
+    flywheelOffset += incrementValue;
   }
 
   public record ShotParameters(

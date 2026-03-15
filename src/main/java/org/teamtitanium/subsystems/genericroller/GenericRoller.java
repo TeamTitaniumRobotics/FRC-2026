@@ -6,6 +6,7 @@ import com.ctre.phoenix6.CANBus;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import java.util.function.Supplier;
@@ -65,6 +66,10 @@ public class GenericRoller extends SubsystemBase {
     Logger.processInputs(name + "/Roller", inputs);
 
     motorDisconnected.set(!motorConnectedDebouncer.calculate(inputs.motorConnected));
+
+    if (DriverStation.isDisabled()) {
+      stop();
+    }
 
     if (rollerkP.hasChanged(hashCode())
         || rollerkI.hasChanged(hashCode())

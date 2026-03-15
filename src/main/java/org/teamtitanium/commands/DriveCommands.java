@@ -128,8 +128,7 @@ public class DriveCommands {
 
               // TODO: Test with towards scale and driver input scale
               double trenchOutput =
-                  TRENCH_CONTROLLER.calculate(RobotState.getInstance().getEstimatedPose().getY())
-                      * towardsTrenchScale;
+                  TRENCH_CONTROLLER.calculate(RobotState.getInstance().getEstimatedPose().getY());
               trenchOutput =
                   MathUtil.clamp(
                       trenchOutput,

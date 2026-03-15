@@ -32,7 +32,7 @@ import org.teamtitanium.utils.FieldConstants;
 public class RobotState {
   private static final double poseBufferSizeSeconds = 2.0;
   private static final Matrix<N3, N1> odometryStateStdDevs =
-      new Matrix<>(VecBuilder.fill(0.05, 0.05, Units.degreesToRadians(5.0)));
+      new Matrix<>(VecBuilder.fill(0.1, 0.1, Units.degreesToRadians(5.0)));
 
   private static RobotState instance;
 
