@@ -32,7 +32,7 @@ public class ShotCalculator {
   }
 
   public static final LoggedTunableNumber maxFlywheelIdleRPM =
-      new LoggedTunableNumber("ShotCalculator/MaxFlywheelIdleRPM", 1800.0);
+      new LoggedTunableNumber("ShotCalculator/MaxFlywheelIdleRPM", 0.0);
 
   @AutoLogOutput(key = "ShotCalculator/FlywheelOffset")
   private double flywheelOffset = 0.0;
@@ -138,9 +138,15 @@ public class ShotCalculator {
     double flywheelRPM = shotMap.get(predictedDistance).flywheelRPM() + flywheelOffset;
     double flywheelIdleRPM = MathUtil.clamp(flywheelRPM, 0.0, maxFlywheelIdleRPM.get());
 
+    boolean isValid =
+        FieldConstants.Zones.NO_SHOOT_ZONE
+            .containsRobot(() -> RobotState.getInstance().getEstimatedPose(), false)
+            .negate()
+            .getAsBoolean();
+
     latestParameters =
         new ShotParameters(
-            true,
+            isValid,
             turretAngle.getRotations(),
             hoodAngleRots,
             flywheelRPM,
@@ -157,16 +163,6 @@ public class ShotCalculator {
   }
 
   private static Rotation2d getTurretAngle(Pose2d robotPose, Translation2d target) {
-    // Rotation2d robotToTarget = target.minus(robotPose.getTranslation()).getAngle();
-    // Rotation2d targetAngle =
-    //     new Rotation2d(
-    //         Math.asin(
-    //             MathUtil.clamp(
-    //                 TURRET_TO_ROBOT.getTranslation().getY()
-    //                     / target.getDistance(robotPose.getTranslation()),
-    //                 -1.0,
-    //                 1.0)));
-    // Rotation2d turretAngle = robotToTarget.minus(robotPose.getRotation()).minus(targetAngle);
     Pose2d turretPose = robotPose.transformBy(TURRET_TO_ROBOT.toTransform2d());
 
     Rotation2d turretToTarget = target.minus(turretPose.getTranslation()).getAngle();

@@ -20,6 +20,7 @@ import org.teamtitanium.subsystems.intake.Intake;
 import org.teamtitanium.subsystems.intake.Intake.IntakeState;
 import org.teamtitanium.subsystems.shooter.Shooter;
 import org.teamtitanium.subsystems.shooter.Shooter.ShooterState;
+import org.teamtitanium.subsystems.shooter.ShotCalculator;
 import org.teamtitanium.subsystems.shooter.turret.TurretConstants;
 import org.teamtitanium.subsystems.spindexer.Spindexer;
 import org.teamtitanium.subsystems.spindexer.Spindexer.SpindexerState;
@@ -76,6 +77,7 @@ public class Superstructure extends VirtualSubsystem {
 
   private final Trigger intakeReq;
   private final Trigger scoreReq;
+  private final Trigger autoScoreReq;
   private final Trigger ejectReq;
   private final Trigger stowReq;
 
@@ -110,12 +112,23 @@ public class Superstructure extends VirtualSubsystem {
     this.intake = intake;
 
     intakeReq = driver.leftTrigger().or(AutoRoutines.autoIntakeReq);
-    scoreReq = driver.rightTrigger().or(AutoRoutines.autoScoreReq);
+    autoScoreReq =
+        new Trigger(
+                () ->
+                    ShotCalculator.getInstance().getParameters().isValid()
+                        && !ShotCalculator.getInstance().getParameters().passing())
+            .and(driver.rightTrigger().negate());
+    scoreReq =
+        autoScoreReq
+            .negate()
+            .and(driver.rightTrigger())
+            .or(AutoRoutines.autoScoreReq)
+            .or(autoScoreReq);
     stowReq = driver.povDown();
     ejectReq = driver.povUp();
 
     // Modifier triggers - backed by simple booleans toggled via commands
-    intakeDeployed = new Trigger(() -> intakeDeployedValue).or(intakeReq);
+    intakeDeployed = new Trigger(() -> intakeDeployedValue).or(() -> intakeReq.getAsBoolean());
     this.trenchStowOverride = RobotState.getInstance().underTrench;
 
     bindTransitions();

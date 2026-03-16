@@ -98,6 +98,25 @@ public class FieldConstants {
         new RectangleZone(
             new Translation2d(LinesVertical.center - Hub.width, fieldWidth / 2.0 + Hub.width / 2.0),
             new Translation2d(LinesVertical.hubCenter, fieldWidth / 2.0 - Hub.width / 2.0));
+    public static final RectangleZone FAR_NO_PASS_ZONE =
+        new RectangleZone(
+            new Translation2d(
+                FieldConstants.fieldLength - Hub.width, fieldWidth / 2.0 + Hub.width / 2.0),
+            new Translation2d(LinesVertical.oppHubCenter, fieldWidth / 2.0 - Hub.width / 2.0));
+
+    public static final RectangleZone TOWER_ZONE =
+        new RectangleZone(
+            new Translation2d(Tower.depth, LinesHorizontal.towerEnd),
+            new Translation2d(0.0, LinesHorizontal.towerStart));
+
+    public static final IZone NO_SHOOT_ZONE =
+        NO_PASS_ZONE.union(FAR_NO_PASS_ZONE).union(TOWER_ZONE);
+  }
+
+  static {
+    Zones.FAR_NO_PASS_ZONE.visualize("FieldConstants/FarNoPassZone");
+    Zones.NO_PASS_ZONE.visualize("FieldConstants/NoPassZone");
+    Zones.TOWER_ZONE.visualize("FieldConstants/TowerZone");
   }
 
   /**
@@ -154,6 +173,9 @@ public class FieldConstants {
     public static final double oppLeftTrenchOpenEnd = oppLeftBumpStart + Units.inchesToMeters(12.0);
     public static final double oppLeftTrenchOpenMiddle = fieldWidth - LeftTrench.openingWidth / 2.0;
     public static final double oppLeftTrenchOpenStart = fieldWidth;
+
+    public static final double towerStart = Tower.centerPoint.getY() - Tower.width / 2.0;
+    public static final double towerEnd = Tower.centerPoint.getY() + Tower.width / 2.0;
   }
 
   /** Hub related constants */
