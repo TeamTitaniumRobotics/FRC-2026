@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj.util.Color;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.Getter;
+import org.littletonrobotics.junction.Logger;
 import org.teamtitanium.subsystems.Superstructure.SuperstructureState;
 import org.teamtitanium.utils.virtualsubsystem.VirtualSubsystem;
 
@@ -40,8 +41,9 @@ public class Leds extends VirtualSubsystem {
         mappedStates.put(SuperstructureState.values()[i], LEDStates.values()[i]);
       }
     } else {
-      System.out.println(
-          "The number of LEDStates doesn't match the number of SuperstructureStates. Please modify LEDStates so they match in length and the states match in name."); // There is probably a better way display/log this but idk
+      Logger.recordOutput(
+          "Leds/Error",
+          "The number of LEDStates doesn't match the number of SuperstructureStates. Please modify LEDStates so they match in length and the states match in name.");
     }
     led.setLength(LENGTH);
     led.start();
@@ -89,8 +91,6 @@ public class Leds extends VirtualSubsystem {
           mapped.getAnimation().applyTo(buffer);
           led.setData(buffer);
         } catch (Exception e) {
-          System.out.println(
-              "Leds periodic error:"); // There is probably a better way display/log this but idk
           e.printStackTrace();
         }
       }
