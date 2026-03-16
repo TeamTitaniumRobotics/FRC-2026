@@ -22,9 +22,8 @@ public class Leds extends VirtualSubsystem {
   private static final Frequency SCROLLSPEED = Percent.per(Seconds).of(100);
   private final Map<SuperstructureState, LEDStates> mappedStates = new HashMap<>();
   private SuperstructureState heldState;
-  private final AddressableLED led =
-      new AddressableLED(0); // TODO: Make sure this is the right PWM port
-  private final int LENGTH = 10; // TODO: set to number of leds
+  private final AddressableLED led = new AddressableLED(0);
+  private final int LENGTH = 20;
   private final AddressableLEDBuffer buffer = new AddressableLEDBuffer(LENGTH);
 
   public static Leds getInstance() {

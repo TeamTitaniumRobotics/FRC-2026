@@ -11,6 +11,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.IterativeRobotBase;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
@@ -468,19 +469,31 @@ public class Robot extends LoggedRobot {
         .leftTrigger()
         .onTrue(Commands.runOnce(() -> shotCalculator.incrementFlywheelOffset(-50.0)));
 
-    driver
-        .rightBumper()
-        .whileTrue(
-            DriveCommands.trenchDrive(
-                swerve,
-                () -> -driver.getLeftY(),
-                () -> -driver.getLeftX(),
-                () -> -driver.getRightX()));
+    RobotModeTriggers.teleop()
+        .or(RobotModeTriggers.autonomous())
+        .or(RobotModeTriggers.disabled())
+        .onTrue(Commands.runOnce(HubTracker::initialize).ignoringDisable(true));
   }
 
   private void updateAlerts() {}
 
-  private void updateDashboardOuputs() {}
+  private void updateDashboardOuputs() {
+    SmartDashboard.putNumber("Dashboard/MatchTime", DriverStation.getMatchTime());
+
+    SmartDashboard.putString(
+        "Dashboard/HubTracker/RemainingShiftTime",
+        String.format("%.1f", Math.max(HubTracker.getOffsetShiftInfo().remainingTime(), 0.0)));
+    SmartDashboard.putBoolean(
+        "Dashboard/HubTracker/HubActive", HubTracker.getOffsetShiftInfo().active());
+    SmartDashboard.putString(
+        "Dashboard/HubTracker/ShiftState",
+        HubTracker.getOffsetShiftInfo().currentShift().toString());
+    SmartDashboard.putBoolean(
+        "Dashboard/HubTracker/ActiveFirst",
+        DriverStation.getAlliance().orElse(Alliance.Blue) == HubTracker.getFirstActiveAlliance());
+
+    SmartDashboard.getBoolean("Dashboard/TurretTracking", true);
+  }
 
   public static boolean isInitializing() {
     return Timer.getTimestamp() < 45.0;
