@@ -113,12 +113,6 @@ public class FieldConstants {
         NO_PASS_ZONE.union(FAR_NO_PASS_ZONE).union(TOWER_ZONE);
   }
 
-  static {
-    Zones.FAR_NO_PASS_ZONE.visualize("FieldConstants/FarNoPassZone");
-    Zones.NO_PASS_ZONE.visualize("FieldConstants/NoPassZone");
-    Zones.TOWER_ZONE.visualize("FieldConstants/TowerZone");
-  }
-
   /**
    * Officially defined and relevant vertical lines found on the field (defined by X-axis offset)
    */

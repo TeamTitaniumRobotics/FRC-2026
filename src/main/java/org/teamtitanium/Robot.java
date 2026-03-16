@@ -319,7 +319,7 @@ public class Robot extends LoggedRobot {
     superstructure = new Superstructure(shooter, feeder, spindexer, intake, driver);
 
     autoRoutines = new AutoRoutines(swerve);
-    autoChooser.addCmd("Right Outpost Trench", autoRoutines::getRightOutpostAuto);
+    autoChooser.addCmd("Right Outpost", autoRoutines::getRightOutpostAuto);
     autoChooser.addCmd("Left Double Pass", autoRoutines::leftDoublePass);
     autoChooser.addCmd("Straight Test", autoRoutines::straightTuningAuto);
 

@@ -64,7 +64,7 @@ public class AutoRoutines {
   }
 
   public Command getRightOutpostAuto() {
-    final AutoRoutine routine = factory.newRoutine("Right Outpost Score Auto");
+    final AutoRoutine routine = factory.newRoutine("Right Outpost Auto");
     Path[] paths = new Path[] {Path.RTS_RFME, Path.RFME_RTSB, Path.RTSB_ROB};
     Command autoCmd = paths[0].getTrajectory(routine).resetOdometry();
 
@@ -72,7 +72,11 @@ public class AutoRoutines {
       autoCmd = autoCmd.andThen(followPath(path, routine));
     }
 
-    autoCmd = autoCmd.andThen(Commands.sequence(setAutoIntake(true), setAutoScore(true)));
+    autoCmd =
+        autoCmd.andThen(
+            Commands.parallel(
+                setAutoIntake(true).withTimeout(5.0).andThen(setAutoIntake(false)),
+                setAutoScore(true)));
 
     routine.active().onTrue(autoCmd);
 
