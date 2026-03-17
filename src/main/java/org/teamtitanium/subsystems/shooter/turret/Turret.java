@@ -86,6 +86,10 @@ public class Turret extends SubsystemBase {
             // .withAbsoluteEncoderOffsets(Rotations.of(0.035400), Rotations.of(-0.275635))
             .withCrtGearRecommendationConstraints(1.2, 15, 45, 30);
     this.easyCRT = new EasyCRT(crtConfig);
+
+    Robot.getCoastOverrideTrigger()
+        .onTrue(runOnce(() -> this.setBrakeMode(false)).ignoringDisable(true))
+        .onFalse(runOnce(() -> this.setBrakeMode(true)).ignoringDisable(true));
   }
 
   @Override

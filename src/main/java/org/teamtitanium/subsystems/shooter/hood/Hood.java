@@ -15,6 +15,7 @@ import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
+import org.teamtitanium.Robot;
 import org.teamtitanium.utils.Constants.Constraints;
 import org.teamtitanium.utils.Constants.Gains;
 import org.teamtitanium.utils.LoggedTracer;
@@ -71,6 +72,10 @@ public class Hood extends SubsystemBase {
         .or(RobotModeTriggers.autonomous())
         .and(() -> !hoodZeroed)
         .onTrue(zeroHood());
+
+    Robot.getCoastOverrideTrigger()
+        .onTrue(runOnce(() -> this.setBrakeMode(false)).ignoringDisable(true))
+        .onFalse(runOnce(() -> this.setBrakeMode(true)).ignoringDisable(true));
   }
 
   @Override

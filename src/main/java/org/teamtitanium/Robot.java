@@ -23,10 +23,12 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import lombok.Getter;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
@@ -35,7 +37,6 @@ import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 import org.teamtitanium.autos.*;
 import org.teamtitanium.commands.DriveCommands;
-import org.teamtitanium.subsystems.Leds;
 import org.teamtitanium.subsystems.Superstructure;
 import org.teamtitanium.subsystems.feeder.Feeder;
 import org.teamtitanium.subsystems.genericroller.GenericRollerIO;
@@ -48,6 +49,9 @@ import org.teamtitanium.subsystems.intake.rack.IntakeRackIO;
 import org.teamtitanium.subsystems.intake.rack.IntakeRackIOSim;
 import org.teamtitanium.subsystems.intake.rack.IntakeRackIOTalonFX;
 import org.teamtitanium.subsystems.intake.roller.IntakeRoller;
+import org.teamtitanium.subsystems.leds.LEDs;
+import org.teamtitanium.subsystems.leds.LEDsIO;
+import org.teamtitanium.subsystems.leds.LEDsIOReal;
 import org.teamtitanium.subsystems.shooter.Shooter;
 import org.teamtitanium.subsystems.shooter.ShotCalculator;
 import org.teamtitanium.subsystems.shooter.flywheel.Flywheel;
@@ -106,6 +110,7 @@ public class Robot extends LoggedRobot {
   private final IntakeRack intakeRack;
   private final IntakeRoller intakeRoller;
   private final Superstructure superstructure;
+  private final LEDs leds;
   private final Vision vision;
 
   private final CommandXboxController driver = new CommandXboxController(0);
@@ -121,6 +126,12 @@ public class Robot extends LoggedRobot {
   private final Timer disabledTimer = new Timer();
   private final CanivoreReader canivoreReader = new CanivoreReader(TunerConstants.kCANBus);
 
+  private static boolean coastOverride = false;
+
+  @Getter
+  private static Trigger coastOverrideTrigger =
+      new Trigger(() -> coastOverride && DriverStation.isDisabled());
+
   private final Alert canErrorAlert = new Alert("CAN Bus Error Detected", Alert.AlertType.kError);
   private final Alert canivoreErrorAlert =
       new Alert("Canivore CAN Bus Error Detected", Alert.AlertType.kError);
@@ -133,8 +144,6 @@ public class Robot extends LoggedRobot {
   private final AutoRoutines autoRoutines;
 
   public Robot() {
-    Leds.getInstance(); // Initialize LED subsystem early
-
     // Set up logger
     Logger.recordMetadata("TuningMode", Boolean.toString(Constants.tuningMode));
     Logger.recordMetadata("RuntimeType", getRuntimeType().toString());
@@ -179,7 +188,7 @@ public class Robot extends LoggedRobot {
     Logger.start();
 
     // Disable CTRE Phoenix Pro auto logging to reduce overhead
-    SignalLogger.enableAutoLogging(true);
+    SignalLogger.enableAutoLogging(true); // TODO: Disable
 
     // Adjust loop timing overrun warning timeout
     try {
@@ -243,7 +252,7 @@ public class Robot extends LoggedRobot {
         intakeRack = new IntakeRack(new IntakeRackIOTalonFX());
         intakeRoller =
             new IntakeRoller(new GenericRollerIOTalonFX(IntakeConstants.RollerConstants.CONSTANTS));
-
+        leds = new LEDs(new LEDsIOReal());
         vision =
             new Vision(
                 new VisionIOPhoton(
@@ -280,6 +289,7 @@ public class Robot extends LoggedRobot {
                     IntakeConstants.RollerConstants.CONSTANTS,
                     IntakeConstants.RollerConstants.ROLLER_MOTOR_GEARBOX,
                     IntakeConstants.RollerConstants.ROLLER_MOI));
+        leds = new LEDs(new LEDsIO() {});
         vision =
             new Vision(
                 new VisionIOSim(
@@ -310,6 +320,7 @@ public class Robot extends LoggedRobot {
         spindexer = new Spindexer(new GenericRollerIO() {});
         intakeRack = new IntakeRack(new IntakeRackIO() {});
         intakeRoller = new IntakeRoller(new GenericRollerIO() {});
+        leds = new LEDs(new LEDsIO() {});
         vision = new Vision(new VisionIO() {}, new VisionIO() {}, new VisionIO() {});
       }
     }
@@ -334,6 +345,7 @@ public class Robot extends LoggedRobot {
     RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());
 
     configureButtonBindings();
+    configureDashboard();
   }
 
   @Override
@@ -411,7 +423,7 @@ public class Robot extends LoggedRobot {
         && disabledTimer.hasElapsed(lowBatteryDisabledTimeThreshold)
         && lowBatteryMinCycleCount >= lowBatteryCycleCount) {
       lowBatteryAlert.set(true);
-      // TODO: Send low battery alert to LEDs
+      LEDs.getInstance().setLowBatteryAlert(true);
     }
 
     // Initialization Alert
@@ -477,6 +489,23 @@ public class Robot extends LoggedRobot {
 
   private void updateAlerts() {}
 
+  private void configureDashboard() {
+    SmartDashboard.putData(
+        "Dashboard/Commands/ZeroTurret",
+        Commands.runOnce(() -> turret.zeroTurretCRT(), turret).ignoringDisable(true));
+    SmartDashboard.putData(
+        "Dashboard/Commands/Coast",
+        Commands.runOnce(
+                () -> {
+                  if (DriverStation.isDisabled()) {
+                    coastOverride = !coastOverride;
+                    leds.setCoastOverride(coastOverride);
+                  }
+                })
+            .ignoringDisable(true)
+            .withName("Coast Override"));
+  }
+
   private void updateDashboardOuputs() {
     SmartDashboard.putNumber("Dashboard/MatchTime", DriverStation.getMatchTime());
 
@@ -491,8 +520,6 @@ public class Robot extends LoggedRobot {
     SmartDashboard.putBoolean(
         "Dashboard/HubTracker/ActiveFirst",
         DriverStation.getAlliance().orElse(Alliance.Blue) == HubTracker.getFirstActiveAlliance());
-
-    SmartDashboard.getBoolean("Dashboard/TurretTracking", true);
   }
 
   public static boolean isInitializing() {
