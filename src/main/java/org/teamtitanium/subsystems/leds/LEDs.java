@@ -142,7 +142,7 @@ public class LEDs extends VirtualSubsystem {
   private void wave(Color c1, Color c2, double cycleLength, double duration) {
     double x = (1 - ((Timer.getTimestamp() % duration) / duration)) * 2.0 * Math.PI;
     double xDiffPerLed = (2.0 * Math.PI) / cycleLength;
-    for (int i = LEDConstants.LENGTH; i >= 0; i--) {
+    for (int i = LEDConstants.LENGTH - 1; i >= 0; i--) {
       x += xDiffPerLed;
       double ratio = (Math.pow(Math.sin(x), LEDConstants.WAVE_EXPONENT) + 1.0) / 2.0;
       if (Double.isNaN(ratio)) {
@@ -159,6 +159,10 @@ public class LEDs extends VirtualSubsystem {
   }
 
   private void setLED(int index, Color color) {
-    buffer.setLED(index, color);
+    try {
+      buffer.setLED(index, color);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
   }
 }

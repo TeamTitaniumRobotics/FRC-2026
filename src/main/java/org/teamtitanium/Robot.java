@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import lombok.Getter;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
@@ -129,6 +130,7 @@ public class Robot extends LoggedRobot {
   private static boolean coastOverride = false;
 
   @Getter
+  @AutoLogOutput(key = "Dashboard/Commands/CoastOverride")
   private static Trigger coastOverrideTrigger =
       new Trigger(() -> coastOverride && DriverStation.isDisabled());
 
@@ -504,6 +506,15 @@ public class Robot extends LoggedRobot {
                 })
             .ignoringDisable(true)
             .withName("Coast Override"));
+
+    RobotModeTriggers.disabled()
+        .onFalse(
+            Commands.runOnce(
+                    () -> {
+                      coastOverride = false;
+                      leds.setCoastOverride(coastOverride);
+                    })
+                .ignoringDisable(true));
   }
 
   private void updateDashboardOuputs() {
