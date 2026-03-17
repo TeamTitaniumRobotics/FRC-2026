@@ -27,7 +27,8 @@ public class FlywheelConstants {
   public static final double VELOCITY_TOLERANCE_RPS = 6.0; // ~60 RPM tolerance
 
   // PID Gains (Velocity control)
-  public static final Gains FLYWHEEL_GAINS = new Gains(0.3, 0.0, 0.0, 0.275, 0.095, 0.0, 0.01);
+  // public static final Gains FLYWHEEL_GAINS = new Gains(0.3, 0.0, 0.0, 0.275, 0.095, 0.0, 0.01);
+  public static final Gains FLYWHEEL_GAINS = new Gains(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
   public static final Constraints FLYWHEEL_CONSTRAINTS = new Constraints(100.0, 175.0);
 
   // Current Limits

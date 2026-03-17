@@ -22,7 +22,7 @@ public class VisionConstants {
   public static final Transform3d backCameraPose =
       new Transform3d(
           new Translation3d(-0.304646, 0.300480, 0.325744),
-          new Rotation3d(0.0, Units.degreesToRadians(-28.0), Units.degreesToRadians(247.22839)));
+          new Rotation3d(0.0, Units.degreesToRadians(-28.0), Units.degreesToRadians(157.22839)));
   public static final Transform3d leftCameraPose =
       new Transform3d(
           new Translation3d(-0.265486, 0.350036, 0.446487),

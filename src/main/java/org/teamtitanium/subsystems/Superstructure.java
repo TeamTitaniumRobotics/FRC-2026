@@ -116,14 +116,14 @@ public class Superstructure extends VirtualSubsystem {
         new Trigger(
                 () ->
                     ShotCalculator.getInstance().getParameters().isValid()
-                        && !ShotCalculator.getInstance().getParameters().passing())
+                        && !ShotCalculator.getInstance().getParameters().passing()
+                        && intakeDeployedValue)
             .and(driver.rightTrigger().negate());
     scoreReq =
         autoScoreReq
-            .negate()
-            .and(driver.rightTrigger())
             .or(AutoRoutines.autoScoreReq)
-            .or(autoScoreReq);
+            .or(RobotState.getInstance().inAllianceZone.negate().and(driver.rightTrigger()))
+            .or(() -> !intakeDeployedValue && driver.rightTrigger().getAsBoolean());
     stowReq = driver.povDown();
     ejectReq = driver.povUp();
 
@@ -165,11 +165,11 @@ public class Superstructure extends VirtualSubsystem {
     bindTransition(
         SuperstructureState.SPIN_UP_SCORE,
         SuperstructureState.SCORE,
-        shooter.atSetpoint().and(scoreReq));
+        shooter.atSetpoint().debounce(0.35).and(scoreReq));
     bindTransition(
         SuperstructureState.SCORE,
         SuperstructureState.SPIN_UP_SCORE,
-        scoreReq.and(shooter.atSetpoint().negate().debounce(0.25)));
+        scoreReq.and(shooter.atSetpoint().negate().debounce(0.2)));
     bindTransition(SuperstructureState.SPIN_UP_SCORE, SuperstructureState.IDLE, scoreReq.negate());
     bindTransition(SuperstructureState.SCORE, SuperstructureState.IDLE, scoreReq.negate());
 
@@ -227,11 +227,11 @@ public class Superstructure extends VirtualSubsystem {
       case EJECT -> intake.setState(IntakeState.EJECT);
       case SPIN_UP_SCORE, SPIN_UP_PASS -> {
         // If intake deployed override is active, keep intaking; else agitate
-        intake.setState(intakeDeployed.getAsBoolean() ? IntakeState.INTAKE : IntakeState.AGITATE);
+        intake.setState(intakeDeployed.getAsBoolean() ? IntakeState.INTAKE : IntakeState.STOW);
       }
       case SCORE, PASS -> {
         // If intake deployed override is active, keep intaking; else stow
-        intake.setState(intakeDeployed.getAsBoolean() ? IntakeState.INTAKE : IntakeState.AGITATE);
+        intake.setState(intakeDeployed.getAsBoolean() ? IntakeState.INTAKE : IntakeState.STOW);
       }
       default -> {
         // IDLE / PREPPED / CLIMB states

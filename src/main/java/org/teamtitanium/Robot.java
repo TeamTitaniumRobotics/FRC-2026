@@ -463,6 +463,15 @@ public class Robot extends LoggedRobot {
                                     Rotation2d.kZero)))
                 .ignoringDisable(true));
 
+    driver
+        .rightBumper()
+        .whileTrue(
+            DriveCommands.trenchDrive(
+                swerve,
+                () -> -driver.getLeftY(),
+                () -> -driver.getLeftX(),
+                () -> -driver.getRightX()));
+
     driver.back().whileTrue(hood.zeroHood()); // TODO: Disable roller while zeroing rack
     // driver.back().whileTrue(Commands.parallel(hood.zeroHood(), intakeRack.zeroIntake()));
     driver.start().whileTrue(intake.zeroIntake());
