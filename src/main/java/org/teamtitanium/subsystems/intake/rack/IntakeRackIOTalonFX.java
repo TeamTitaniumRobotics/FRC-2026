@@ -43,7 +43,7 @@ public class IntakeRackIOTalonFX implements IntakeRackIO {
 
     motorConfig.MotorOutput.Inverted =
         RACK_INVERTED ? InvertedValue.Clockwise_Positive : InvertedValue.CounterClockwise_Positive;
-    motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
 
     motorConfig.CurrentLimits.StatorCurrentLimit = STATOR_CURRENT_LIMIT;
     motorConfig.CurrentLimits.StatorCurrentLimitEnable = true;

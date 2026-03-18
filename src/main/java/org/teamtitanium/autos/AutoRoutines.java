@@ -29,6 +29,7 @@ public class AutoRoutines {
 
   private static boolean autoIntake;
   private static boolean autoIntakeOverride;
+  private static boolean autoSpinUp;
   private static boolean autoScore;
 
   @AutoLogOutput(key = "Superstructure/AutoIntake")
@@ -38,6 +39,10 @@ public class AutoRoutines {
   @AutoLogOutput(key = "Superstructure/AutoIntakeOverride")
   public static Trigger autoIntakeOverrideReq =
       new Trigger(() -> autoIntakeOverride).and(DriverStation::isAutonomous);
+
+  @AutoLogOutput(key = "Superstructure/AutoSpinUp")
+  public static Trigger autoSpinUpReq =
+      new Trigger(() -> autoSpinUp).and(DriverStation::isAutonomous);
 
   @AutoLogOutput(key = "Superstructure/AutoScore")
   public static Trigger autoScoreReq =
@@ -73,8 +78,18 @@ public class AutoRoutines {
 
   public Command getRightOutpostAuto() {
     final AutoRoutine routine = factory.newRoutine("Right Outpost Auto");
-    Path[] paths = new Path[] {Path.RTS_RFME, Path.RFME_RTSB, Path.RTSB_ROB};
+    Path[] paths = new Path[] {Path.RTS_RFME, Path.RFME_RTSB, Path.RTSB_ROB, Path.ROB_RBB};
     Command autoCmd = resetPose(paths[0]);
+
+    // autoCmd =
+    //     autoCmd.andThen(
+    //         Commands.sequence(
+    //             followPath(Path.RTS_RFME, routine),
+    //             followPath(Path.RFME_RTSB, routine),
+    //             followPath(Path.RTSB_ROB, routine),
+    //             setAutoIntake(true),
+    //             setAutoIntake(false),
+    //             followPath(Path.ROB_RBB, routine)));
 
     for (Path path : paths) {
       autoCmd = autoCmd.andThen(followPath(path, routine));
@@ -83,8 +98,12 @@ public class AutoRoutines {
     autoCmd =
         autoCmd.andThen(
             Commands.parallel(
-                setAutoIntake(true).withTimeout(5.0).andThen(setAutoIntake(false)),
-                setAutoScore(true)));
+                setAutoScore(true),
+                Commands.repeatingSequence(
+                    setAutoIntakeOverride(true),
+                    Commands.waitSeconds(1.0),
+                    setAutoIntakeOverride(false),
+                    Commands.waitSeconds(0.75))));
 
     routine.active().onTrue(autoCmd);
 
@@ -112,6 +131,8 @@ public class AutoRoutines {
     switch (action) {
       case INTAKE:
         return intakePath(path, routine);
+      case SPIN_UP:
+        return spinUpPath(path, routine);
       case SCORE:
         return scorePath(path, routine);
       case NOTHING:
@@ -126,6 +147,16 @@ public class AutoRoutines {
         setAutoIntake(true), setAutoScore(false), path.getPathCommand(), setAutoIntake(false));
   }
 
+  private Command spinUpPath(Path path, AutoRoutine routine) {
+    boolean deployIntake = path.intakeDeployed;
+    return Commands.sequence(
+        setAutoSpinUp(true),
+        setAutoIntakeOverride(deployIntake),
+        path.getPathCommand(),
+        setAutoSpinUp(false),
+        setAutoIntakeOverride(false));
+  }
+
   private Command scorePath(Path path, AutoRoutine routine) {
     boolean deployIntake = path.intakeDeployed;
     return Commands.sequence(
@@ -137,8 +168,6 @@ public class AutoRoutines {
   }
 
   private Command emptyPath(Path path, AutoRoutine routine) {
-    // AutoTrajectory trajectory = path.getTrajectory(routine);
-    // return trajectory.cmd().until(trajectory.done());
     return path.getPathCommand();
   }
 
@@ -161,12 +190,17 @@ public class AutoRoutines {
     return Commands.runOnce(() -> autoIntakeOverride = value);
   }
 
+  private Command setAutoSpinUp(boolean value) {
+    return Commands.runOnce(() -> autoSpinUp = value);
+  }
+
   private Command setAutoScore(boolean value) {
     return Commands.runOnce(() -> autoScore = value);
   }
 
   public enum PathAction {
     INTAKE,
+    SPIN_UP,
     SCORE,
     NOTHING
   }
@@ -190,7 +224,8 @@ public class AutoRoutines {
   public enum Path {
     RTS_RFME(PathAction.INTAKE),
     RFME_RTSB(PathAction.NOTHING),
-    RTSB_ROB(PathAction.SCORE, true),
+    RTSB_ROB(PathAction.INTAKE),
+    ROB_RBB(PathAction.SPIN_UP, true),
     LTS_LFME(PathAction.INTAKE),
     LFME_LTSB(PathAction.NOTHING),
     LTSB_LOB(PathAction.NOTHING);

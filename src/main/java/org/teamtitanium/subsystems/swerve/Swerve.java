@@ -169,7 +169,7 @@ public class Swerve extends SubsystemBase {
         () -> getChassisSpeeds(),
         (speeds, feedforwards) -> this.runVelocity(speeds),
         new PPHolonomicDriveController(
-            new PIDConstants(6.25, 0.0, 0.1), new PIDConstants(5.25, 0.0, 0.1)),
+            new PIDConstants(6.35, 0.0, 0.125), new PIDConstants(5.25, 0.0, 0.1)),
         config,
         () -> AllianceFlipUtil.shouldFlip(),
         this);

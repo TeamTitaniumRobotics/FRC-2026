@@ -163,7 +163,10 @@ public class Superstructure extends VirtualSubsystem {
     bindTransition(SuperstructureState.SCORE, SuperstructureState.IDLE, stowReq);
 
     // IDLE -> SPIN_UP_SCORE -> SCORE
-    bindTransition(SuperstructureState.IDLE, SuperstructureState.SPIN_UP_SCORE, scoreReq);
+    bindTransition(
+        SuperstructureState.IDLE,
+        SuperstructureState.SPIN_UP_SCORE,
+        scoreReq.or(AutoRoutines.autoSpinUpReq));
     bindTransition(
         SuperstructureState.SPIN_UP_SCORE,
         SuperstructureState.SCORE,
@@ -172,7 +175,10 @@ public class Superstructure extends VirtualSubsystem {
         SuperstructureState.SCORE,
         SuperstructureState.SPIN_UP_SCORE,
         scoreReq.and(shooter.atSetpoint().negate().debounce(0.2)));
-    bindTransition(SuperstructureState.SPIN_UP_SCORE, SuperstructureState.IDLE, scoreReq.negate());
+    bindTransition(
+        SuperstructureState.SPIN_UP_SCORE,
+        SuperstructureState.IDLE,
+        scoreReq.negate().and(AutoRoutines.autoSpinUpReq.negate()));
     bindTransition(SuperstructureState.SCORE, SuperstructureState.IDLE, scoreReq.negate());
 
     // IDLE -> EJECT (spit fuel out the front)
