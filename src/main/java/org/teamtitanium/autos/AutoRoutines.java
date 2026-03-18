@@ -81,16 +81,6 @@ public class AutoRoutines {
     Path[] paths = new Path[] {Path.RTS_RFME, Path.RFME_RTSB, Path.RTSB_ROB, Path.ROB_RBB};
     Command autoCmd = resetPose(paths[0]);
 
-    // autoCmd =
-    //     autoCmd.andThen(
-    //         Commands.sequence(
-    //             followPath(Path.RTS_RFME, routine),
-    //             followPath(Path.RFME_RTSB, routine),
-    //             followPath(Path.RTSB_ROB, routine),
-    //             setAutoIntake(true),
-    //             setAutoIntake(false),
-    //             followPath(Path.ROB_RBB, routine)));
-
     for (Path path : paths) {
       autoCmd = autoCmd.andThen(followPath(path, routine));
     }
@@ -112,14 +102,30 @@ public class AutoRoutines {
 
   public Command leftDoublePass() {
     final AutoRoutine routine = factory.newRoutine("Left Double Pass Auto");
-    Path[] paths = new Path[] {Path.LTS_LFME, Path.LFME_LTSB, Path.LTSB_LOB};
+    Path[] paths = new Path[] {Path.LTS_LFME, Path.LFME_LTS, Path.LTS_LB};
     Command autoCmd = resetPose(paths[0]);
 
-    for (Path path : paths) {
-      autoCmd = autoCmd.andThen(followPath(path, routine));
-    }
+    autoCmd =
+        autoCmd.andThen(
+            Commands.sequence(
+                followPath(Path.LTS_LFME, routine),
+                followPath(Path.LFME_LTS, routine),
+                followPath(Path.LTS_LB, routine)));
 
-    autoCmd = autoCmd.andThen(setAutoScore(true));
+    // for (Path path : paths) {
+    //   autoCmd = autoCmd.andThen(followPath(path, routine));
+    // }
+
+    autoCmd =
+        autoCmd.andThen(
+            Commands.parallel(
+                    setAutoScore(true),
+                    Commands.repeatingSequence(
+                        setAutoIntakeOverride(true),
+                        Commands.waitSeconds(1.0),
+                        setAutoIntakeOverride(false),
+                        Commands.waitSeconds(0.75)))
+                .withTimeout(5.0));
 
     routine.active().onTrue(autoCmd);
 
@@ -227,8 +233,8 @@ public class AutoRoutines {
     RTSB_ROB(PathAction.INTAKE),
     ROB_RBB(PathAction.SPIN_UP, true),
     LTS_LFME(PathAction.INTAKE),
-    LFME_LTSB(PathAction.NOTHING),
-    LTSB_LOB(PathAction.NOTHING);
+    LFME_LTS(PathAction.NOTHING, true),
+    LTS_LB(PathAction.SPIN_UP, true);
 
     private final PathAction action;
     private final boolean intakeDeployed;
