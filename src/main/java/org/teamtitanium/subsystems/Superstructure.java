@@ -76,6 +76,8 @@ public class Superstructure extends VirtualSubsystem {
   // ----------------------------- Driver inputs --------------------------------
 
   private final Trigger intakeReq;
+  private final Trigger autoIntakeReq =
+      AutoRoutines.autoIntakeReq.or(AutoRoutines.autoIntakeOverrideReq);
   private final Trigger scoreReq;
   private final Trigger autoScoreReq;
   private final Trigger ejectReq;
@@ -228,21 +230,27 @@ public class Superstructure extends VirtualSubsystem {
       case SPIN_UP_SCORE, SPIN_UP_PASS -> {
         // If intake deployed override is active, keep intaking; else agitate
         intake.setState(
-            intakeDeployed.getAsBoolean() || intakeReq.getAsBoolean()
+            intakeDeployed.getAsBoolean()
+                    || intakeReq.getAsBoolean()
+                    || autoIntakeReq.getAsBoolean()
                 ? IntakeState.INTAKE
                 : IntakeState.STOW);
       }
       case SCORE, PASS -> {
         // If intake deployed override is active, keep intaking; else stow
         intake.setState(
-            intakeDeployed.getAsBoolean() || intakeReq.getAsBoolean()
+            intakeDeployed.getAsBoolean()
+                    || intakeReq.getAsBoolean()
+                    || autoIntakeReq.getAsBoolean()
                 ? IntakeState.INTAKE
                 : IntakeState.STOW);
       }
       default -> {
         // IDLE / PREPPED / CLIMB states
         intake.setState(
-            intakeDeployed.getAsBoolean() || intakeReq.getAsBoolean()
+            intakeDeployed.getAsBoolean()
+                    || intakeReq.getAsBoolean()
+                    || autoIntakeReq.getAsBoolean()
                 ? IntakeState.INTAKE
                 : IntakeState.STOW);
       }

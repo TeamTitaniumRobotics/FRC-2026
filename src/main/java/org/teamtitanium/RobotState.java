@@ -135,8 +135,7 @@ public class RobotState {
 
     // Calculate the transform from the odometry pose to the vision pose
     Transform2d sampledToOdometryTransform = new Transform2d(sampledPose.get(), odometryPose);
-    Transform2d odometryToSampledTransform = sampledToOdometryTransform.inverse(); // TODO: Test
-    // Transform2d odometryToSampledTransform = new Transform2d(odometryPose, sampledPose.get());
+    Transform2d odometryToSampledTransform = sampledToOdometryTransform.inverse();
 
     // Apply the odometry transform to the estimated pose to get the estimated pose
     Pose2d estimateAtTime = estimatedPose.plus(odometryToSampledTransform);
