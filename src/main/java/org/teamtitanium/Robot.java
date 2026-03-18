@@ -6,6 +6,8 @@ package org.teamtitanium;
 
 import choreo.auto.AutoChooser;
 import com.ctre.phoenix6.SignalLogger;
+import com.pathplanner.lib.commands.FollowPathCommand;
+import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.hal.AllianceStationID;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -332,6 +334,14 @@ public class Robot extends LoggedRobot {
     shooter = new Shooter(flywheel, hood, turret);
     superstructure = new Superstructure(shooter, feeder, spindexer, intake, driver);
 
+    PathPlannerLogging.setLogCurrentPoseCallback(
+        (pose) -> Logger.recordOutput("Autos/CurrentPose", pose));
+    PathPlannerLogging.setLogTargetPoseCallback(
+        (pose) -> Logger.recordOutput("Autos/TargetPose", pose));
+    PathPlannerLogging.setLogActivePathCallback(
+        (poses) ->
+            Logger.recordOutput("Autos/ActivePath", poses.toArray(new Pose2d[poses.size()])));
+
     autoRoutines = new AutoRoutines(swerve);
     autoChooser.addCmd("Right Outpost", autoRoutines::getRightOutpostAuto);
     autoChooser.addCmd("Left Double Pass", autoRoutines::leftDoublePass);
@@ -345,7 +355,11 @@ public class Robot extends LoggedRobot {
 
     SmartDashboard.putData("Autos/AutoChooser", autoChooser);
 
+    RobotModeTriggers.autonomous()
+        .onTrue(Commands.runOnce(() -> autonomousCommand = autoChooser.selectedCommand()));
     RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());
+
+    CommandScheduler.getInstance().schedule(FollowPathCommand.warmupCommand());
 
     configureButtonBindings();
     configureDashboard();
@@ -572,7 +586,11 @@ public class Robot extends LoggedRobot {
   public void autonomousPeriodic() {}
 
   @Override
-  public void autonomousExit() {}
+  public void autonomousExit() {
+    if (autonomousCommand != null) {
+      autonomousCommand.cancel();
+    }
+  }
 
   @Override
   public void teleopInit() {

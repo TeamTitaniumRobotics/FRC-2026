@@ -128,7 +128,7 @@ public class Superstructure extends VirtualSubsystem {
     ejectReq = driver.povUp();
 
     // Modifier triggers - backed by simple booleans toggled via commands
-    intakeDeployed = new Trigger(() -> intakeDeployedValue).or(() -> intakeReq.getAsBoolean());
+    intakeDeployed = new Trigger(() -> intakeDeployedValue);
     this.trenchStowOverride = RobotState.getInstance().underTrench;
 
     bindTransitions();
@@ -165,7 +165,7 @@ public class Superstructure extends VirtualSubsystem {
     bindTransition(
         SuperstructureState.SPIN_UP_SCORE,
         SuperstructureState.SCORE,
-        shooter.atSetpoint().and(scoreReq).and(() -> stateTimer.hasElapsed(0.5)));
+        shooter.atSetpoint().and(scoreReq).and(() -> stateTimer.hasElapsed(0.35)));
     bindTransition(
         SuperstructureState.SCORE,
         SuperstructureState.SPIN_UP_SCORE,
@@ -227,15 +227,24 @@ public class Superstructure extends VirtualSubsystem {
       case EJECT -> intake.setState(IntakeState.EJECT);
       case SPIN_UP_SCORE, SPIN_UP_PASS -> {
         // If intake deployed override is active, keep intaking; else agitate
-        intake.setState(intakeDeployed.getAsBoolean() ? IntakeState.INTAKE : IntakeState.STOW);
+        intake.setState(
+            intakeDeployed.getAsBoolean() || intakeReq.getAsBoolean()
+                ? IntakeState.INTAKE
+                : IntakeState.STOW);
       }
       case SCORE, PASS -> {
         // If intake deployed override is active, keep intaking; else stow
-        intake.setState(intakeDeployed.getAsBoolean() ? IntakeState.INTAKE : IntakeState.STOW);
+        intake.setState(
+            intakeDeployed.getAsBoolean() || intakeReq.getAsBoolean()
+                ? IntakeState.INTAKE
+                : IntakeState.STOW);
       }
       default -> {
         // IDLE / PREPPED / CLIMB states
-        intake.setState(intakeDeployed.getAsBoolean() ? IntakeState.INTAKE : IntakeState.STOW);
+        intake.setState(
+            intakeDeployed.getAsBoolean() || intakeReq.getAsBoolean()
+                ? IntakeState.INTAKE
+                : IntakeState.STOW);
       }
     }
 

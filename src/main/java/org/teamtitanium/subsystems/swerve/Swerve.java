@@ -1,10 +1,17 @@
 package org.teamtitanium.subsystems.swerve;
 
+import static edu.wpi.first.units.Units.KilogramSquareMeters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.Pounds;
 import static edu.wpi.first.units.Units.Volts;
 
 import choreo.trajectory.SwerveSample;
 import com.ctre.phoenix6.CANBus;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.config.ModuleConfig;
+import com.pathplanner.lib.config.PIDConstants;
+import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
@@ -18,6 +25,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.Alert;
@@ -36,6 +44,7 @@ import org.littletonrobotics.junction.Logger;
 import org.teamtitanium.Robot;
 import org.teamtitanium.RobotState;
 import org.teamtitanium.RobotState.OdometryObservation;
+import org.teamtitanium.utils.AllianceFlipUtil;
 import org.teamtitanium.utils.Constants;
 import org.teamtitanium.utils.LoggedTracer;
 import org.teamtitanium.utils.LoggedTunableBoolean;
@@ -135,6 +144,35 @@ public class Swerve extends SubsystemBase {
 
     lastMovementTimer.start();
     setBrakeMode(true);
+
+    RobotConfig config;
+    try {
+      config = RobotConfig.fromGUISettings();
+    } catch (Exception e) {
+      config =
+          new RobotConfig(
+              Pounds.of(150),
+              KilogramSquareMeters.of(6.0),
+              new ModuleConfig(
+                  TunerConstants.FrontLeft.WheelRadius,
+                  TunerConstants.kSpeedAt12Volts.in(MetersPerSecond),
+                  1.2,
+                  DCMotor.getKrakenX60(1),
+                  TunerConstants.FrontLeft.SlipCurrent,
+                  1),
+              getModuleTranslations());
+    }
+
+    AutoBuilder.configure(
+        () -> RobotState.getInstance().getEstimatedPose(),
+        (pose) -> RobotState.getInstance().setEstimatedPose(pose),
+        () -> getChassisSpeeds(),
+        (speeds, feedforwards) -> this.runVelocity(speeds),
+        new PPHolonomicDriveController(
+            new PIDConstants(5.0, 0.0, 0.0), new PIDConstants(5.0, 0.0, 0.0)),
+        config,
+        () -> AllianceFlipUtil.shouldFlip(),
+        this);
 
     HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_AdvantageKit);
 
