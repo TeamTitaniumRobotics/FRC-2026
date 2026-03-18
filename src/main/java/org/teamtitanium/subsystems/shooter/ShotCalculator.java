@@ -47,22 +47,27 @@ public class ShotCalculator {
       new InterpolatingTreeMap<>(InverseInterpolator.forDouble(), ShotData::interpolate);
 
   static {
-    shotMap.put(1.35, new ShotData(2350, 3));
-    shotMap.put(1.50, new ShotData(2400, 4));
-    shotMap.put(2.00, new ShotData(2600, 6));
-    shotMap.put(2.50, new ShotData(2875, 8));
-    shotMap.put(2.75, new ShotData(2900, 9));
-    shotMap.put(3.05, new ShotData(3000, 10));
-    shotMap.put(3.25, new ShotData(3100, 11));
-    shotMap.put(3.50, new ShotData(3100, 12));
-    shotMap.put(3.75, new ShotData(3225, 13));
-    shotMap.put(4.05, new ShotData(3350, 13));
-    shotMap.put(4.35, new ShotData(3500, 13));
-    shotMap.put(4.5, new ShotData(3600, 14));
-    shotMap.put(5.0, new ShotData(3700, 16));
+    shotMap.put(1.25, new ShotData(2450, 3));
+    shotMap.put(1.50, new ShotData(2500, 4));
+    shotMap.put(2.00, new ShotData(2650, 6));
+    shotMap.put(2.50, new ShotData(2850, 8, 1.1));
+    shotMap.put(2.75, new ShotData(2950, 9, 1.1));
+    shotMap.put(3.00, new ShotData(3050, 10, 1.1));
+    shotMap.put(3.25, new ShotData(3150, 11, 1.1));
+    shotMap.put(3.50, new ShotData(3250, 12, 1.1));
+    shotMap.put(3.75, new ShotData(3350, 13, 1.1));
+    shotMap.put(4.00, new ShotData(3450, 14, 1.12));
+    shotMap.put(4.25, new ShotData(3550, 14.5, 1.12));
+    shotMap.put(4.55, new ShotData(3700, 15, 1.12));
+    shotMap.put(4.75, new ShotData(3775, 16, 1.14));
+    shotMap.put(5.0, new ShotData(3950, 18, 1.14));
 
-    passingMap.put(4.5, new ShotData(4250, 22.5));
-    passingMap.put(6.5, new ShotData(4500, 27.5));
+    passingMap.put(5.0, new ShotData(3350, 20.0, 1.2));
+    passingMap.put(6.0, new ShotData(3600, 22.5, 1.2));
+    passingMap.put(7.0, new ShotData(4000, 25.0, 1.25));
+    passingMap.put(8.0, new ShotData(4500, 27.5, 1.25));
+    passingMap.put(9.0, new ShotData(5500, 27.5, 1.3));
+    passingMap.put(10.0, new ShotData(6500, 27.5, 1.3));
   }
 
   public ShotParameters getParameters() {
