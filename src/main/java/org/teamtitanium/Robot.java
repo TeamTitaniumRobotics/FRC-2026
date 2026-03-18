@@ -24,6 +24,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
@@ -491,6 +492,11 @@ public class Robot extends LoggedRobot {
     copilot
         .leftTrigger()
         .onTrue(Commands.runOnce(() -> shotCalculator.incrementFlywheelOffset(-50.0)));
+
+    copilot.povUp().whileTrue(flywheel.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    copilot.povDown().whileTrue(flywheel.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    copilot.povLeft().whileTrue(flywheel.sysIdDynamic(SysIdRoutine.Direction.kForward));
+    copilot.povRight().whileTrue(flywheel.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
     RobotModeTriggers.teleop()
         .or(RobotModeTriggers.autonomous())

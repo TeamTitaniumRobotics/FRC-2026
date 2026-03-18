@@ -30,7 +30,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 
   private final TalonFXConfiguration config = new TalonFXConfiguration();
 
-  private final VelocityTorqueCurrentFOC velocityTorqueCurreuntFOC =
+  private final VelocityTorqueCurrentFOC velocityTorqueCurrentFOC =
       new VelocityTorqueCurrentFOC(0.0).withUpdateFreqHz(250.0);
   private final VoltageOut voltageOut = new VoltageOut(0.0).withEnableFOC(true);
 
@@ -59,7 +59,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
     // Gear ratio
     config.Feedback.SensorToMechanismRatio = FLYWHEEL_GEAR_RATIO;
 
-    config.Feedback.VelocityFilterTimeConstant = 0.01;
+    config.Feedback.VelocityFilterTimeConstant = 0.0;
 
     // PID configuration
     config.Slot0.kP = FLYWHEEL_GAINS.kP();
@@ -78,7 +78,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
     config.Voltage.PeakReverseVoltage = -12.0;
 
     config.TorqueCurrent.PeakForwardTorqueCurrent = STATOR_CURRENT_LIMIT;
-    config.TorqueCurrent.PeakReverseTorqueCurrent = 0.0;
+    config.TorqueCurrent.PeakReverseTorqueCurrent = -STATOR_CURRENT_LIMIT;
 
     // Apply to both motors
     PhoenixUtil.tryUntilOk(5, () -> leftMotor.getConfigurator().apply(config));
@@ -95,10 +95,10 @@ public class FlywheelIOTalonFX implements FlywheelIO {
     temperature = List.of(leftMotor.getDeviceTemp(), rightMotor.getDeviceTemp());
 
     // Set update frequencies
+    BaseStatusSignal.setUpdateFrequencyForAll(400, velocity);
     BaseStatusSignal.setUpdateFrequencyForAll(
         100,
         position,
-        velocity,
         velocitySetpoint,
         appliedVolts.get(0),
         appliedVolts.get(1),
@@ -161,7 +161,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 
   @Override
   public void setVelocity(double velocityRps) {
-    leftMotor.setControl(velocityTorqueCurreuntFOC.withVelocity(velocityRps));
+    leftMotor.setControl(velocityTorqueCurrentFOC.withVelocity(velocityRps));
   }
 
   @Override

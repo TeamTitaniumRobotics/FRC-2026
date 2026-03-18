@@ -119,14 +119,6 @@ public class DriveCommands {
       DoubleSupplier omegaSupplier) {
     return Commands.run(
             () -> {
-              double towardsTrenchScale =
-                  MathUtil.clamp(
-                      RobotState.getInstance().getTowardTrenchScaled(0.75)
-                          / Swerve.getMaxLinearSpeedMetersPerSec(),
-                      0.0,
-                      1.0);
-
-              // TODO: Test with towards scale and driver input scale
               double trenchOutput =
                   TRENCH_CONTROLLER.calculate(RobotState.getInstance().getEstimatedPose().getY());
               trenchOutput =

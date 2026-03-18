@@ -62,11 +62,11 @@ public class Shooter {
     this.hood = hood;
     this.turret = turret;
 
-    // flywheel.setDefaultCommand(flywheel.setVelocity(() -> state.getFlywheelVelocity().get()));
-    flywheel.setDefaultCommand(
-        flywheel.setVelocity(() -> RPM.of(flywheel.flywheelConfigNumber1.get())));
-    hood.setDefaultCommand(hood.setPosition(() -> Degrees.of(hood.hoodConfigNumber1.get())));
-    // hood.setDefaultCommand(hood.setPosition(() -> state.getHoodAngle().get()));
+    flywheel.setDefaultCommand(flywheel.setVelocity(() -> state.getFlywheelVelocity().get()));
+    // flywheel.setDefaultCommand(
+    //     flywheel.setVelocity(() -> RPM.of(flywheel.flywheelConfigNumber1.get())));
+    // hood.setDefaultCommand(hood.setPosition(() -> Degrees.of(hood.hoodConfigNumber1.get())));
+    hood.setDefaultCommand(hood.setPosition(() -> state.getHoodAngle().get()));
     // turret.setDefaultCommand(
     //     turret.setPosition(() -> Degrees.of(turret.turretConfigNumber1.get())));
     turret.setDefaultCommand(turret.setPosition(() -> state.getTurretAngle().get()));

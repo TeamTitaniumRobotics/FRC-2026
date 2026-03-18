@@ -48,7 +48,7 @@ public record ChoreoTraj(
     public static final ChoreoTraj RFME_RTSB = new ChoreoTraj(
         "RFME_RTSB",
         OptionalInt.empty(),
-        2.25446,
+        2.64694,
         new Pose2d(7.93556, 3.30756, Rotation2d.fromRadians(1.309)),
         new Pose2d(4.45, 0.6524, Rotation2d.fromRadians(3.14159))
     );
