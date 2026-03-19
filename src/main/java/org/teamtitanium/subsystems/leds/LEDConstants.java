@@ -3,7 +3,9 @@ package org.teamtitanium.subsystems.leds;
 public class LEDConstants {
   // Hardware Constants
   public static final int PORT = 0;
-  public static final int LENGTH = 55;
+  public static final int LENGTH = 56;
+
+  public static final double MAX_BRIGHTNESS = 0.1;
 
   public static final double STROBE_DURATION = 0.1;
 

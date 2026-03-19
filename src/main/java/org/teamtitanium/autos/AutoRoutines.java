@@ -91,10 +91,52 @@ public class AutoRoutines {
                 setAutoScore(true),
                 Commands.repeatingSequence(
                     setAutoIntakeOverride(true),
-                    Commands.waitSeconds(1.0),
+                    Commands.waitSeconds(0.9),
                     setAutoIntakeOverride(false),
                     Commands.waitSeconds(0.75))));
 
+    routine.active().onTrue(autoCmd);
+
+    return routine.cmd();
+  }
+
+  public Command rightDHAuto() {
+    final AutoRoutine routine = factory.newRoutine("Right Double Pass Auto");
+    Path[] paths = new Path[] {Path.RTS_RFME, Path.RFME_RTSB, Path.RTSB_ROB, Path.ROB_RBB};
+    Command autoCmd = resetPose(paths[0]);
+
+    autoCmd =
+        autoCmd.andThen(
+            Commands.sequence(
+                followPath(Path.RTS_RFME, routine),
+                followPath(Path.RFME_RTSB, routine),
+                followPath(Path.RTSB_RTSHB, routine)));
+
+    autoCmd =
+        autoCmd.andThen(
+            Commands.parallel(
+                    setAutoScore(true),
+                    Commands.repeatingSequence(
+                        setAutoIntakeOverride(true),
+                        Commands.waitSeconds(1.0),
+                        setAutoIntakeOverride(false),
+                        Commands.waitSeconds(0.75)))
+                .withTimeout(5.0));
+
+    autoCmd =
+        autoCmd.andThen(
+            Commands.sequence(
+                followPath(Path.RTSHB_ROB, routine), followPath(Path.ROB_RBB, routine)));
+
+    autoCmd =
+        autoCmd.andThen(
+            Commands.parallel(
+                setAutoScore(true),
+                Commands.repeatingSequence(
+                    setAutoIntakeOverride(true),
+                    Commands.waitSeconds(1.0),
+                    setAutoIntakeOverride(false),
+                    Commands.waitSeconds(0.75))));
     routine.active().onTrue(autoCmd);
 
     return routine.cmd();
@@ -111,10 +153,6 @@ public class AutoRoutines {
                 followPath(Path.LTS_LFME, routine),
                 followPath(Path.LFME_LTS, routine),
                 followPath(Path.LTS_LB, routine)));
-
-    // for (Path path : paths) {
-    //   autoCmd = autoCmd.andThen(followPath(path, routine));
-    // }
 
     autoCmd =
         autoCmd.andThen(
@@ -159,7 +197,7 @@ public class AutoRoutines {
         setAutoSpinUp(true),
         setAutoIntakeOverride(deployIntake),
         path.getPathCommand(),
-        setAutoSpinUp(false),
+        // setAutoSpinUp(false),
         setAutoIntakeOverride(false));
   }
 
@@ -167,6 +205,7 @@ public class AutoRoutines {
     boolean deployIntake = path.intakeDeployed;
     return Commands.sequence(
         setAutoScore(true),
+        setAutoSpinUp(false),
         setAutoIntakeOverride(deployIntake),
         path.getPathCommand(),
         setAutoScore(false),
@@ -201,7 +240,13 @@ public class AutoRoutines {
   }
 
   private Command setAutoScore(boolean value) {
-    return Commands.runOnce(() -> autoScore = value);
+    return Commands.runOnce(
+        () -> {
+          autoScore = value;
+          if (value) {
+            autoSpinUp = false;
+          }
+        });
   }
 
   public enum PathAction {
@@ -230,7 +275,9 @@ public class AutoRoutines {
   public enum Path {
     RTS_RFME(PathAction.INTAKE),
     RFME_RTSB(PathAction.NOTHING),
+    RTSB_RTSHB(PathAction.SPIN_UP, true),
     RTSB_ROB(PathAction.INTAKE),
+    RTSHB_ROB(PathAction.INTAKE),
     ROB_RBB(PathAction.SPIN_UP, true),
     LTS_LFME(PathAction.INTAKE),
     LFME_LTS(PathAction.NOTHING, true),

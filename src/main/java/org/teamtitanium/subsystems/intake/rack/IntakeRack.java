@@ -103,7 +103,7 @@ public class IntakeRack extends SubsystemBase {
     io.updateInputs(inputs);
     Logger.processInputs("Intake/Rack", inputs);
 
-    motorDisconnectedAlert.set(disconnectedDebouncer.calculate(inputs.motorConnected));
+    motorDisconnectedAlert.set(disconnectedDebouncer.calculate(!inputs.motorConnected));
 
     if (rackkP.hasChanged(hashCode())
         || rackkI.hasChanged(hashCode())
