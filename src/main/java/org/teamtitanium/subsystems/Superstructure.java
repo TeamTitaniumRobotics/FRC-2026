@@ -20,7 +20,6 @@ import org.teamtitanium.subsystems.intake.Intake;
 import org.teamtitanium.subsystems.intake.Intake.IntakeState;
 import org.teamtitanium.subsystems.shooter.Shooter;
 import org.teamtitanium.subsystems.shooter.Shooter.ShooterState;
-import org.teamtitanium.subsystems.shooter.ShotCalculator;
 import org.teamtitanium.subsystems.shooter.turret.TurretConstants;
 import org.teamtitanium.subsystems.spindexer.Spindexer;
 import org.teamtitanium.subsystems.spindexer.Spindexer.SpindexerState;
@@ -79,7 +78,7 @@ public class Superstructure extends VirtualSubsystem {
   private final Trigger autoIntakeReq =
       AutoRoutines.autoIntakeReq.or(AutoRoutines.autoIntakeOverrideReq);
   private final Trigger scoreReq;
-  private final Trigger autoScoreReq;
+  // private final Trigger autoScoreReq;
   private final Trigger ejectReq;
   private final Trigger stowReq;
 
@@ -114,18 +113,19 @@ public class Superstructure extends VirtualSubsystem {
     this.intake = intake;
 
     intakeReq = driver.leftTrigger().or(AutoRoutines.autoIntakeReq);
-    autoScoreReq =
-        new Trigger(
-                () ->
-                    ShotCalculator.getInstance().getParameters().isValid()
-                        && !ShotCalculator.getInstance().getParameters().passing()
-                        && intakeDeployedValue)
-            .and(driver.rightTrigger().negate());
-    scoreReq =
-        autoScoreReq
-            .or(AutoRoutines.autoScoreReq)
-            .or(RobotState.getInstance().inAllianceZone.negate().and(driver.rightTrigger()))
-            .or(() -> !intakeDeployedValue && driver.rightTrigger().getAsBoolean());
+    // autoScoreReq =
+    //     new Trigger(
+    //             () ->
+    //                 ShotCalculator.getInstance().getParameters().isValid()
+    //                     && !ShotCalculator.getInstance().getParameters().passing()
+    //                     && intakeDeployedValue)
+    //         .and(driver.rightTrigger().negate());
+    // scoreReq =
+    //     autoScoreReq
+    //         .or(AutoRoutines.autoScoreReq)
+    //         .or(RobotState.getInstance().inAllianceZone.negate().and(driver.rightTrigger()))
+    //         .or(() -> !intakeDeployedValue && driver.rightTrigger().getAsBoolean());
+    scoreReq = AutoRoutines.autoScoreReq.or(driver.rightTrigger());
     stowReq = driver.povDown();
     ejectReq = driver.povUp();
 

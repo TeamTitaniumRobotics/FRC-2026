@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 4.325,
-        "y": 7.45
-      },
-      "prevControl": null,
-      "nextControl": {
-        "x": 6.325,
-        "y": 7.45
-      },
-      "isLocked": false,
-      "linkedName": "LTS"
-    },
-    {
-      "anchor": {
         "x": 6.5,
         "y": 4.775
       },
-      "prevControl": {
+      "prevControl": null,
+      "nextControl": {
         "x": 6.5,
         "y": 6.775
       },
-      "nextControl": null,
       "isLocked": false,
       "linkedName": "LCME"
+    },
+    {
+      "anchor": {
+        "x": 4.325,
+        "y": 7.45
+      },
+      "prevControl": {
+        "x": 6.325,
+        "y": 7.45
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "LTS"
     }
   ],
   "rotationTargets": [],
@@ -41,14 +41,14 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 0,
-    "rotation": -90.0
+    "velocity": 3.0,
+    "rotation": 0.0
   },
   "reversed": false,
   "folder": "LT",
   "idealStartingState": {
-    "velocity": 3.0,
-    "rotation": 0.0
+    "velocity": 0,
+    "rotation": -90.0
   },
   "useDefaultConstraints": true
 }
