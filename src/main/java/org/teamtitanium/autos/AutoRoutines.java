@@ -264,6 +264,11 @@ public class AutoRoutines {
       try {
         return AutoBuilder.followPath(PathPlannerPath.fromPathFile(this.toString()));
       } catch (Exception e) {
+        DriverStation.reportError(
+            "Failed to load PathPlanner path for auto '" + this.toString() + "'.", e.getStackTrace());
+        Logger.recordOutput(
+            "AutoRoutines/PathLoadError",
+            "Failed to load PathPlanner path for auto '" + this.toString() + "': " + e);
         return Commands.none();
       }
     }
@@ -272,6 +277,11 @@ public class AutoRoutines {
       try {
         return PathPlannerPath.fromPathFile(this.toString());
       } catch (Exception e) {
+        DriverStation.reportError(
+            "Failed to load PathPlanner path for auto '" + this.toString() + "'.", e.getStackTrace());
+        Logger.recordOutput(
+            "AutoRoutines/PathLoadError",
+            "Failed to load PathPlanner path for auto '" + this.toString() + "': " + e);
         return new PathPlannerPath(
             List.of(new Waypoint(new Translation2d(), new Translation2d(), new Translation2d())),
             PathConstraints.unlimitedConstraints(12.0),

@@ -192,8 +192,12 @@ public class Robot extends LoggedRobot {
     // Start the logger
     Logger.start();
 
-    // Disable CTRE Phoenix Pro auto logging to reduce overhead
-    SignalLogger.enableAutoLogging(true); // TODO: Disable
+    // Disable CTRE Phoenix Pro auto logging to reduce overhead (enable only in tuning mode)
+    if (Constants.tuningMode) {
+      SignalLogger.enableAutoLogging(true);
+    } else {
+      SignalLogger.enableAutoLogging(false);
+    }
 
     // Adjust loop timing overrun warning timeout
     try {
@@ -438,9 +442,13 @@ public class Robot extends LoggedRobot {
     }
     if (RobotController.getBatteryVoltage() <= lowBatteryVoltageThreshold
         && disabledTimer.hasElapsed(lowBatteryDisabledTimeThreshold)
-        && lowBatteryMinCycleCount >= lowBatteryCycleCount) {
+        && lowBatteryCycleCount >= lowBatteryMinCycleCount) {
       lowBatteryAlert.set(true);
       LEDs.getInstance().setLowBatteryAlert(true);
+    } else {
+      lowBatteryCycleCount = 0;
+      lowBatteryAlert.set(false);
+      LEDs.getInstance().setLowBatteryAlert(false);
     }
 
     // Initialization Alert
