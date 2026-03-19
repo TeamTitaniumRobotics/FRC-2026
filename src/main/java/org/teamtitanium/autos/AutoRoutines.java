@@ -160,10 +160,15 @@ public class AutoRoutines {
                     setAutoScore(true),
                     Commands.repeatingSequence(
                         setAutoIntakeOverride(true),
-                        Commands.waitSeconds(1.0),
+                        Commands.waitSeconds(0.9),
                         setAutoIntakeOverride(false),
                         Commands.waitSeconds(0.75)))
-                .withTimeout(5.0));
+                .withTimeout(4.0));
+
+    autoCmd =
+        autoCmd.andThen(
+            Commands.sequence(
+                followPath(Path.LB_LTS, routine), followPath(Path.LTS_LCME, routine)));
 
     routine.active().onTrue(autoCmd);
 
@@ -281,7 +286,9 @@ public class AutoRoutines {
     ROB_RBB(PathAction.SPIN_UP, true),
     LTS_LFME(PathAction.INTAKE),
     LFME_LTS(PathAction.NOTHING, true),
-    LTS_LB(PathAction.SPIN_UP, true);
+    LTS_LB(PathAction.SPIN_UP, true),
+    LB_LTS(PathAction.NOTHING),
+    LTS_LCME(PathAction.INTAKE);
 
     private final PathAction action;
     private final boolean intakeDeployed;
