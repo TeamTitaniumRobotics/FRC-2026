@@ -17,6 +17,7 @@ import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
+import org.teamtitanium.Robot;
 import org.teamtitanium.utils.Constants.Constraints;
 import org.teamtitanium.utils.Constants.Gains;
 import org.teamtitanium.utils.LoggedTracer;
@@ -58,6 +59,7 @@ public class IntakeRack extends SubsystemBase {
       new Alert("Intake Rack Motor Disconnected", Alert.AlertType.kWarning);
   private final Debouncer disconnectedDebouncer = new Debouncer(0.5, DebounceType.kFalling);
 
+  @AutoLogOutput(key = "Intake/Rack/AtSetpoint")
   private final Trigger atSetpoint =
       new Trigger(
           () ->
@@ -86,9 +88,14 @@ public class IntakeRack extends SubsystemBase {
           () ->
               homeVelocityDebouncer.calculate(
                   Math.abs(inputs.velocityRps) <= HOMING_VELOCITY_THRESHOLD_RPS));
+  private boolean rackZeroed = false;
 
   public IntakeRack(IntakeRackIO io) {
     this.io = io;
+
+    Robot.getCoastOverrideTrigger()
+        .onTrue(runOnce(() -> this.setBrakeMode(false)).ignoringDisable(true))
+        .onFalse(runOnce(() -> this.setBrakeMode(true)).ignoringDisable(true));
   }
 
   @Override
@@ -198,6 +205,10 @@ public class IntakeRack extends SubsystemBase {
   public Command zeroIntake() {
     return Commands.sequence(
         setVoltage(HOMING_VOLTAGE_VOLTS).until(homeCurrentTrigger.and(homeVelocityTrigger)),
-        Commands.runOnce(() -> io.setMotorPosition(0.0)));
+        Commands.runOnce(
+            () -> {
+              io.setMotorPosition(0.0);
+              rackZeroed = true;
+            }));
   }
 }

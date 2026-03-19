@@ -34,7 +34,7 @@ public class Shooter {
     EJECT(
         () -> FlywheelConstants.EJECT_VELOCITY,
         () -> HoodConstants.EJECT_ANGLE,
-        () -> Degrees.of(0.0));
+        () -> Degrees.of(-90.0));
 
     @Getter private final Supplier<AngularVelocity> flywheelVelocity;
     @Getter private final Supplier<Angle> hoodAngle;
@@ -49,15 +49,6 @@ public class Shooter {
   @Setter
   @AutoLogOutput(key = "Shooter/State")
   private ShooterState state = ShooterState.STOW;
-
-  // /**
-  //  * Override trigger: when active, the hood will stow regardless of the current shooter state.
-  // Used
-  //  * for auto-stow when going under the trench, etc.
-  //  */
-  // @AutoLogOutput(key = "Shooter/HoodStowOverride")
-  // @Setter
-  // private Trigger hoodStowOverride = RobotState.getInstance().underTrench;
 
   /**
    * Creates a new Shooter subsystem with the given flywheel, hood, and turret.

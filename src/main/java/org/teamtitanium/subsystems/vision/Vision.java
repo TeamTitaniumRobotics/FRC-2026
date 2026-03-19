@@ -99,7 +99,7 @@ public class Vision extends VirtualSubsystem {
                   1
                       + (observation.averageTagDistance()
                           * observation.averageTagDistance()
-                          / (observation.tagCount() * 15.0)));
+                          / (observation.tagCount() * 7.5)));
         }
 
         if (DriverStation.isDisabled()) {

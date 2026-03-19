@@ -27,44 +27,44 @@ public record ChoreoTraj(
     public static final ChoreoTraj LFME_LTSB = new ChoreoTraj(
         "LFME_LTSB",
         OptionalInt.empty(),
-        1.92136,
+        1.95438,
         new Pose2d(7.93556, 4.76171, Rotation2d.fromRadians(-1.5708)),
-        new Pose2d(4.39896, 7.4299, Rotation2d.fromRadians(-1.5708))
+        new Pose2d(4.45, 7.56926, Rotation2d.fromRadians(-1.5708))
     );
     public static final ChoreoTraj LTSB_LOB = new ChoreoTraj(
         "LTSB_LOB",
         OptionalInt.empty(),
         1.01582,
-        new Pose2d(4.39896, 7.4299, Rotation2d.fromRadians(-1.5708)),
-        new Pose2d(2.64896, 7.4299, Rotation2d.fromRadians(-1.5708))
+        new Pose2d(4.45, 7.56926, Rotation2d.fromRadians(-1.5708)),
+        new Pose2d(2.7, 7.56926, Rotation2d.fromRadians(-1.5708))
     );
     public static final ChoreoTraj LTS_LFME = new ChoreoTraj(
         "LTS_LFME",
         OptionalInt.empty(),
-        3.56208,
-        new Pose2d(4.39896, 7.4299, Rotation2d.fromRadians(0)),
+        3.58714,
+        new Pose2d(4.45, 7.56926, Rotation2d.fromRadians(1.5708)),
         new Pose2d(7.93556, 4.76171, Rotation2d.fromRadians(-1.5708))
     );
     public static final ChoreoTraj RFME_RTSB = new ChoreoTraj(
         "RFME_RTSB",
         OptionalInt.empty(),
-        1.46076,
-        new Pose2d(7.93556, 3.30756, Rotation2d.fromRadians(1.5708)),
-        new Pose2d(4.39896, 0.63937, Rotation2d.fromRadians(3.14159))
+        2.64694,
+        new Pose2d(7.93556, 3.30756, Rotation2d.fromRadians(1.309)),
+        new Pose2d(4.45, 0.6524, Rotation2d.fromRadians(3.14159))
     );
     public static final ChoreoTraj RTSB_ROB = new ChoreoTraj(
         "RTSB_ROB",
         OptionalInt.empty(),
-        1.97646,
-        new Pose2d(4.39896, 0.63937, Rotation2d.fromRadians(3.14159)),
-        new Pose2d(0.72708, 0.64572, Rotation2d.fromRadians(3.14159))
+        2.69405,
+        new Pose2d(4.45, 0.6524, Rotation2d.fromRadians(3.14159)),
+        new Pose2d(0.72707, 0.64572, Rotation2d.fromRadians(3.14159))
     );
     public static final ChoreoTraj RTS_RFME = new ChoreoTraj(
         "RTS_RFME",
         OptionalInt.empty(),
-        3.13814,
-        new Pose2d(4.39896, 0.63937, Rotation2d.fromRadians(0)),
-        new Pose2d(7.93556, 3.30756, Rotation2d.fromRadians(1.5708))
+        2.68135,
+        new Pose2d(4.45, 0.5, Rotation2d.fromRadians(1.5708)),
+        new Pose2d(7.93556, 3.30756, Rotation2d.fromRadians(1.309))
     );
     public static final ChoreoTraj StraightPath = new ChoreoTraj(
         "StraightPath",

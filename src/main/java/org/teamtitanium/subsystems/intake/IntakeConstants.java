@@ -20,11 +20,12 @@ public class IntakeConstants {
 
     public static final boolean ROLLER_INVERTED = false;
 
-    public static final AngularVelocity IDLE_VELOCITY = RotationsPerSecond.of(16.0);
+    public static final AngularVelocity IDLE_VELOCITY = RotationsPerSecond.of(0.0);
+    public static final AngularVelocity AGITATE_VELOCITY = RotationsPerSecond.of(16.0);
     public static final AngularVelocity INTAKE_VELOCITY = RotationsPerSecond.of(36.0);
     public static final AngularVelocity EJECT_VELOCITY = RotationsPerSecond.of(-24.0);
 
-    public static final double STATOR_CURRENT_LIMIT = 40.0;
+    public static final double STATOR_CURRENT_LIMIT = 30.0;
     public static final double SUPPLY_CURRENT_LIMIT = 30.0;
 
     public static final double ROLLER_GEAR_RATIO = (18.0 / 12.0);
@@ -45,7 +46,7 @@ public class IntakeConstants {
             STATOR_CURRENT_LIMIT,
             SUPPLY_CURRENT_LIMIT,
             ROLLER_INVERTED,
-            true);
+            false);
   }
 
   public static class RackConstants {
@@ -58,8 +59,8 @@ public class IntakeConstants {
     public static final boolean RACK_INVERTED = true;
 
     // Current limits
-    public static final double STATOR_CURRENT_LIMIT = 50.0;
-    public static final double SUPPLY_CURRENT_LIMIT = 40.0;
+    public static final double STATOR_CURRENT_LIMIT = 30.0;
+    public static final double SUPPLY_CURRENT_LIMIT = 20.0;
 
     // Gearbox + mechanism geometry
     public static final double RACK_GEAR_RATIO =
@@ -98,9 +99,9 @@ public class IntakeConstants {
 
     // Homing parameters
     public static final double HOMING_VOLTAGE_VOLTS = -2.5;
-    public static final double HOMING_CURRENT_THRESHOLD_AMPS = 25.0;
+    public static final double HOMING_CURRENT_THRESHOLD_AMPS = 35.0;
     public static final double HOMING_VELOCITY_THRESHOLD_RPS = 0.05;
-    public static final double HOMING_DEBOUNCE_TIME_SECS = 0.2;
+    public static final double HOMING_DEBOUNCE_TIME_SECS = 0.5;
 
     // Simulation
     public static final DCMotor RACK_GEARBOX = DCMotor.getKrakenX44Foc(1);

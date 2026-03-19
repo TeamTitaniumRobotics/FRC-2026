@@ -6,8 +6,11 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.ControlModeValue;
+import com.ctre.phoenix6.signals.DeviceEnableValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.signals.RobotEnableValue;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
@@ -34,6 +37,9 @@ public class GenericRollerIOTalonFX implements GenericRollerIO {
   private final StatusSignal<Current> torqueCurrent;
   private final StatusSignal<Temperature> temperature;
   private final StatusSignal<Double> setpointReference;
+  private final StatusSignal<RobotEnableValue> robotEnabled;
+  private final StatusSignal<DeviceEnableValue> deviceEnabled;
+  private final StatusSignal<ControlModeValue> controlMode;
 
   public GenericRollerIOTalonFX(GenericRollerConstants constants) {
     rollerMotor = new TalonFX(constants.motorId(), constants.canbus());
@@ -78,9 +84,22 @@ public class GenericRollerIOTalonFX implements GenericRollerIO {
     temperature = rollerMotor.getDeviceTemp();
     setpointReference = rollerMotor.getClosedLoopReference();
 
+    robotEnabled = rollerMotor.getRobotEnable();
+    deviceEnabled = rollerMotor.getDeviceEnable();
+    controlMode = rollerMotor.getControlMode();
+
     BaseStatusSignal.setUpdateFrequencyForAll(100, velocity);
     BaseStatusSignal.setUpdateFrequencyForAll(
-        50, position, appliedVoltage, supplyCurrent, torqueCurrent, temperature, setpointReference);
+        50,
+        position,
+        appliedVoltage,
+        supplyCurrent,
+        torqueCurrent,
+        temperature,
+        setpointReference,
+        robotEnabled,
+        deviceEnabled,
+        controlMode);
 
     PhoenixUtil.registerSignals(
         constants.canbus(),
@@ -90,7 +109,10 @@ public class GenericRollerIOTalonFX implements GenericRollerIO {
         supplyCurrent,
         torqueCurrent,
         temperature,
-        setpointReference);
+        setpointReference,
+        robotEnabled,
+        deviceEnabled,
+        controlMode);
 
     rollerMotor.optimizeBusUtilization(0.0, 1.0);
   }
@@ -107,6 +129,10 @@ public class GenericRollerIOTalonFX implements GenericRollerIO {
     inputs.torqueCurrentAmps = torqueCurrent.getValueAsDouble();
     inputs.tempCelsius = temperature.getValueAsDouble();
     inputs.velocitySetpoint = setpointReference.getValueAsDouble();
+
+    inputs.robotEnabled = robotEnabled.getValue();
+    inputs.motorEnabled = deviceEnabled.getValue();
+    inputs.controlMode = controlMode.getValue();
   }
 
   @Override

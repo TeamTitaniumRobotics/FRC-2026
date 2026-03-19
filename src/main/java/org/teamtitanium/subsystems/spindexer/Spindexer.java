@@ -16,6 +16,7 @@ import org.teamtitanium.subsystems.genericroller.GenericRollerIO;
 import org.teamtitanium.utils.Constants;
 import org.teamtitanium.utils.Constants.Constraints;
 import org.teamtitanium.utils.Constants.Gains;
+import org.teamtitanium.utils.LoggedTunableNumber;
 
 public class Spindexer extends GenericRoller {
   /** Independent states for the spindexer. */
@@ -27,6 +28,9 @@ public class Spindexer extends GenericRoller {
 
     @Getter private final Supplier<Double> spindexerVoltage;
   }
+
+  public static final LoggedTunableNumber configNumber =
+      new LoggedTunableNumber("Spindexer/Roller/ConfigShotNum", 10.2);
 
   public static final int SPINDEXER_MOTOR_ID = 35;
   public static final CANBus SPINDEXER_CAN_BUS = Constants.RIO_CAN_BUS;

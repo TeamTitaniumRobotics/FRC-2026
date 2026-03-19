@@ -6,7 +6,7 @@ import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
-import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
+import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -30,8 +30,8 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 
   private final TalonFXConfiguration config = new TalonFXConfiguration();
 
-  private final MotionMagicVelocityVoltage motionMagicVelocityVoltage =
-      new MotionMagicVelocityVoltage(0.0).withEnableFOC(true);
+  private final VelocityTorqueCurrentFOC velocityTorqueCurrentFOC =
+      new VelocityTorqueCurrentFOC(0.0).withUpdateFreqHz(250.0);
   private final VoltageOut voltageOut = new VoltageOut(0.0).withEnableFOC(true);
 
   private final StatusSignal<Angle> position;
@@ -48,7 +48,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 
     // Configure motors
     config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-    config.MotorOutput.NeutralMode = NeutralModeValue.Coast; // Coast for flywheels
+    config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
 
     // Current limits
     config.CurrentLimits.StatorCurrentLimit = STATOR_CURRENT_LIMIT;
@@ -58,6 +58,8 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 
     // Gear ratio
     config.Feedback.SensorToMechanismRatio = FLYWHEEL_GEAR_RATIO;
+
+    config.Feedback.VelocityFilterTimeConstant = 0.0;
 
     // PID configuration
     config.Slot0.kP = FLYWHEEL_GAINS.kP();
@@ -93,10 +95,10 @@ public class FlywheelIOTalonFX implements FlywheelIO {
     temperature = List.of(leftMotor.getDeviceTemp(), rightMotor.getDeviceTemp());
 
     // Set update frequencies
+    BaseStatusSignal.setUpdateFrequencyForAll(400, velocity);
     BaseStatusSignal.setUpdateFrequencyForAll(
         100,
         position,
-        velocity,
         velocitySetpoint,
         appliedVolts.get(0),
         appliedVolts.get(1),
@@ -159,7 +161,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 
   @Override
   public void setVelocity(double velocityRps) {
-    leftMotor.setControl(motionMagicVelocityVoltage.withVelocity(velocityRps));
+    leftMotor.setControl(velocityTorqueCurrentFOC.withVelocity(velocityRps));
   }
 
   @Override

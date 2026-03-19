@@ -1,5 +1,8 @@
 package org.teamtitanium.subsystems.genericroller;
 
+import com.ctre.phoenix6.signals.ControlModeValue;
+import com.ctre.phoenix6.signals.DeviceEnableValue;
+import com.ctre.phoenix6.signals.RobotEnableValue;
 import org.littletonrobotics.junction.AutoLog;
 import org.teamtitanium.utils.Constants.Constraints;
 import org.teamtitanium.utils.Constants.Gains;
@@ -15,6 +18,10 @@ public interface GenericRollerIO {
     public double supplyCurrentAmps = 0.0;
     public double torqueCurrentAmps = 0.0;
     public double tempCelsius = 0.0;
+
+    public DeviceEnableValue motorEnabled = DeviceEnableValue.Disabled;
+    public RobotEnableValue robotEnabled = RobotEnableValue.Disabled;
+    public ControlModeValue controlMode = ControlModeValue.DisabledOutput;
   }
 
   public default void updateInputs(GenericRollerIOInputs inputs) {}

@@ -2,11 +2,19 @@ package org.teamtitanium.autos;
 
 import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
-import choreo.auto.AutoTrajectory;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.path.GoalEndState;
+import com.pathplanner.lib.path.PathConstraints;
+import com.pathplanner.lib.path.PathPlannerPath;
+import com.pathplanner.lib.path.Waypoint;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import java.util.List;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.teamtitanium.RobotState;
@@ -21,6 +29,7 @@ public class AutoRoutines {
 
   private static boolean autoIntake;
   private static boolean autoIntakeOverride;
+  private static boolean autoSpinUp;
   private static boolean autoScore;
 
   @AutoLogOutput(key = "Superstructure/AutoIntake")
@@ -30,6 +39,10 @@ public class AutoRoutines {
   @AutoLogOutput(key = "Superstructure/AutoIntakeOverride")
   public static Trigger autoIntakeOverrideReq =
       new Trigger(() -> autoIntakeOverride).and(DriverStation::isAutonomous);
+
+  @AutoLogOutput(key = "Superstructure/AutoSpinUp")
+  public static Trigger autoSpinUpReq =
+      new Trigger(() -> autoSpinUp).and(DriverStation::isAutonomous);
 
   @AutoLogOutput(key = "Superstructure/AutoScore")
   public static Trigger autoScoreReq =
@@ -64,15 +77,23 @@ public class AutoRoutines {
   }
 
   public Command getRightOutpostAuto() {
-    final AutoRoutine routine = factory.newRoutine("Right Outpost Score Auto");
-    Path[] paths = new Path[] {Path.RTS_RFME, Path.RFME_RTSB, Path.RTSB_ROB};
-    Command autoCmd = paths[0].getTrajectory(routine).resetOdometry();
+    final AutoRoutine routine = factory.newRoutine("Right Outpost Auto");
+    Path[] paths = new Path[] {Path.RTS_RFME, Path.RFME_RTSB, Path.RTSB_ROB, Path.ROB_RBB};
+    Command autoCmd = resetPose(paths[0]);
 
     for (Path path : paths) {
       autoCmd = autoCmd.andThen(followPath(path, routine));
     }
 
-    autoCmd = autoCmd.andThen(Commands.sequence(setAutoIntake(true), setAutoScore(true)));
+    autoCmd =
+        autoCmd.andThen(
+            Commands.parallel(
+                setAutoScore(true),
+                Commands.repeatingSequence(
+                    setAutoIntakeOverride(true),
+                    Commands.waitSeconds(1.0),
+                    setAutoIntakeOverride(false),
+                    Commands.waitSeconds(0.75))));
 
     routine.active().onTrue(autoCmd);
 
@@ -81,14 +102,30 @@ public class AutoRoutines {
 
   public Command leftDoublePass() {
     final AutoRoutine routine = factory.newRoutine("Left Double Pass Auto");
-    Path[] paths = new Path[] {Path.LTS_LFME, Path.LFME_LTSB, Path.LTSB_LOB};
-    Command autoCmd = paths[0].getTrajectory(routine).resetOdometry();
+    Path[] paths = new Path[] {Path.LTS_LFME, Path.LFME_LTS, Path.LTS_LB};
+    Command autoCmd = resetPose(paths[0]);
 
-    for (Path path : paths) {
-      autoCmd = autoCmd.andThen(followPath(path, routine));
-    }
+    autoCmd =
+        autoCmd.andThen(
+            Commands.sequence(
+                followPath(Path.LTS_LFME, routine),
+                followPath(Path.LFME_LTS, routine),
+                followPath(Path.LTS_LB, routine)));
 
-    autoCmd = autoCmd.andThen(setAutoScore(true));
+    // for (Path path : paths) {
+    //   autoCmd = autoCmd.andThen(followPath(path, routine));
+    // }
+
+    autoCmd =
+        autoCmd.andThen(
+            Commands.parallel(
+                    setAutoScore(true),
+                    Commands.repeatingSequence(
+                        setAutoIntakeOverride(true),
+                        Commands.waitSeconds(1.0),
+                        setAutoIntakeOverride(false),
+                        Commands.waitSeconds(0.75)))
+                .withTimeout(5.0));
 
     routine.active().onTrue(autoCmd);
 
@@ -100,6 +137,8 @@ public class AutoRoutines {
     switch (action) {
       case INTAKE:
         return intakePath(path, routine);
+      case SPIN_UP:
+        return spinUpPath(path, routine);
       case SCORE:
         return scorePath(path, routine);
       case NOTHING:
@@ -110,28 +149,43 @@ public class AutoRoutines {
   }
 
   private Command intakePath(Path path, AutoRoutine routine) {
-    AutoTrajectory trajectory = path.getTrajectory(routine);
     return Commands.sequence(
-        setAutoIntake(true),
-        setAutoScore(false),
-        trajectory.cmd().until(trajectory.done()),
-        setAutoIntake(false));
+        setAutoIntake(true), setAutoScore(false), path.getPathCommand(), setAutoIntake(false));
+  }
+
+  private Command spinUpPath(Path path, AutoRoutine routine) {
+    boolean deployIntake = path.intakeDeployed;
+    return Commands.sequence(
+        setAutoSpinUp(true),
+        setAutoIntakeOverride(deployIntake),
+        path.getPathCommand(),
+        setAutoSpinUp(false),
+        setAutoIntakeOverride(false));
   }
 
   private Command scorePath(Path path, AutoRoutine routine) {
-    AutoTrajectory trajectory = path.getTrajectory(routine);
     boolean deployIntake = path.intakeDeployed;
     return Commands.sequence(
         setAutoScore(true),
         setAutoIntakeOverride(deployIntake),
-        trajectory.cmd().until(trajectory.done()),
+        path.getPathCommand(),
         setAutoScore(false),
         setAutoIntakeOverride(false));
   }
 
   private Command emptyPath(Path path, AutoRoutine routine) {
-    AutoTrajectory trajectory = path.getTrajectory(routine);
-    return trajectory.cmd().until(trajectory.done());
+    return path.getPathCommand();
+  }
+
+  private Command resetPose(Path path) {
+    return Commands.runOnce(
+        () ->
+            RobotState.getInstance()
+                .setEstimatedPose(
+                    AllianceFlipUtil.apply(
+                        path.getPathPlannerPath()
+                            .getStartingHolonomicPose()
+                            .orElse(Pose2d.kZero))));
   }
 
   private Command setAutoIntake(boolean value) {
@@ -142,12 +196,17 @@ public class AutoRoutines {
     return Commands.runOnce(() -> autoIntakeOverride = value);
   }
 
+  private Command setAutoSpinUp(boolean value) {
+    return Commands.runOnce(() -> autoSpinUp = value);
+  }
+
   private Command setAutoScore(boolean value) {
     return Commands.runOnce(() -> autoScore = value);
   }
 
   public enum PathAction {
     INTAKE,
+    SPIN_UP,
     SCORE,
     NOTHING
   }
@@ -171,10 +230,11 @@ public class AutoRoutines {
   public enum Path {
     RTS_RFME(PathAction.INTAKE),
     RFME_RTSB(PathAction.NOTHING),
-    RTSB_ROB(PathAction.SCORE, true),
+    RTSB_ROB(PathAction.INTAKE),
+    ROB_RBB(PathAction.SPIN_UP, true),
     LTS_LFME(PathAction.INTAKE),
-    LFME_LTSB(PathAction.NOTHING),
-    LTSB_LOB(PathAction.NOTHING);
+    LFME_LTS(PathAction.NOTHING, true),
+    LTS_LB(PathAction.SPIN_UP, true);
 
     private final PathAction action;
     private final boolean intakeDeployed;
@@ -189,15 +249,47 @@ public class AutoRoutines {
       this.intakeDeployed = intakeDeployed;
     }
 
-    public AutoTrajectory getTrajectory(AutoRoutine routine) {
-      AutoTrajectory desiredTraj =
-          ChoreoTraj.ALL_TRAJECTORIES
-              .getOrDefault(this.name(), ChoreoTraj.StraightPath)
-              .asAutoTraj(routine);
-      if (desiredTraj == null) {
-        desiredTraj = ChoreoTraj.StraightPath.asAutoTraj(routine);
+    // public AutoTrajectory getTrajectory(AutoRoutine routine) {
+    //   AutoTrajectory desiredTraj =
+    //       ChoreoTraj.ALL_TRAJECTORIES
+    //           .getOrDefault(this.name(), ChoreoTraj.StraightPath)
+    //           .asAutoTraj(routine);
+    //   if (desiredTraj == null) {
+    //     desiredTraj = ChoreoTraj.StraightPath.asAutoTraj(routine);
+    //   }
+    //   return desiredTraj;
+    // }
+
+    public Command getPathCommand() {
+      try {
+        return AutoBuilder.followPath(PathPlannerPath.fromPathFile(this.toString()));
+      } catch (Exception e) {
+        DriverStation.reportError(
+            "Failed to load PathPlanner path for auto '" + this.toString() + "'.",
+            e.getStackTrace());
+        Logger.recordOutput(
+            "AutoRoutines/PathLoadError",
+            "Failed to load PathPlanner path for auto '" + this.toString() + "': " + e);
+        return Commands.none();
       }
-      return desiredTraj;
+    }
+
+    public PathPlannerPath getPathPlannerPath() {
+      try {
+        return PathPlannerPath.fromPathFile(this.toString());
+      } catch (Exception e) {
+        DriverStation.reportError(
+            "Failed to load PathPlanner path for auto '" + this.toString() + "'.",
+            e.getStackTrace());
+        Logger.recordOutput(
+            "AutoRoutines/PathLoadError",
+            "Failed to load PathPlanner path for auto '" + this.toString() + "': " + e);
+        return new PathPlannerPath(
+            List.of(new Waypoint(new Translation2d(), new Translation2d(), new Translation2d())),
+            PathConstraints.unlimitedConstraints(12.0),
+            null,
+            new GoalEndState(0.0, Rotation2d.kZero));
+      }
     }
   }
 }

@@ -95,8 +95,19 @@ public class TurretIOTalonFX implements TurretIO {
     PhoenixUtil.tryUntilOk(5, () -> turretMotor.getConfigurator().apply(motorConfig));
 
     // Configure CANcoders
-    cancoderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.CounterClockwise_Positive;
+    cancoderConfig.MagnetSensor.SensorDirection =
+        CANCODER_1_INVERTED
+            ? SensorDirectionValue.Clockwise_Positive
+            : SensorDirectionValue.CounterClockwise_Positive;
+    cancoderConfig.MagnetSensor.MagnetOffset = CANCODER_1_OFFSET;
+    cancoderConfig.MagnetSensor.AbsoluteSensorDiscontinuityPoint = 1.0;
     PhoenixUtil.tryUntilOk(5, () -> cancoder1.getConfigurator().apply(cancoderConfig));
+
+    cancoderConfig.MagnetSensor.SensorDirection =
+        CANCODER_2_INVERTED
+            ? SensorDirectionValue.Clockwise_Positive
+            : SensorDirectionValue.CounterClockwise_Positive;
+    cancoderConfig.MagnetSensor.MagnetOffset = CANCODER_2_OFFSET;
     PhoenixUtil.tryUntilOk(5, () -> cancoder2.getConfigurator().apply(cancoderConfig));
 
     // Get status signals

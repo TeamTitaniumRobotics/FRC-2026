@@ -4,13 +4,16 @@
 
 package org.teamtitanium;
 
-import static edu.wpi.first.units.Units.Degrees;
-
 import choreo.auto.AutoChooser;
 import com.ctre.phoenix6.SignalLogger;
+import com.pathplanner.lib.commands.FollowPathCommand;
+import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.hal.AllianceStationID;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.IterativeRobotBase;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
@@ -22,10 +25,14 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import lombok.Getter;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
@@ -34,12 +41,7 @@ import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 import org.teamtitanium.autos.*;
 import org.teamtitanium.commands.DriveCommands;
-import org.teamtitanium.subsystems.Leds;
 import org.teamtitanium.subsystems.Superstructure;
-import org.teamtitanium.subsystems.climber.Climber;
-import org.teamtitanium.subsystems.climber.ClimberIO;
-import org.teamtitanium.subsystems.climber.ClimberIOSim;
-import org.teamtitanium.subsystems.climber.ClimberIOTalonFX;
 import org.teamtitanium.subsystems.feeder.Feeder;
 import org.teamtitanium.subsystems.genericroller.GenericRollerIO;
 import org.teamtitanium.subsystems.genericroller.GenericRollerIOSim;
@@ -51,6 +53,9 @@ import org.teamtitanium.subsystems.intake.rack.IntakeRackIO;
 import org.teamtitanium.subsystems.intake.rack.IntakeRackIOSim;
 import org.teamtitanium.subsystems.intake.rack.IntakeRackIOTalonFX;
 import org.teamtitanium.subsystems.intake.roller.IntakeRoller;
+import org.teamtitanium.subsystems.leds.LEDs;
+import org.teamtitanium.subsystems.leds.LEDsIO;
+import org.teamtitanium.subsystems.leds.LEDsIOReal;
 import org.teamtitanium.subsystems.shooter.Shooter;
 import org.teamtitanium.subsystems.shooter.ShotCalculator;
 import org.teamtitanium.subsystems.shooter.flywheel.Flywheel;
@@ -108,8 +113,8 @@ public class Robot extends LoggedRobot {
   private final Intake intake;
   private final IntakeRack intakeRack;
   private final IntakeRoller intakeRoller;
-  private final Climber climber;
   private final Superstructure superstructure;
+  private final LEDs leds;
   private final Vision vision;
 
   private final CommandXboxController driver = new CommandXboxController(0);
@@ -125,6 +130,13 @@ public class Robot extends LoggedRobot {
   private final Timer disabledTimer = new Timer();
   private final CanivoreReader canivoreReader = new CanivoreReader(TunerConstants.kCANBus);
 
+  private static boolean coastOverride = false;
+
+  @Getter
+  @AutoLogOutput(key = "Dashboard/Commands/CoastOverride")
+  private static Trigger coastOverrideTrigger =
+      new Trigger(() -> coastOverride && DriverStation.isDisabled());
+
   private final Alert canErrorAlert = new Alert("CAN Bus Error Detected", Alert.AlertType.kError);
   private final Alert canivoreErrorAlert =
       new Alert("Canivore CAN Bus Error Detected", Alert.AlertType.kError);
@@ -137,8 +149,6 @@ public class Robot extends LoggedRobot {
   private final AutoRoutines autoRoutines;
 
   public Robot() {
-    Leds.getInstance(); // Initialize LED subsystem early
-
     // Set up logger
     Logger.recordMetadata("TuningMode", Boolean.toString(Constants.tuningMode));
     Logger.recordMetadata("RuntimeType", getRuntimeType().toString());
@@ -182,8 +192,12 @@ public class Robot extends LoggedRobot {
     // Start the logger
     Logger.start();
 
-    // Disable CTRE Phoenix Pro auto logging to reduce overhead
-    SignalLogger.enableAutoLogging(false);
+    // Disable CTRE Phoenix Pro auto logging to reduce overhead (enable only in tuning mode)
+    if (Constants.tuningMode) {
+      SignalLogger.enableAutoLogging(true);
+    } else {
+      SignalLogger.enableAutoLogging(false);
+    }
 
     // Adjust loop timing overrun warning timeout
     try {
@@ -247,13 +261,14 @@ public class Robot extends LoggedRobot {
         intakeRack = new IntakeRack(new IntakeRackIOTalonFX());
         intakeRoller =
             new IntakeRoller(new GenericRollerIOTalonFX(IntakeConstants.RollerConstants.CONSTANTS));
-        climber = new Climber(new ClimberIOTalonFX());
-
+        leds = new LEDs(new LEDsIOReal());
         vision =
             new Vision(
                 new VisionIOPhoton(
-                    VisionConstants.forwardCameraName, VisionConstants.forwardCameraPose),
-                new VisionIOPhoton(VisionConstants.leftCameraName, VisionConstants.leftCameraPose));
+                    VisionConstants.frontCameraName, VisionConstants.frontCameraPose),
+                new VisionIOPhoton(VisionConstants.backCameraName, VisionConstants.backCameraPose),
+                new VisionIOPhoton(VisionConstants.leftCameraName, VisionConstants.leftCameraPose),
+                new VisionIOPhoton(VisionConstants.frCameraName, VisionConstants.frCameraPose));
       }
       case SIM -> {
         swerve =
@@ -283,12 +298,16 @@ public class Robot extends LoggedRobot {
                     IntakeConstants.RollerConstants.CONSTANTS,
                     IntakeConstants.RollerConstants.ROLLER_MOTOR_GEARBOX,
                     IntakeConstants.RollerConstants.ROLLER_MOI));
-        climber = new Climber(new ClimberIOSim());
+        leds = new LEDs(new LEDsIO() {});
         vision =
             new Vision(
                 new VisionIOSim(
-                    VisionConstants.forwardCameraName,
-                    VisionConstants.forwardCameraPose,
+                    VisionConstants.frontCameraName,
+                    VisionConstants.frontCameraPose,
+                    () -> RobotState.getInstance().getEstimatedPose()),
+                new VisionIOSim(
+                    VisionConstants.backCameraName,
+                    VisionConstants.backCameraPose,
                     () -> RobotState.getInstance().getEstimatedPose()),
                 new VisionIOSim(
                     VisionConstants.leftCameraName,
@@ -310,8 +329,8 @@ public class Robot extends LoggedRobot {
         spindexer = new Spindexer(new GenericRollerIO() {});
         intakeRack = new IntakeRack(new IntakeRackIO() {});
         intakeRoller = new IntakeRoller(new GenericRollerIO() {});
-        climber = new Climber(new ClimberIO() {});
-        vision = new Vision(new VisionIO() {});
+        leds = new LEDs(new LEDsIO() {});
+        vision = new Vision(new VisionIO() {}, new VisionIO() {}, new VisionIO() {});
       }
     }
 
@@ -319,8 +338,16 @@ public class Robot extends LoggedRobot {
     shooter = new Shooter(flywheel, hood, turret);
     superstructure = new Superstructure(shooter, feeder, spindexer, intake, driver);
 
+    PathPlannerLogging.setLogCurrentPoseCallback(
+        (pose) -> Logger.recordOutput("Autos/CurrentPose", pose));
+    PathPlannerLogging.setLogTargetPoseCallback(
+        (pose) -> Logger.recordOutput("Autos/TargetPose", pose));
+    PathPlannerLogging.setLogActivePathCallback(
+        (poses) ->
+            Logger.recordOutput("Autos/ActivePath", poses.toArray(new Pose2d[poses.size()])));
+
     autoRoutines = new AutoRoutines(swerve);
-    autoChooser.addCmd("Right Outpost Trench", autoRoutines::getRightOutpostAuto);
+    autoChooser.addCmd("Right Outpost", autoRoutines::getRightOutpostAuto);
     autoChooser.addCmd("Left Double Pass", autoRoutines::leftDoublePass);
     autoChooser.addCmd("Straight Test", autoRoutines::straightTuningAuto);
 
@@ -332,9 +359,14 @@ public class Robot extends LoggedRobot {
 
     SmartDashboard.putData("Autos/AutoChooser", autoChooser);
 
+    RobotModeTriggers.autonomous()
+        .onTrue(Commands.runOnce(() -> autonomousCommand = autoChooser.selectedCommand()));
     RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());
 
+    CommandScheduler.getInstance().schedule(FollowPathCommand.warmupCommand());
+
     configureButtonBindings();
+    configureDashboard();
   }
 
   @Override
@@ -410,9 +442,13 @@ public class Robot extends LoggedRobot {
     }
     if (RobotController.getBatteryVoltage() <= lowBatteryVoltageThreshold
         && disabledTimer.hasElapsed(lowBatteryDisabledTimeThreshold)
-        && lowBatteryMinCycleCount >= lowBatteryCycleCount) {
+        && lowBatteryCycleCount >= lowBatteryMinCycleCount) {
       lowBatteryAlert.set(true);
-      // TODO: Send low battery alert to LEDs
+      LEDs.getInstance().setLowBatteryAlert(true);
+    } else {
+      lowBatteryCycleCount = 0;
+      lowBatteryAlert.set(false);
+      LEDs.getInstance().setLowBatteryAlert(false);
     }
 
     // Initialization Alert
@@ -433,199 +469,106 @@ public class Robot extends LoggedRobot {
     swerve.setDefaultCommand(
         DriveCommands.joystickDrive(
             swerve,
-            () -> -driver.getLeftY() * 1.0,
-            () -> -driver.getLeftX() * 1.0,
-            () -> -driver.getRightX() * 1.0,
+            () -> -driver.getLeftY(),
+            () -> -driver.getLeftX(),
+            () -> -driver.getRightX(),
             () -> false));
 
-    // driver.start().onTrue(Commands.runOnce(() -> swerve.setGyroAngle(Rotations.of(0.0))));
-    // driver.start().onTrue(Commands.runOnce(() -> turret.zeroMotor()));
-    // driver.start().onTrue(Commands.runOnce(() -> intakeRack.zero()));
+    driver
+        .start()
+        .onTrue(
+            Commands.runOnce(
+                    () ->
+                        RobotState.getInstance()
+                            .setEstimatedPose(
+                                new Pose2d(
+                                    RobotState.getInstance().getEstimatedPose().getTranslation(),
+                                    Rotation2d.kZero)))
+                .ignoringDisable(true));
 
-    driver.back().onTrue(hood.zeroHood());
-    driver.start().onTrue(intakeRack.zeroIntake());
+    driver
+        .rightBumper()
+        .whileTrue(
+            DriveCommands.trenchDrive(
+                swerve,
+                () -> -driver.getLeftY(),
+                () -> -driver.getLeftX(),
+                () -> -driver.getRightX()));
 
-    // driver.leftBumper().whileTrue(turret.setVoltage(() -> turret.turretConfigNumber2.get()));
-    // driver.rightBumper().whileTrue(turret.setVoltage(() -> -turret.turretConfigNumber2.get()));
-    driver.y().whileTrue(intakeRack.setVoltage(() -> IntakeRack.configRackNumber2.get()));
-    driver.a().whileTrue(intakeRack.setVoltage(() -> -IntakeRack.configRackNumber2.get()));
+    driver.back().whileTrue(hood.zeroHood()); // TODO: Disable roller while zeroing rack
+    // driver.back().whileTrue(Commands.parallel(hood.zeroHood(), intakeRack.zeroIntake()));
+    driver.start().whileTrue(intake.zeroIntake());
+
+    driver.leftStick().whileTrue(Commands.runOnce(() -> swerve.stopWithX(), swerve));
 
     driver.x().whileTrue(spindexer.setVoltage(() -> -spindexer.configurableNumber.get()));
     driver.b().whileTrue(spindexer.setVoltage(() -> spindexer.configurableNumber.get()));
 
-    driver.povUp().whileTrue(climber.setVoltage(() -> climber.configClimberNumber1.get()));
-    driver.povDown().whileTrue(climber.setVoltage(() -> -climber.configClimberNumber1.get()));
-
-    // driver
-    //     .rightBumper()
-    //     .whileTrue(
-    //         DriveCommands.trenchDrive(
-    //             swerve,
-    //             () -> -driver.getLeftY(),
-    //             () -> -driver.getLeftX(),
-    //             () -> -driver.getRightX()));
-
-    // driver.leftBumper().onTrue(Commands.runOnce(() -> intake.setState(IntakeState.INTAKE)));
-    // driver.rightBumper().onTrue(Commands.runOnce(() -> intake.setState(IntakeState.STOW)));
-    // driver.a().onTrue(Commands.runOnce(() -> intake.setState(IntakeState.AGITATE)));
-    // driver.b().onTrue(Commands.runOnce(() -> intake.setState(IntakeState.EJECT)));
-
-    // driver.rightTrigger().onTrue(Commands.runOnce(() -> feeder.setState(FeederState.FEED)));
-    // driver.leftTrigger().onTrue(Commands.runOnce(() -> feeder.setState(FeederState.IDLE)));
-
-    // driver.y().onTrue(Commands.runOnce(() -> shooter.setState(ShooterState.AIM)));
-    // driver.a().onTrue(Commands.runOnce(() -> shooter.setState(ShooterState.STOW)));
-
-    // driver
-    //     .leftTrigger()
-    //     .onTrue(Commands.runOnce(() -> intake.setState(IntakeState.INTAKE)))
-    //     .onFalse(Commands.runOnce(() -> intake.setState(IntakeState.STOW)));
-
-    // driver
-    //     .rightTrigger()
-    //     .onTrue(
-    //         Commands.runOnce(
-    //             () -> {
-    //               feeder.setState(FeederState.FEED);
-    //               spindexer.setState(SpindexerState.FEED);
-    //             }))
-    //     .onFalse(
-    //         Commands.runOnce(
-    //             () -> {
-    //               feeder.setState(FeederState.IDLE);
-    //               spindexer.setState(SpindexerState.IDLE);
-    //             }));
-
-    // driver
-    //     .rightBumper()
-    //     .onTrue(intakeRack.setExtension(() -> Inches.of(intakeRack.configRackNumber.get())))
-    //     .onFalse(intakeRack.stop());
-    // driver
-    //     .leftBumper()
-    //     .onTrue(intakeRack.setExtension(() -> Inches.of(0.0)))
-    //     .onFalse(intakeRack.stop());
-
-    // driver
-    //     .rightTrigger()
-    //     .onTrue(
-    //         intakeRoller.setVelocity(
-    //             () -> RotationsPerSecond.of(intakeRoller.configurableNumber.get())))
-    //     .onFalse(intakeRoller.stop());
-    // driver
-    //     .leftTrigger()
-    //     .onTrue(
-    //         intakeRoller.setVelocity(
-    //             () -> RotationsPerSecond.of(-intakeRoller.configurableNumber.get())))
-    //     .onFalse(intakeRoller.stop());
-
-    // driver.rightBumper().onTrue(intakeRack.setVoltage(() -> 2.0)).onFalse(intakeRack.stop());
-    // driver.leftBumper().onTrue(intakeRack.setVoltage(() -> -2.0)).onFalse(intakeRack.stop());
-
-    // driver
-    //     .b()
-    //     .onTrue(intakeRoller.setVoltage(() -> intakeRoller.configurableNumber.get()))
-    //     .onFalse(intakeRoller.stop());
-    // driver
-    //     .x()
-    //     .onTrue(intakeRoller.setVoltage(() -> -intakeRoller.configurableNumber.get()))
-    //     .onFalse(intakeRoller.stop());
-
-    // Feeder
-    // driver
-    //     .pov(0)
-    //     .onTrue(feeder.setVoltage(() -> feeder.configurableNumber.get()))
-    //     .onFalse(feeder.stop());
-    // driver
-    //     .pov(180)
-    //     .onTrue(feeder.setVoltage(() -> -feeder.configurableNumber.get()))
-    //     .onFalse(feeder.stop());
-
-    // driver
-    //     .pov(90)
-    //     .onTrue(feeder.setVelocity(() -> RotationsPerSecond.of(feeder.configurableNumber.get())))
-    //     .onFalse(feeder.stop());
-    // driver
-    //     .pov(270)
-    //     .onTrue(feeder.setVelocity(() ->
-    // RotationsPerSecond.of(-feeder.configurableNumber.get())))
-    //     .onFalse(feeder.stop());
-
-    // Spindexer
-    // driver
-    //     .x()
-    //     .onTrue(spindexer.setVoltage(() -> spindexer.configurableNumber.get()))
-    //     .onFalse(spindexer.stop());
-    // driver
-    //     .b()
-    //     .onTrue(spindexer.setVoltage(() -> -spindexer.configurableNumber.get()))
-    //     .onFalse(spindexer.stop());
-
-    // Hood
-    copilot.start().onTrue(Commands.runOnce(() -> hood.zeroHood()));
-
-    // copilot
-    //     .y()
-    //     .onTrue(hood.setPosition(() -> Degrees.of(hood.hoodConfigNumber1.get())))
-    //     .onFalse(hood.setVoltage(0.0));
-    // copilot.a().onTrue(hood.setPosition(() -> Degrees.of(0.0))).onFalse(hood.setVoltage(0.0));
-
     copilot
-        .b()
-        .onTrue(hood.setVoltage(() -> hood.hoodConfigNumber2.get()))
-        .onFalse(hood.setVoltage(0.0));
-    copilot
-        .x()
-        .onTrue(hood.setVoltage(() -> -hood.hoodConfigNumber2.get()))
-        .onFalse(hood.setVoltage(0.0));
+        .a()
+        .whileTrue(spindexer.setVoltage(() -> -6.0).alongWith(feeder.setVoltage(() -> -6.0)));
 
-    // Turet
-    copilot.back().onTrue(Commands.runOnce(() -> turret.zeroMotor()));
-
-    copilot
-        .rightBumper()
-        .onTrue(turret.setPosition(() -> Degrees.of(turret.turretConfigNumber1.get())))
-        .onFalse(turret.setVoltage(0.0));
     copilot
         .leftBumper()
-        .onTrue(turret.setPosition(() -> Degrees.of(0.0)))
-        .onFalse(turret.setVoltage(0.0));
-
-    copilot
-        .rightTrigger()
-        .onTrue(turret.setVoltage(() -> turret.turretConfigNumber2.get()))
-        .onFalse(turret.setVoltage(0.0));
+        .onTrue(Commands.runOnce(() -> shotCalculator.incrementFlywheelOffset(50.0)));
     copilot
         .leftTrigger()
-        .onTrue(turret.setVoltage(() -> -turret.turretConfigNumber2.get()))
-        .onFalse(turret.setVoltage(0.0));
+        .onTrue(Commands.runOnce(() -> shotCalculator.incrementFlywheelOffset(-50.0)));
 
-    // Shooter
-    // copilot
-    //     .pov(90)
-    //     .onTrue(
-    //         flywheel.setVelocity(() ->
-    // RotationsPerSecond.of(flywheel.flywheelConfigNumber1.get())))
-    //     .onFalse(flywheel.setVelocity(RotationsPerSecond.of(0.0)));
-    // copilot
-    //     .pov(270)
-    //     .onTrue(
-    //         flywheel.setVelocity(
-    //             () -> RotationsPerSecond.of(-flywheel.flywheelConfigNumber1.get())))
-    //     .onFalse(flywheel.setVoltage(0.0));
+    copilot.povUp().whileTrue(flywheel.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    copilot.povDown().whileTrue(flywheel.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    copilot.povLeft().whileTrue(flywheel.sysIdDynamic(SysIdRoutine.Direction.kForward));
+    copilot.povRight().whileTrue(flywheel.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
-    // copilot
-    //     .pov(0)
-    //     .onTrue(flywheel.setVoltage(() -> flywheel.flywheelConfigNumber2.get()))
-    //     .onFalse(flywheel.setVoltage(0.0));
-    // copilot
-    //     .pov(180)
-    //     .onTrue(flywheel.setVoltage(() -> -flywheel.flywheelConfigNumber2.get()))
-    //     .onFalse(flywheel.setVoltage(0.0));
+    RobotModeTriggers.teleop()
+        .or(RobotModeTriggers.autonomous())
+        .or(RobotModeTriggers.disabled())
+        .onTrue(Commands.runOnce(HubTracker::initialize).ignoringDisable(true));
   }
 
   private void updateAlerts() {}
 
-  private void updateDashboardOuputs() {}
+  private void configureDashboard() {
+    SmartDashboard.putData(
+        "Dashboard/Commands/ZeroTurret",
+        Commands.runOnce(() -> turret.zeroTurretCRT(), turret).ignoringDisable(true));
+    SmartDashboard.putData(
+        "Dashboard/Commands/Coast",
+        Commands.runOnce(
+                () -> {
+                  if (DriverStation.isDisabled()) {
+                    coastOverride = !coastOverride;
+                    leds.setCoastOverride(coastOverride);
+                  }
+                })
+            .ignoringDisable(true)
+            .withName("Coast Override"));
+
+    RobotModeTriggers.disabled()
+        .onFalse(
+            Commands.runOnce(
+                    () -> {
+                      coastOverride = false;
+                      leds.setCoastOverride(coastOverride);
+                    })
+                .ignoringDisable(true));
+  }
+
+  private void updateDashboardOuputs() {
+    SmartDashboard.putNumber("Dashboard/MatchTime", DriverStation.getMatchTime());
+
+    SmartDashboard.putString(
+        "Dashboard/HubTracker/RemainingShiftTime",
+        String.format("%.1f", Math.max(HubTracker.getOffsetShiftInfo().remainingTime(), 0.0)));
+    SmartDashboard.putBoolean(
+        "Dashboard/HubTracker/HubActive", HubTracker.getOffsetShiftInfo().active());
+    SmartDashboard.putString(
+        "Dashboard/HubTracker/ShiftState",
+        HubTracker.getOffsetShiftInfo().currentShift().toString());
+    SmartDashboard.putBoolean(
+        "Dashboard/HubTracker/ActiveFirst",
+        DriverStation.getAlliance().orElse(Alliance.Blue) == HubTracker.getFirstActiveAlliance());
+  }
 
   public static boolean isInitializing() {
     return Timer.getTimestamp() < 45.0;
@@ -651,7 +594,11 @@ public class Robot extends LoggedRobot {
   public void autonomousPeriodic() {}
 
   @Override
-  public void autonomousExit() {}
+  public void autonomousExit() {
+    if (autonomousCommand != null) {
+      autonomousCommand.cancel();
+    }
+  }
 
   @Override
   public void teleopInit() {

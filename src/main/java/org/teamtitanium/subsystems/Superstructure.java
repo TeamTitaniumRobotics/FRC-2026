@@ -20,6 +20,7 @@ import org.teamtitanium.subsystems.intake.Intake;
 import org.teamtitanium.subsystems.intake.Intake.IntakeState;
 import org.teamtitanium.subsystems.shooter.Shooter;
 import org.teamtitanium.subsystems.shooter.Shooter.ShooterState;
+import org.teamtitanium.subsystems.shooter.ShotCalculator;
 import org.teamtitanium.subsystems.shooter.turret.TurretConstants;
 import org.teamtitanium.subsystems.spindexer.Spindexer;
 import org.teamtitanium.subsystems.spindexer.Spindexer.SpindexerState;
@@ -75,11 +76,12 @@ public class Superstructure extends VirtualSubsystem {
   // ----------------------------- Driver inputs --------------------------------
 
   private final Trigger intakeReq;
+  private final Trigger autoIntakeReq =
+      AutoRoutines.autoIntakeReq.or(AutoRoutines.autoIntakeOverrideReq);
   private final Trigger scoreReq;
-  private final Trigger passReq;
-  private final Trigger spitReq;
+  private final Trigger autoScoreReq;
+  private final Trigger ejectReq;
   private final Trigger stowReq;
-  private final Trigger hasFuel;
 
   // ----------------------------- Modifier triggers --------------------------------
 
@@ -112,19 +114,24 @@ public class Superstructure extends VirtualSubsystem {
     this.intake = intake;
 
     intakeReq = driver.leftTrigger().or(AutoRoutines.autoIntakeReq);
-    scoreReq = driver.rightTrigger().or(AutoRoutines.autoScoreReq);
-    passReq = new Trigger(() -> false);
-    stowReq = new Trigger(() -> false);
-    spitReq = new Trigger(() -> false);
-
-    hasFuel = spindexer.hasFuel.or(feeder.hasFuel);
+    autoScoreReq =
+        new Trigger(
+                () ->
+                    ShotCalculator.getInstance().getParameters().isValid()
+                        && !ShotCalculator.getInstance().getParameters().passing()
+                        && intakeDeployedValue)
+            .and(driver.rightTrigger().negate());
+    scoreReq =
+        autoScoreReq
+            .or(AutoRoutines.autoScoreReq)
+            .or(RobotState.getInstance().inAllianceZone.negate().and(driver.rightTrigger()))
+            .or(() -> !intakeDeployedValue && driver.rightTrigger().getAsBoolean());
+    stowReq = driver.povDown();
+    ejectReq = driver.povUp();
 
     // Modifier triggers - backed by simple booleans toggled via commands
-    intakeDeployed = new Trigger(() -> intakeDeployedValue).or(intakeReq);
+    intakeDeployed = new Trigger(() -> intakeDeployedValue);
     this.trenchStowOverride = RobotState.getInstance().underTrench;
-
-    // Pass the hood-stow override trigger into Shooter so it can respect it
-    // shooter.setHoodStowOverride(this.trenchStowOverride);
 
     bindTransitions();
     bindModifierToggles(driver);
@@ -156,39 +163,30 @@ public class Superstructure extends VirtualSubsystem {
     bindTransition(SuperstructureState.SCORE, SuperstructureState.IDLE, stowReq);
 
     // IDLE -> SPIN_UP_SCORE -> SCORE
-    bindTransition(SuperstructureState.IDLE, SuperstructureState.SPIN_UP_SCORE, scoreReq);
+    bindTransition(
+        SuperstructureState.IDLE,
+        SuperstructureState.SPIN_UP_SCORE,
+        scoreReq.or(AutoRoutines.autoSpinUpReq));
     bindTransition(
         SuperstructureState.SPIN_UP_SCORE,
         SuperstructureState.SCORE,
-        shooter.atSetpoint().and(scoreReq));
+        shooter.atSetpoint().and(scoreReq).and(() -> stateTimer.hasElapsed(0.35)));
     bindTransition(
         SuperstructureState.SCORE,
         SuperstructureState.SPIN_UP_SCORE,
-        scoreReq.and(shooter.atSetpoint().negate().debounce(0.25)));
-    bindTransition(SuperstructureState.SPIN_UP_SCORE, SuperstructureState.IDLE, scoreReq.negate());
+        scoreReq.and(shooter.atSetpoint().negate().debounce(0.2)));
+    bindTransition(
+        SuperstructureState.SPIN_UP_SCORE,
+        SuperstructureState.IDLE,
+        scoreReq.negate().and(AutoRoutines.autoSpinUpReq.negate()));
     bindTransition(SuperstructureState.SCORE, SuperstructureState.IDLE, scoreReq.negate());
 
-    // IDLE -> SPIN_UP_PASS -> PASS
-    bindTransition(SuperstructureState.IDLE, SuperstructureState.SPIN_UP_PASS, passReq);
-    bindTransition(
-        SuperstructureState.SPIN_UP_PASS,
-        SuperstructureState.PASS,
-        shooter.atSetpoint().and(passReq));
-    bindTransition(
-        SuperstructureState.PASS,
-        SuperstructureState.IDLE,
-        passReq.negate().and(() -> stateTimer.hasElapsed(0.5)));
-    bindTransition(
-        SuperstructureState.SPIN_UP_PASS,
-        SuperstructureState.IDLE,
-        passReq.negate().and(() -> stateTimer.hasElapsed(0.5)));
-
     // IDLE -> EJECT (spit fuel out the front)
-    bindTransition(SuperstructureState.IDLE, SuperstructureState.EJECT, spitReq);
+    bindTransition(SuperstructureState.IDLE, SuperstructureState.EJECT, ejectReq);
     // Return to the state we were in before ejecting
     SuperstructureState.EJECT
         .getTrigger()
-        .and(spitReq.negate())
+        .and(ejectReq.negate())
         .onTrue(
             Commands.runOnce(
                     () -> {
@@ -237,15 +235,30 @@ public class Superstructure extends VirtualSubsystem {
       case EJECT -> intake.setState(IntakeState.EJECT);
       case SPIN_UP_SCORE, SPIN_UP_PASS -> {
         // If intake deployed override is active, keep intaking; else agitate
-        intake.setState(intakeDeployed.getAsBoolean() ? IntakeState.INTAKE : IntakeState.AGITATE);
+        intake.setState(
+            intakeDeployed.getAsBoolean()
+                    || intakeReq.getAsBoolean()
+                    || autoIntakeReq.getAsBoolean()
+                ? IntakeState.INTAKE
+                : IntakeState.STOW);
       }
       case SCORE, PASS -> {
         // If intake deployed override is active, keep intaking; else stow
-        intake.setState(intakeDeployed.getAsBoolean() ? IntakeState.INTAKE : IntakeState.AGITATE);
+        intake.setState(
+            intakeDeployed.getAsBoolean()
+                    || intakeReq.getAsBoolean()
+                    || autoIntakeReq.getAsBoolean()
+                ? IntakeState.INTAKE
+                : IntakeState.STOW);
       }
       default -> {
         // IDLE / PREPPED / CLIMB states
-        intake.setState(intakeDeployed.getAsBoolean() ? IntakeState.INTAKE : IntakeState.STOW);
+        intake.setState(
+            intakeDeployed.getAsBoolean()
+                    || intakeReq.getAsBoolean()
+                    || autoIntakeReq.getAsBoolean()
+                ? IntakeState.INTAKE
+                : IntakeState.STOW);
       }
     }
 

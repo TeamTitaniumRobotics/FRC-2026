@@ -32,6 +32,7 @@ public class DriveCommands {
   public static final double FF_RAMP_RATE = 0.1;
   private static final double WHEEL_RADIUS_MAX_VELOCITY = 0.25;
   private static final double WHEEL_RADIUS_RAMP_RATE = 0.1;
+  private static final double TRENCH_WALL_CLEARANCE_OFFSET_METERS = Units.inchesToMeters(6.0);
 
   private static final PIDController TRENCH_CONTROLLER = new PIDController(5.0, 0.0, 0.0);
   private static final PIDController ROTATIONAL_CONTROLLER = new PIDController(5.0, 0.0, 0.0);
@@ -121,10 +122,20 @@ public class DriveCommands {
             () -> {
               double trenchOutput =
                   TRENCH_CONTROLLER.calculate(RobotState.getInstance().getEstimatedPose().getY());
+              trenchOutput =
+                  MathUtil.clamp(
+                      trenchOutput,
+                      -Swerve.getMaxLinearSpeedMetersPerSec(),
+                      Swerve.getMaxLinearSpeedMetersPerSec());
 
               double omega =
                   ROTATIONAL_CONTROLLER.calculate(
                       RobotState.getInstance().getRotation().getRadians());
+              omega =
+                  MathUtil.clamp(
+                      omega,
+                      -Swerve.getMaxAngularVelocityRadPerSec(),
+                      Swerve.getMaxAngularVelocityRadPerSec());
 
               ChassisSpeeds speeds =
                   new ChassisSpeeds(
@@ -150,12 +161,35 @@ public class DriveCommands {
             swerve)
         .beforeStarting(
             () -> {
-              TRENCH_CONTROLLER.setSetpoint(
+              TRENCH_CONTROLLER.reset();
+              ROTATIONAL_CONTROLLER.reset();
+
+              double trenchSetpoint =
                   RobotState.getInstance().getEstimatedPose().getY()
                           < FieldConstants.fieldWidth / 2.0
                       ? FieldConstants.LinesHorizontal.rightTrenchOpenMiddle
-                      : FieldConstants.LinesHorizontal.leftTrenchOpenMiddle);
-              ROTATIONAL_CONTROLLER.setSetpoint(getTrenchAngleRad());
+                      : FieldConstants.LinesHorizontal.leftTrenchOpenMiddle;
+
+              double targetAngle = getTrenchAngleRad();
+              ROTATIONAL_CONTROLLER.setSetpoint(targetAngle);
+
+              double signedOffset = getTrenchYOffsetMeters(targetAngle);
+
+              double offsetSetpoint =
+                  MathUtil.clamp(trenchSetpoint + signedOffset, 0.0, FieldConstants.fieldWidth);
+
+              TRENCH_CONTROLLER.setSetpoint(offsetSetpoint);
+
+              Logger.recordOutput("AutoAlign/Trench/Active", true);
+              Logger.recordOutput("AutoAlign/Trench/BaseSetpointY", trenchSetpoint);
+              Logger.recordOutput("AutoAlign/Trench/OffsetSetpointY", offsetSetpoint);
+              Logger.recordOutput("AutoAlign/Trench/SetpointOffset", signedOffset);
+            })
+        .finallyDo(
+            () -> {
+              Logger.recordOutput("AutoAlign/Trench/Active", false);
+              Logger.recordOutput("AutoAlign/Trench/TargetPose", Pose2d.kZero);
+              Logger.recordOutput("AutoAlign/Trench/TargetSpeeds", new ChassisSpeeds());
             });
   }
 
@@ -175,6 +209,17 @@ public class DriveCommands {
       nearestAngle -= 2 * Math.PI;
     }
     return nearestAngle;
+  }
+
+  private static double getTrenchYOffsetMeters(double targetAngle) {
+    int nearestQuarter = Math.floorMod((int) Math.round(targetAngle / (Math.PI / 2.0)), 4);
+    if (nearestQuarter == 1) {
+      return -TRENCH_WALL_CLEARANCE_OFFSET_METERS;
+    } else if (nearestQuarter == 3) {
+      return TRENCH_WALL_CLEARANCE_OFFSET_METERS;
+    } else {
+      return 0.0;
+    }
   }
 
   /**

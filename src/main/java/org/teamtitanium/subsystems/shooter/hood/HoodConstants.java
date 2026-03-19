@@ -40,7 +40,10 @@ public class HoodConstants {
   // Current Limits
   public static final double STATOR_CURRENT_LIMIT = 60.0;
   public static final double SUPPLY_CURRENT_LIMIT = 40.0;
+
+  // Zeroing
   public static final double ZERO_CURRENT_LIMIT = 35.0;
+  public static final double ZERO_VELOCITY_LIMIT = 0.1;
 
   // Simulation
   public static final DCMotor HOOD_GEARBOX = DCMotor.getKrakenX44(1);

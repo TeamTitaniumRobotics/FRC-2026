@@ -16,16 +16,20 @@ import org.teamtitanium.subsystems.genericroller.GenericRollerIO;
 import org.teamtitanium.utils.Constants;
 import org.teamtitanium.utils.Constants.Constraints;
 import org.teamtitanium.utils.Constants.Gains;
+import org.teamtitanium.utils.LoggedTunableNumber;
 
 public class Feeder extends GenericRoller {
   /** Independent states for the feeder. */
   @RequiredArgsConstructor
   public enum FeederState {
     IDLE(() -> 0.0),
-    FEED(() -> 9.0);
+    FEED(() -> 7.8);
 
     @Getter private final Supplier<Double> feederVoltage;
   }
+
+  public static final LoggedTunableNumber configNumber =
+      new LoggedTunableNumber("Feeder/Roller/ConfigShotNum", 9.0);
 
   public static final AngularVelocity IDLE_VELOCITY = RotationsPerSecond.of(0.0);
   public static final AngularVelocity FEED_VELOCITY = RotationsPerSecond.of(24.0);
