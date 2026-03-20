@@ -64,10 +64,10 @@ public class ShotCalculator {
 
     passingMap.put(5.0, new ShotData(3350, 20.0, 1.2));
     passingMap.put(6.0, new ShotData(3600, 22.5, 1.2));
-    passingMap.put(7.0, new ShotData(4000, 25.0, 1.25));
-    passingMap.put(8.0, new ShotData(4500, 27.5, 1.25));
-    passingMap.put(9.0, new ShotData(5500, 27.5, 1.3));
-    passingMap.put(10.0, new ShotData(6500, 27.5, 1.3));
+    passingMap.put(7.0, new ShotData(4150, 25.0, 1.25));
+    passingMap.put(8.0, new ShotData(4650, 27.5, 1.25));
+    passingMap.put(9.0, new ShotData(5650, 27.5, 1.3));
+    passingMap.put(10.0, new ShotData(6650, 27.5, 1.3));
   }
 
   public ShotParameters getParameters() {
