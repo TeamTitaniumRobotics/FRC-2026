@@ -110,6 +110,17 @@ public class SwerveModule {
 
   /** Periodic method for the module, updating gains and checking connections. */
   public void periodic() {
+    // Update odometry positions
+    int sampleCount = inputs.odometryTimestamps.length;
+    odometryPositions = new SwerveModulePosition[sampleCount];
+    for (int i = 0; i < sampleCount; i++) {
+      double positionMeters = inputs.odometryDrivePositionsRad[i] * constants.WheelRadius;
+      odometryPositions[i] =
+          new SwerveModulePosition(positionMeters, inputs.odometryTurnPositions[i]);
+    }
+
+    LoggedTracer.record("Swerve/Module" + index + "/Odom");
+
     // Update drive and turn gains if they have changed
     if (drivekP.hasChanged(hashCode())
         || drivekD.hasChanged(hashCode())
@@ -125,15 +136,6 @@ public class SwerveModule {
       io.setTurnGains(new Gains(turnkP.get(), 0.0, turnkD.get()));
     }
 
-    // Update odometry positions
-    int sampleCount = inputs.odometryTimestamps.length;
-    odometryPositions = new SwerveModulePosition[sampleCount];
-    for (int i = 0; i < sampleCount; i++) {
-      double positionMeters = inputs.odometryDrivePositionsRad[i] * constants.WheelRadius;
-      odometryPositions[i] =
-          new SwerveModulePosition(positionMeters, inputs.odometryTurnPositions[i]);
-    }
-
     // Update connection alerts with debouncing
     driveDisconnectedAlert.set(
         !driveDisconnectedDebouncer.calculate(inputs.driveConnected && !Robot.isInitializing()));
@@ -144,7 +146,7 @@ public class SwerveModule {
             inputs.turnCANcoderConnected && !Robot.isInitializing()));
 
     // Log tracer
-    LoggedTracer.record("Swerve/Module" + index);
+    LoggedTracer.record("Swerve/Module" + index + "/Misc");
   }
 
   /**
