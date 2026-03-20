@@ -78,7 +78,7 @@ public class Shooter {
     turret.setDefaultCommand(
         Commands.either(
             turret.setPosition(() -> state.getTurretAngle().get()),
-            turret.stop(),
+            turret.setPosition(() -> turret.getPosition()),
             () -> !turretDisabled));
   }
 
