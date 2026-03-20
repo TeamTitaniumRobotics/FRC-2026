@@ -502,7 +502,7 @@ public class Robot extends LoggedRobot {
 
     superstructure
         .getIntakeDeployed()
-        .onTrue(Commands.runOnce(() -> driver.setRumble(RumbleType.kBothRumble, 0.03)))
+        .onTrue(Commands.runOnce(() -> driver.setRumble(RumbleType.kBothRumble, 0.01)))
         .onFalse(Commands.runOnce(() -> driver.setRumble(RumbleType.kBothRumble, 0.0)));
 
     driver.back().whileTrue(hood.zeroHood()); // TODO: Disable roller while zeroing rack
@@ -511,19 +511,17 @@ public class Robot extends LoggedRobot {
 
     driver.leftStick().whileTrue(Commands.runOnce(() -> swerve.stopWithX(), swerve));
 
-    // driver.x().whileTrue(spindexer.setVoltage(() -> -spindexer.configurableNumber.get()));
-    // driver.b().whileTrue(spindexer.setVoltage(() -> spindexer.configurableNumber.get()));
-
-    copilot
-        .a()
+    driver
+        .povRight()
         .whileTrue(spindexer.setVoltage(() -> -6.0).alongWith(feeder.setVoltage(() -> -6.0)));
 
     copilot
-        .leftBumper()
+        .rightBumper()
         .onTrue(Commands.runOnce(() -> shotCalculator.incrementFlywheelOffset(50.0)));
     copilot
-        .leftTrigger()
+        .rightTrigger()
         .onTrue(Commands.runOnce(() -> shotCalculator.incrementFlywheelOffset(-50.0)));
+    copilot.a().onTrue(Commands.runOnce(() -> shotCalculator.setFlywheelOffset(0.0)));
 
     RobotModeTriggers.teleop()
         .or(RobotModeTriggers.autonomous())

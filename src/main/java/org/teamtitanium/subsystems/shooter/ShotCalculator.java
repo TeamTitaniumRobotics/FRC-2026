@@ -183,6 +183,10 @@ public class ShotCalculator {
     flywheelOffset += incrementValue;
   }
 
+  public void setFlywheelOffset(double offset) {
+    flywheelOffset = offset;
+  }
+
   public record ShotParameters(
       boolean isValid,
       double turretAngleRots,
