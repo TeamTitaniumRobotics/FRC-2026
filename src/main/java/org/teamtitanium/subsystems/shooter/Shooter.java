@@ -50,6 +50,10 @@ public class Shooter {
   @AutoLogOutput(key = "Shooter/State")
   private ShooterState state = ShooterState.STOW;
 
+  @Setter
+  @AutoLogOutput(key = "Shooter/TurretDisabled")
+  private boolean turretDisabled = false;
+
   /**
    * Creates a new Shooter subsystem with the given flywheel, hood, and turret.
    *
