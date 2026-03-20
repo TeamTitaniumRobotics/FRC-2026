@@ -6,6 +6,7 @@ import static edu.wpi.first.units.Units.Rotations;
 
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.util.function.Supplier;
 import lombok.Getter;
@@ -50,6 +51,7 @@ public class Shooter {
   @AutoLogOutput(key = "Shooter/State")
   private ShooterState state = ShooterState.STOW;
 
+  @Getter
   @Setter
   @AutoLogOutput(key = "Shooter/TurretDisabled")
   private boolean turretDisabled = false;
@@ -73,7 +75,11 @@ public class Shooter {
     hood.setDefaultCommand(hood.setPosition(() -> state.getHoodAngle().get()));
     // turret.setDefaultCommand(
     //     turret.setPosition(() -> Degrees.of(turret.turretConfigNumber1.get())));
-    turret.setDefaultCommand(turret.setPosition(() -> state.getTurretAngle().get()));
+    turret.setDefaultCommand(
+        Commands.either(
+            turret.setPosition(() -> state.getTurretAngle().get()),
+            turret.stop(),
+            () -> !turretDisabled));
   }
 
   @AutoLogOutput(key = "Shooter/AtSetpoint")

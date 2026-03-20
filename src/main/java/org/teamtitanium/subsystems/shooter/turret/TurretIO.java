@@ -44,4 +44,6 @@ public interface TurretIO {
 
   /** Sets the turret motor encoder position to the given value in rotations. */
   public default void setMotorPosition(double positionRots) {}
+
+  public default void stop() {}
 }

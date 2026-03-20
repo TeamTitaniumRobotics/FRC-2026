@@ -540,6 +540,16 @@ public class Robot extends LoggedRobot {
         "Dashboard/Commands/ZeroTurret",
         Commands.runOnce(() -> turret.zeroTurretCRT(), turret).ignoringDisable(true));
     SmartDashboard.putData(
+        "Dashboard/Commands/DisableTurret",
+        Commands.runOnce(
+                () -> {
+                  shooter.setTurretDisabled(!shooter.isTurretDisabled());
+                  leds.setEStopped(shooter.isTurretDisabled());
+                })
+            .ignoringDisable(true)
+            .withName("Turret Disable"));
+
+    SmartDashboard.putData(
         "Dashboard/Commands/Coast",
         Commands.runOnce(
                 () -> {

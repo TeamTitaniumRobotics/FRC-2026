@@ -205,4 +205,9 @@ public class TurretIOTalonFX implements TurretIO {
   public void setMotorPosition(double positionRots) {
     turretMotor.setPosition(positionRots);
   }
+
+  @Override
+  public void stop() {
+    turretMotor.stopMotor();
+  }
 }

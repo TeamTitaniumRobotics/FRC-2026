@@ -215,6 +215,10 @@ public class Turret extends SubsystemBase {
     return setVoltage(() -> voltage);
   }
 
+  public Command stop() {
+    return run(() -> io.stop());
+  }
+
   /**
    * Gets the current position of the turret.
    *

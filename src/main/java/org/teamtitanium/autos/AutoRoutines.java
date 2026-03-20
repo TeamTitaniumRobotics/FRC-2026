@@ -300,7 +300,7 @@ public class AutoRoutines {
     ROB_RBB(PathAction.SPIN_UP, true),
     LTS_LFME(PathAction.INTAKE),
     LFME_LTS(PathAction.NOTHING, true),
-    LTS_LB(PathAction.SPIN_UP, true),
+    LTS_LB(PathAction.SCORE, true),
     LB_LTS(PathAction.NOTHING),
     LTS_LCME(PathAction.INTAKE),
     LCME_LTS(PathAction.NOTHING, true);
