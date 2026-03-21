@@ -352,6 +352,7 @@ public class Robot extends LoggedRobot {
     autoRoutines = new AutoRoutines(swerve);
     autoChooser.addCmd("Right Outpost", autoRoutines::getRightOutpostAuto);
     autoChooser.addCmd("Left Double Pass", autoRoutines::leftDoublePass);
+    autoChooser.addCmd("Right Double Pass", autoRoutines::rightDoublePass);
     autoChooser.addCmd("Straight Test", autoRoutines::straightTuningAuto);
 
     autoChooser.addCmd(

@@ -142,6 +142,52 @@ public class AutoRoutines {
     return routine.cmd();
   }
 
+  public Command rightDoublePass() {
+    final AutoRoutine routine = factory.newRoutine("Right Double Pass");
+    Command autoCmd = resetPose(Path.RTS_RFME);
+
+    autoCmd =
+        autoCmd.andThen(
+            Commands.sequence(
+                followPath(Path.RTS_RFME, routine),
+                followPath(Path.RFME_RTS, routine),
+                followPath(Path.RTS_RB, routine)));
+
+    autoCmd =
+        autoCmd.andThen(
+            Commands.parallel(
+                    setAutoScore(true),
+                    Commands.repeatingSequence(
+                        setAutoIntakeOverride(true),
+                        Commands.waitSeconds(0.8),
+                        setAutoIntakeOverride(false),
+                        Commands.waitSeconds(0.75)))
+                .withTimeout(4.5));
+
+    autoCmd =
+        autoCmd.andThen(
+            Commands.sequence(
+                followPath(Path.RB_RTS, routine),
+                followPath(Path.RTS_RCME, routine),
+                followPath(Path.RCME_RTS, routine),
+                followPath(Path.RTS_RB, routine)));
+
+    autoCmd =
+        autoCmd.andThen(
+            Commands.parallel(
+                    setAutoScore(true),
+                    Commands.repeatingSequence(
+                        setAutoIntakeOverride(true),
+                        Commands.waitSeconds(0.75),
+                        setAutoIntakeOverride(false),
+                        Commands.waitSeconds(0.75)))
+                .withTimeout(4.5));
+
+    routine.active().onTrue(autoCmd);
+
+    return routine.cmd();
+  }
+
   public Command leftDoublePass() {
     final AutoRoutine routine = factory.newRoutine("Left Double Pass Auto");
     Path[] paths = new Path[] {Path.LTS_LFME, Path.LFME_LTS, Path.LTS_LB};
@@ -293,15 +339,20 @@ public class AutoRoutines {
    */
   public enum Path {
     RTS_RFME(PathAction.INTAKE),
+    RFME_RTS(PathAction.NOTHING, true),
     RFME_RTSB(PathAction.NOTHING),
+    RTS_RB(PathAction.SPIN_UP, true),
     RTSB_RTSHB(PathAction.SPIN_UP, true),
     RTSB_ROB(PathAction.INTAKE),
     RTSHB_ROB(PathAction.INTAKE),
     ROB_RBB(PathAction.SPIN_UP, true),
+    RB_RTS(PathAction.INTAKE),
+    RTS_RCME(PathAction.INTAKE),
+    RCME_RTS(PathAction.NOTHING, true),
     LTS_LFME(PathAction.INTAKE),
     LFME_LTS(PathAction.NOTHING, true),
     LTS_LB(PathAction.SCORE, true),
-    LB_LTS(PathAction.NOTHING),
+    LB_LTS(PathAction.INTAKE),
     LTS_LCME(PathAction.INTAKE),
     LCME_LTS(PathAction.NOTHING, true);
 
@@ -317,17 +368,6 @@ public class AutoRoutines {
       this.action = action;
       this.intakeDeployed = intakeDeployed;
     }
-
-    // public AutoTrajectory getTrajectory(AutoRoutine routine) {
-    //   AutoTrajectory desiredTraj =
-    //       ChoreoTraj.ALL_TRAJECTORIES
-    //           .getOrDefault(this.name(), ChoreoTraj.StraightPath)
-    //           .asAutoTraj(routine);
-    //   if (desiredTraj == null) {
-    //     desiredTraj = ChoreoTraj.StraightPath.asAutoTraj(routine);
-    //   }
-    //   return desiredTraj;
-    // }
 
     public Command getPathCommand() {
       try {
