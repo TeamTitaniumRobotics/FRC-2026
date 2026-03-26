@@ -3,16 +3,16 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 4.45,
+        "x": 3.25,
         "y": 0.65
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.45,
+        "x": 2.25,
         "y": 0.6500000000000001
       },
       "isLocked": false,
-      "linkedName": "RTSB"
+      "linkedName": "RTSHB"
     },
     {
       "anchor": {
@@ -62,7 +62,7 @@
   "folder": "RT",
   "idealStartingState": {
     "velocity": 3.0,
-    "rotation": 0.0
+    "rotation": 180.0
   },
   "useDefaultConstraints": true
 }

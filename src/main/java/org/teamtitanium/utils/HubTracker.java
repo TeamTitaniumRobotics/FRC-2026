@@ -6,6 +6,7 @@ import edu.wpi.first.wpilibj.Timer;
 import java.util.Optional;
 import java.util.function.Supplier;
 import lombok.Setter;
+import org.littletonrobotics.junction.Logger;
 
 public class HubTracker {
   public enum Shift {
@@ -65,6 +66,8 @@ public class HubTracker {
         return Alliance.Red;
       }
     }
+
+    Logger.recordOutput("HubTracker/GameMessage", message);
 
     return alliance == Alliance.Blue ? Alliance.Red : Alliance.Blue;
   }

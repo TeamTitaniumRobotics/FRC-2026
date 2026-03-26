@@ -14,11 +14,13 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.IterativeRobotBase;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.Watchdog;
 import edu.wpi.first.wpilibj.simulation.DriverStationSim;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -26,7 +28,6 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
@@ -147,6 +148,8 @@ public class Robot extends LoggedRobot {
 
   private final AutoChooser autoChooser = new AutoChooser();
   private final AutoRoutines autoRoutines;
+
+  private final Field2d field2d = new Field2d();
 
   public Robot() {
     // Set up logger
@@ -349,6 +352,7 @@ public class Robot extends LoggedRobot {
     autoRoutines = new AutoRoutines(swerve);
     autoChooser.addCmd("Right Outpost", autoRoutines::getRightOutpostAuto);
     autoChooser.addCmd("Left Double Pass", autoRoutines::leftDoublePass);
+    autoChooser.addCmd("Right Double Pass", autoRoutines::rightDoublePass);
     autoChooser.addCmd("Straight Test", autoRoutines::straightTuningAuto);
 
     autoChooser.addCmd(
@@ -454,6 +458,8 @@ public class Robot extends LoggedRobot {
     // Initialization Alert
     initializationAlert.set(isInitializing());
 
+    field2d.setRobotPose(RobotState.getInstance().getEstimatedPose());
+
     // Log hub state
     Logger.recordOutput("HubTracker/Official", HubTracker.getOfficialShiftInfo());
     Logger.recordOutput("HubTracker/Offset", HubTracker.getOffsetShiftInfo());
@@ -495,30 +501,28 @@ public class Robot extends LoggedRobot {
                 () -> -driver.getLeftX(),
                 () -> -driver.getRightX()));
 
+    superstructure
+        .getIntakeDeployed()
+        .onTrue(Commands.runOnce(() -> driver.setRumble(RumbleType.kBothRumble, 0.01)))
+        .onFalse(Commands.runOnce(() -> driver.setRumble(RumbleType.kBothRumble, 0.0)));
+
     driver.back().whileTrue(hood.zeroHood()); // TODO: Disable roller while zeroing rack
     // driver.back().whileTrue(Commands.parallel(hood.zeroHood(), intakeRack.zeroIntake()));
     driver.start().whileTrue(intake.zeroIntake());
 
     driver.leftStick().whileTrue(Commands.runOnce(() -> swerve.stopWithX(), swerve));
 
-    driver.x().whileTrue(spindexer.setVoltage(() -> -spindexer.configurableNumber.get()));
-    driver.b().whileTrue(spindexer.setVoltage(() -> spindexer.configurableNumber.get()));
-
-    copilot
-        .a()
+    driver
+        .povRight()
         .whileTrue(spindexer.setVoltage(() -> -6.0).alongWith(feeder.setVoltage(() -> -6.0)));
 
     copilot
-        .leftBumper()
+        .rightBumper()
         .onTrue(Commands.runOnce(() -> shotCalculator.incrementFlywheelOffset(50.0)));
     copilot
-        .leftTrigger()
+        .rightTrigger()
         .onTrue(Commands.runOnce(() -> shotCalculator.incrementFlywheelOffset(-50.0)));
-
-    copilot.povUp().whileTrue(flywheel.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-    copilot.povDown().whileTrue(flywheel.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-    copilot.povLeft().whileTrue(flywheel.sysIdDynamic(SysIdRoutine.Direction.kForward));
-    copilot.povRight().whileTrue(flywheel.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+    copilot.a().onTrue(Commands.runOnce(() -> shotCalculator.setFlywheelOffset(0.0)));
 
     RobotModeTriggers.teleop()
         .or(RobotModeTriggers.autonomous())
@@ -529,9 +533,21 @@ public class Robot extends LoggedRobot {
   private void updateAlerts() {}
 
   private void configureDashboard() {
+    SmartDashboard.putData("Dashboard/Field2d", field2d);
+
     SmartDashboard.putData(
         "Dashboard/Commands/ZeroTurret",
         Commands.runOnce(() -> turret.zeroTurretCRT(), turret).ignoringDisable(true));
+    SmartDashboard.putData(
+        "Dashboard/Commands/DisableTurret",
+        Commands.runOnce(
+                () -> {
+                  shooter.setTurretDisabled(!shooter.isTurretDisabled());
+                  leds.setEStopped(shooter.isTurretDisabled());
+                })
+            .ignoringDisable(true)
+            .withName("Turret Disable"));
+
     SmartDashboard.putData(
         "Dashboard/Commands/Coast",
         Commands.runOnce(

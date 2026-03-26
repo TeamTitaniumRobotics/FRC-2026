@@ -12,6 +12,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.DriverStation;
 import java.util.Queue;
+import org.teamtitanium.utils.PhoenixUtil;
 import org.teamtitanium.utils.TunerConstants;
 
 public class GyroIOPigeon2 implements GyroIO {
@@ -39,8 +40,8 @@ public class GyroIOPigeon2 implements GyroIO {
 
     pigeon.optimizeBusUtilization();
 
-    // PhoenixUtil.registerSignals(
-    //     TunerConstants.kCANBus, yaw, pitch, roll, yawVelocity, pitchVelocity, rollVelocity);
+    PhoenixUtil.registerSignals(
+        TunerConstants.kCANBus, yaw, pitch, roll, yawVelocity, pitchVelocity, rollVelocity);
 
     yawTimestampQueue = PhoenixOdometryThread.getInstance().makeTimestampQueue();
     yawPositionQueue = PhoenixOdometryThread.getInstance().registerSignal(pigeon.getYaw());
@@ -48,9 +49,11 @@ public class GyroIOPigeon2 implements GyroIO {
 
   @Override
   public void updateInputs(GyroIOInputs inputs) {
+    // inputs.connected =
+    //     BaseStatusSignal.refreshAll(yaw, roll, pitch, yawVelocity, rollVelocity, pitchVelocity)
+    //         .isOK();
     inputs.connected =
-        BaseStatusSignal.refreshAll(yaw, roll, pitch, yawVelocity, rollVelocity, pitchVelocity)
-            .isOK();
+        BaseStatusSignal.isAllGood(yaw, roll, pitch, yawVelocity, rollVelocity, pitchVelocity);
 
     if (!inputs.connected && DriverStation.isDisabled()) {
       pigeon = new Pigeon2(TunerConstants.DrivetrainConstants.Pigeon2Id, TunerConstants.kCANBus);
@@ -71,8 +74,8 @@ public class GyroIOPigeon2 implements GyroIO {
 
       pigeon.optimizeBusUtilization();
 
-      // PhoenixUtil.registerSignals(
-      //     TunerConstants.kCANBus, yaw, pitch, roll, yawVelocity, pitchVelocity, rollVelocity);
+      PhoenixUtil.registerSignals(
+          TunerConstants.kCANBus, yaw, pitch, roll, yawVelocity, pitchVelocity, rollVelocity);
 
       yawTimestampQueue = PhoenixOdometryThread.getInstance().makeTimestampQueue();
       yawPositionQueue = PhoenixOdometryThread.getInstance().registerSignal(pigeon.getYaw());

@@ -3,47 +3,54 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 4.45,
-        "y": 0.65
+        "x": 7.94,
+        "y": 3.3
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.45,
-        "y": 0.6500000000000001
+        "x": 7.94,
+        "y": 0.7999999999999998
       },
       "isLocked": false,
-      "linkedName": "RTSB"
+      "linkedName": "RFME"
     },
     {
       "anchor": {
-        "x": 1.0,
+        "x": 5.5,
         "y": 0.65
       },
       "prevControl": {
-        "x": 1.9999999999999998,
+        "x": 5.921,
+        "y": 0.65
+      },
+      "nextControl": {
+        "x": 5.0,
+        "y": 0.6500000000000001
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 4.45,
+        "y": 0.65
+      },
+      "prevControl": {
+        "x": 4.95,
         "y": 0.6499999999999999
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "ROB"
+      "linkedName": "RTSB"
     }
   ],
-  "rotationTargets": [],
-  "constraintZones": [
+  "rotationTargets": [
     {
-      "name": "Intake",
-      "minWaypointRelativePos": 0.6999999999999879,
-      "maxWaypointRelativePos": 1.0,
-      "constraints": {
-        "maxVelocity": 1.25,
-        "maxAcceleration": 3.0,
-        "maxAngularVelocity": 540.0,
-        "maxAngularAcceleration": 720.0,
-        "nominalVoltage": 12.0,
-        "unlimited": false
-      }
+      "waypointRelativePos": 0.4,
+      "rotationDegrees": 45.0
     }
   ],
+  "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
@@ -55,14 +62,14 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 0.0,
-    "rotation": 180.0
+    "velocity": 2.0,
+    "rotation": 0.0
   },
   "reversed": false,
   "folder": "RT",
   "idealStartingState": {
-    "velocity": 3.0,
-    "rotation": 0.0
+    "velocity": 0,
+    "rotation": 90.0
   },
   "useDefaultConstraints": true
 }

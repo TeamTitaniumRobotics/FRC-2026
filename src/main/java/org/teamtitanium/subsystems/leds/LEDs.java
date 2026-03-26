@@ -160,7 +160,11 @@ public class LEDs extends VirtualSubsystem {
 
   private void setLED(int index, Color color) {
     try {
-      buffer.setLED(index, color);
+      buffer.setRGB(
+          index,
+          (int) (color.red * 255 * LEDConstants.MAX_BRIGHTNESS),
+          (int) (color.green * 255 * LEDConstants.MAX_BRIGHTNESS),
+          (int) (color.blue * 255 * LEDConstants.MAX_BRIGHTNESS));
     } catch (Exception e) {
       e.printStackTrace();
     }
