@@ -29,7 +29,7 @@ public interface FlywheelIO {
   public default void setVoltage(double volts) {}
 
   /** Updates the flywheel motor PID gains. */
-  public default void setGains(Gains gains) {}
+  public default void setGains(Gains gains, int slotId) {}
 
   public default void setConstraints(Constraints constraints) {}
 
