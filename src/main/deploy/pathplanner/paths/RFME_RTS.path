@@ -32,16 +32,16 @@
     },
     {
       "anchor": {
-        "x": 4.45,
+        "x": 4.325,
         "y": 0.65
       },
       "prevControl": {
-        "x": 4.95,
+        "x": 4.825,
         "y": 0.6499999999999999
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "RTSB"
+      "linkedName": "RTS"
     }
   ],
   "rotationTargets": [
