@@ -46,11 +46,10 @@ public class FlywheelIOTalonFX implements FlywheelIO {
   private final List<StatusSignal<Temperature>> temperature;
 
   private final Object controlLock = new Object();
+  private final Object signalLock = new Object();
   private volatile double targetVelocityRps = 0.0;
-  private volatile double previousTargetVelocityRps = 0.0;
   private volatile double measuredVelocityRps = 0.0;
   private volatile int activeSlot = 0;
-  private volatile boolean slotChanged = false;
   private volatile boolean velocityMode = false;
 
   private final Notifier gainNotifier;
@@ -134,8 +133,6 @@ public class FlywheelIOTalonFX implements FlywheelIO {
     PhoenixUtil.registerSignals(
         FlywheelConstants.FLYWHEEL_CANBUS,
         position,
-        velocity,
-        velocitySetpoint,
         appliedVolts.get(0),
         appliedVolts.get(1),
         supplyCurrent.get(0),
@@ -148,6 +145,11 @@ public class FlywheelIOTalonFX implements FlywheelIO {
     gainNotifier =
         new Notifier(
             () -> {
+              synchronized (signalLock) {
+                BaseStatusSignal.refreshAll(velocity, velocitySetpoint);
+                measuredVelocityRps = velocity.getValueAsDouble();
+              }
+
               final double error = targetVelocityRps - measuredVelocityRps;
 
               final double enterRecovery = VELOCITY_GAIN_TOLERANCE_RPS;
@@ -155,29 +157,28 @@ public class FlywheelIOTalonFX implements FlywheelIO {
               final double recoveryBoundary = VELOCITY_GAIN_TOLERANCE_RPS * 7.5;
 
               int newSlot = activeSlot;
-              if (Math.signum(error) > 0
-                  // && previousTargetVelocityRps > 0
-                  // && measuredVelocityRps > 0
-                  && MathUtil.isNear(targetVelocityRps, measuredVelocityRps, recoveryBoundary)) {
+              boolean inRange =
+                  MathUtil.isNear(targetVelocityRps, measuredVelocityRps, recoveryBoundary);
+              if (inRange) {
                 if (activeSlot == 0 && error > enterRecovery) {
                   newSlot = 1;
                 } else if (activeSlot == 1 && error < exitRecovery) {
                   newSlot = 0;
                 }
-              } else if (activeSlot == 1
-                  && (Math.signum(error) <= 0
-                      || !MathUtil.isNear(
-                          targetVelocityRps, measuredVelocityRps, recoveryBoundary))) {
+              } else if (activeSlot == 1) {
                 newSlot = 0;
               }
 
-              // Math.signum(error) > 0 && (activeSlot == 0 && error > enterRecovery)
-              //     ? 1
-              //     : (activeSlot == 1 && error < exitRecovery) ? 0 : activeSlot;
-
               if (newSlot != activeSlot) {
-                activeSlot = newSlot;
-                slotChanged = true;
+                synchronized (controlLock) {
+                  if (velocityMode) {
+                    activeSlot = newSlot;
+                    velocityVoltage.Slot = activeSlot;
+                    leftMotor.setControl(velocityVoltage.withVelocity(targetVelocityRps));
+                  } else {
+                    activeSlot = newSlot;
+                  }
+                }
               }
             });
     gainNotifier.startPeriodic(0.004);
@@ -203,22 +204,12 @@ public class FlywheelIOTalonFX implements FlywheelIO {
             torqueCurrent.get(1),
             temperature.get(1));
 
-    inputs.velocityRps = velocity.getValueAsDouble();
-    measuredVelocityRps = inputs.velocityRps;
-
-    Logger.recordOutput("Flywheel/TargetVelocity", targetVelocityRps);
-    Logger.recordOutput("Flywheel/PreviousTargetVelocity", previousTargetVelocityRps);
-
-    if (velocityMode && slotChanged) {
-      synchronized (controlLock) {
-        velocityVoltage.Slot = activeSlot;
-        leftMotor.setControl(velocityVoltage.withVelocity(targetVelocityRps));
-        slotChanged = false;
-      }
+    synchronized (signalLock) {
+      inputs.velocityRps = velocity.getValueAsDouble();
+      inputs.velocitySetpoint = velocitySetpoint.getValueAsDouble();
     }
 
     inputs.positionRots = position.getValueAsDouble();
-    inputs.velocitySetpoint = velocitySetpoint.getValueAsDouble();
     inputs.appliedVolts = appliedVolts.stream().mapToDouble(s -> s.getValueAsDouble()).toArray();
     inputs.supplyCurrentAmps =
         supplyCurrent.stream().mapToDouble(s -> s.getValueAsDouble()).toArray();
@@ -232,13 +223,10 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 
   @Override
   public void setVelocity(double velocityRps) {
-    previousTargetVelocityRps = targetVelocityRps;
     targetVelocityRps = velocityRps;
     velocityMode = true;
     synchronized (controlLock) {
-      velocityVoltage.Slot = activeSlot;
       leftMotor.setControl(velocityVoltage.withVelocity(velocityRps));
-      slotChanged = false;
     }
   }
 
