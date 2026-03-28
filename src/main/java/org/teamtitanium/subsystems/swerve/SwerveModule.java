@@ -105,6 +105,10 @@ public class SwerveModule {
   /** Updates the inputs for the module. */
   public void updateInputs() {
     io.updateInputs(inputs);
+  }
+
+  /** Logs the latest module inputs. */
+  public void logInputs() {
     Logger.processInputs("Swerve/Module" + index, inputs);
   }
 

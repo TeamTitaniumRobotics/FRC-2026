@@ -82,6 +82,7 @@ public class Swerve extends SubsystemBase {
   private final SwerveModule[] swerveModules = new SwerveModule[4];
 
   private final SysIdRoutine sysId;
+  private static final int FAST_LOG_DIVISOR = 5;
 
   private static final LoggedTunableNumber coastWaitTime =
       new LoggedTunableNumber("Swerve/CoastWaitTimeSecs", 0.5);
@@ -129,6 +130,9 @@ public class Swerve extends SubsystemBase {
   private final PIDController xPosController = new PIDController(10.0, 0.0, 0.0);
   private final PIDController yPosController = new PIDController(10.0, 0.0, 0.0);
   private final PIDController headingController = new PIDController(7.5, 0.0, 0.0);
+
+  private int velocityLogCounter = 0;
+  private int choreoLogCounter = 0;
 
   public Swerve(
       GyroIO gyroIO,
@@ -192,20 +196,22 @@ public class Swerve extends SubsystemBase {
 
   @Override
   public void periodic() {
-    odometryLock.lock(); // Lock odometry for the duration of input updates
+    odometryLock.lock();
+    try {
+      gyroIO.updateInputs(gyroInputs);
 
-    gyroIO.updateInputs(gyroInputs);
-    Logger.processInputs("Swerve/Gyro", gyroInputs);
-
-    for (SwerveModule module : swerveModules) {
-      module.updateInputs();
+      for (SwerveModule module : swerveModules) {
+        module.updateInputs();
+      }
+    } finally {
+      odometryLock.unlock();
     }
 
+    Logger.processInputs("Swerve/Gyro", gyroInputs);
     for (var swerveModule : swerveModules) {
+      swerveModule.logInputs();
       swerveModule.periodic();
     }
-
-    odometryLock.unlock();
     LoggedTracer.record("Swerve/Inputs");
 
     // Stop swerve modules if disabled
@@ -320,14 +326,22 @@ public class Swerve extends SubsystemBase {
     SwerveDriveKinematics.desaturateWheelSpeeds(
         setpointStates, TunerConstants.kSpeedAt12Volts.in(MetersPerSecond));
 
-    Logger.recordOutput("Swerve/ChassisSpeeds/Setpoints", speeds);
-    Logger.recordOutput("Swerve/SwerveStates/Setpoints", setpointStates);
+    boolean shouldLogFastData = velocityLogCounter++ % FAST_LOG_DIVISOR == 0;
+    if (Constants.tuningMode) {
+      shouldLogFastData = true;
+    }
+    if (shouldLogFastData) {
+      Logger.recordOutput("Swerve/ChassisSpeeds/Setpoints", speeds);
+      Logger.recordOutput("Swerve/SwerveStates/Setpoints", setpointStates);
+    }
 
     for (int i = 0; i < 4; i++) {
       swerveModules[i].runSetpoint(setpointStates[i]);
     }
 
-    Logger.recordOutput("Swerve/SwerveStates/SetpointsOptimized", setpointStates);
+    if (shouldLogFastData) {
+      Logger.recordOutput("Swerve/SwerveStates/SetpointsOptimized", setpointStates);
+    }
   }
 
   // public void runVelocity(ChassisSpeeds speeds, List<Vector<N2>> moduleForces) {
@@ -366,11 +380,17 @@ public class Swerve extends SubsystemBase {
   public void followChoreoTrajectory(SwerveSample sample) {
     Pose2d pose = RobotState.getInstance().getEstimatedPose();
 
-    Logger.recordOutput("Swerve/Choreo/Sample", sample);
-    Logger.recordOutput("Swerve/Choreo/ErrorX", sample.x - pose.getX());
-    Logger.recordOutput("Swerve/Choreo/ErrorY", sample.y - pose.getY());
-    Logger.recordOutput(
-        "Swerve/Choreo/ErrorTheta", sample.heading - pose.getRotation().getRadians());
+    boolean shouldLogChoreoData = choreoLogCounter++ % FAST_LOG_DIVISOR == 0;
+    if (Constants.tuningMode) {
+      shouldLogChoreoData = true;
+    }
+    if (shouldLogChoreoData) {
+      Logger.recordOutput("Swerve/Choreo/Sample", sample);
+      Logger.recordOutput("Swerve/Choreo/ErrorX", sample.x - pose.getX());
+      Logger.recordOutput("Swerve/Choreo/ErrorY", sample.y - pose.getY());
+      Logger.recordOutput(
+          "Swerve/Choreo/ErrorTheta", sample.heading - pose.getRotation().getRadians());
+    }
 
     ChassisSpeeds fieldRelativeSpeeds =
         new ChassisSpeeds(

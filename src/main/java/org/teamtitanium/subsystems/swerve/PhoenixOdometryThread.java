@@ -97,45 +97,66 @@ public class PhoenixOdometryThread extends Thread {
   @Override
   public void run() {
     while (true) {
+      BaseStatusSignal[] phoenixSignalsSnapshot;
+      List<DoubleSupplier> genericSignalsSnapshot;
+      List<Queue<Double>> phoenixQueuesSnapshot;
+      List<Queue<Double>> genericQueuesSnapshot;
+      List<Queue<Double>> timestampQueuesSnapshot;
+
       signalsLock.lock();
+      try {
+        phoenixSignalsSnapshot = phoenixSignals.clone();
+        genericSignalsSnapshot = new ArrayList<>(genericSignals);
+        phoenixQueuesSnapshot = new ArrayList<>(phoenixQueues);
+        genericQueuesSnapshot = new ArrayList<>(genericQueues);
+        timestampQueuesSnapshot = new ArrayList<>(timestampQueues);
+      } finally {
+        signalsLock.unlock();
+      }
 
       try {
-        if (isCANFD && phoenixSignals.length > 0) {
-          BaseStatusSignal.waitForAll(2.0 / Swerve.ODOMETRY_FREQUENCY, phoenixSignals);
+        if (isCANFD && phoenixSignalsSnapshot.length > 0) {
+          BaseStatusSignal.waitForAll(2.0 / Swerve.ODOMETRY_FREQUENCY, phoenixSignalsSnapshot);
         } else {
           Thread.sleep((long) (1000.0 / Swerve.ODOMETRY_FREQUENCY));
-          if (phoenixSignals.length > 0) {
-            BaseStatusSignal.refreshAll(phoenixSignals);
+          if (phoenixSignalsSnapshot.length > 0) {
+            BaseStatusSignal.refreshAll(phoenixSignalsSnapshot);
           }
         }
       } catch (InterruptedException e) {
-        e.printStackTrace();
-      } finally {
-        signalsLock.unlock();
+        Thread.currentThread().interrupt();
+        return;
+      }
+
+      double timestamp = RobotController.getFPGATime() / 1e6;
+      double totalLatency = 0.0;
+      double[] phoenixValues = new double[phoenixSignalsSnapshot.length];
+      for (int i = 0; i < phoenixSignalsSnapshot.length; i++) {
+        BaseStatusSignal signal = phoenixSignalsSnapshot[i];
+        totalLatency += signal.getTimestamp().getLatency();
+        phoenixValues[i] = signal.getValueAsDouble();
+      }
+
+      if (phoenixSignalsSnapshot.length > 0) {
+        timestamp -= totalLatency / phoenixSignalsSnapshot.length;
+      }
+
+      double[] genericValues = new double[genericSignalsSnapshot.size()];
+      for (int i = 0; i < genericSignalsSnapshot.size(); i++) {
+        genericValues[i] = genericSignalsSnapshot.get(i).getAsDouble();
       }
 
       Swerve.odometryLock.lock();
 
       try {
-        double timestamp = RobotController.getFPGATime() / 1e6;
-        double totalLatency = 0.0;
-
-        for (BaseStatusSignal signal : phoenixSignals) {
-          totalLatency += signal.getTimestamp().getLatency();
+        for (int i = 0; i < phoenixValues.length; i++) {
+          phoenixQueuesSnapshot.get(i).offer(phoenixValues[i]);
         }
-
-        if (phoenixSignals.length > 0) {
-          timestamp -= totalLatency / phoenixSignals.length;
+        for (int i = 0; i < genericValues.length; i++) {
+          genericQueuesSnapshot.get(i).offer(genericValues[i]);
         }
-
-        for (int i = 0; i < phoenixSignals.length; i++) {
-          phoenixQueues.get(i).offer(phoenixSignals[i].getValueAsDouble());
-        }
-        for (int i = 0; i < genericSignals.size(); i++) {
-          genericQueues.get(i).offer(genericSignals.get(i).getAsDouble());
-        }
-        for (int i = 0; i < timestampQueues.size(); i++) {
-          timestampQueues.get(i).offer(timestamp);
+        for (int i = 0; i < timestampQueuesSnapshot.size(); i++) {
+          timestampQueuesSnapshot.get(i).offer(timestamp);
         }
       } finally {
         Swerve.odometryLock.unlock();

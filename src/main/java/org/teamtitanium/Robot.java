@@ -100,6 +100,8 @@ public class Robot extends LoggedRobot {
   private static final double lowBatteryVoltageThreshold = 11.8;
   private static final double lowBatteryDisabledTimeThreshold = 2.0;
   private static final double lowBatteryMinCycleCount = 10.0;
+  private static final int telemetryLogDivisor = 5;
+  private static final int dashboardUpdateDivisor = 5;
   private static int lowBatteryCycleCount = 0;
 
   private Command autonomousCommand;
@@ -130,6 +132,10 @@ public class Robot extends LoggedRobot {
   private final Timer canivoreErrorTimer = new Timer();
   private final Timer disabledTimer = new Timer();
   private final CanivoreReader canivoreReader = new CanivoreReader(TunerConstants.kCANBus);
+  private int telemetryLogCounter = 0;
+  private int dashboardUpdateCounter = 0;
+  private int pathPlannerLogCounter = 0;
+  private int selectedAutoLogCounter = 0;
 
   private static boolean coastOverride = false;
 
@@ -342,12 +348,23 @@ public class Robot extends LoggedRobot {
     superstructure = new Superstructure(shooter, feeder, spindexer, intake, driver);
 
     PathPlannerLogging.setLogCurrentPoseCallback(
-        (pose) -> Logger.recordOutput("Autos/CurrentPose", pose));
+        (pose) -> {
+          if (shouldLogPathPlannerTelemetry()) {
+            Logger.recordOutput("Autos/CurrentPose", pose);
+          }
+        });
     PathPlannerLogging.setLogTargetPoseCallback(
-        (pose) -> Logger.recordOutput("Autos/TargetPose", pose));
+        (pose) -> {
+          if (shouldLogPathPlannerTelemetry()) {
+            Logger.recordOutput("Autos/TargetPose", pose);
+          }
+        });
     PathPlannerLogging.setLogActivePathCallback(
-        (poses) ->
-            Logger.recordOutput("Autos/ActivePath", poses.toArray(new Pose2d[poses.size()])));
+        (poses) -> {
+          if (shouldLogPathPlannerTelemetry()) {
+            Logger.recordOutput("Autos/ActivePath", poses.toArray(new Pose2d[poses.size()]));
+          }
+        });
 
     autoRoutines = new AutoRoutines(swerve);
     autoChooser.addCmd("Right Outpost", autoRoutines::getRightOutpostAuto);
@@ -375,6 +392,8 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void robotPeriodic() {
+    boolean shouldLogTelemetryThisCycle = shouldLogTelemetryThisCycle();
+
     // Refresh Phoenix devices
     LoggedTracer.reset();
     PhoenixUtil.refreshAll();
@@ -403,7 +422,13 @@ public class Robot extends LoggedRobot {
     }
 
     updateAlerts();
-    updateDashboardOuputs();
+    boolean shouldUpdateDashboardThisCycle = dashboardUpdateCounter++ % dashboardUpdateDivisor == 0;
+    if (Constants.tuningMode) {
+      shouldUpdateDashboardThisCycle = true;
+    }
+    if (shouldUpdateDashboardThisCycle) {
+      updateDashboardOuputs();
+    }
 
     var canStatus = RobotController.getCANStatus();
     if (canStatus.transmitErrorCount > 0 || canStatus.receiveErrorCount > 0) {
@@ -416,18 +441,20 @@ public class Robot extends LoggedRobot {
     if (Constants.getMode() == Constants.Mode.REAL) {
       var canivoreStatus = canivoreReader.getStatus();
       if (canivoreStatus.isPresent()) {
-        Logger.recordOutput("CANivoreStatus/Status", canivoreStatus.get().Status.getName());
-        Logger.recordOutput("CANivoreStatus/Utilization", canivoreStatus.get().BusUtilization);
-        Logger.recordOutput("CANivoreStatus/OffCount", canivoreStatus.get().BusOffCount);
-        Logger.recordOutput("CANivoreStatus/TxFullCount", canivoreStatus.get().TxFullCount);
-        Logger.recordOutput("CANivoreStatus/ReceiveErrorCount", canivoreStatus.get().REC);
-        Logger.recordOutput("CANivoreStatus/TransmitErrorCount", canivoreStatus.get().TEC);
+        if (shouldLogTelemetryThisCycle) {
+          Logger.recordOutput("CANivoreStatus/Status", canivoreStatus.get().Status.getName());
+          Logger.recordOutput("CANivoreStatus/Utilization", canivoreStatus.get().BusUtilization);
+          Logger.recordOutput("CANivoreStatus/OffCount", canivoreStatus.get().BusOffCount);
+          Logger.recordOutput("CANivoreStatus/TxFullCount", canivoreStatus.get().TxFullCount);
+          Logger.recordOutput("CANivoreStatus/ReceiveErrorCount", canivoreStatus.get().REC);
+          Logger.recordOutput("CANivoreStatus/TransmitErrorCount", canivoreStatus.get().TEC);
+        }
         if (!canivoreStatus.get().Status.isOK()
             || canStatus.transmitErrorCount > 0
             || canStatus.receiveErrorCount > 0) {
           canivoreErrorTimer.restart();
         }
-      } else {
+      } else if (shouldLogTelemetryThisCycle) {
         Logger.recordOutput("CANivoreStatus/Status", "CANivore Status Not Present");
       }
 
@@ -437,7 +464,9 @@ public class Robot extends LoggedRobot {
     }
 
     // Log NetworkTables data
-    NTClientLogger.log();
+    if (shouldLogTelemetryThisCycle) {
+      NTClientLogger.log();
+    }
 
     // Low Battery Alert
     lowBatteryCycleCount++;
@@ -461,11 +490,15 @@ public class Robot extends LoggedRobot {
     field2d.setRobotPose(RobotState.getInstance().getEstimatedPose());
 
     // Log hub state
-    Logger.recordOutput("HubTracker/Official", HubTracker.getOfficialShiftInfo());
-    Logger.recordOutput("HubTracker/Offset", HubTracker.getOffsetShiftInfo());
+    if (shouldLogTelemetryThisCycle) {
+      Logger.recordOutput("HubTracker/Official", HubTracker.getOfficialShiftInfo());
+      Logger.recordOutput("HubTracker/Offset", HubTracker.getOffsetShiftInfo());
+    }
 
     // Log shot parameters
-    Logger.recordOutput("ShotCalculator/Parameters", shotCalculator.getParameters());
+    if (shouldLogTelemetryThisCycle) {
+      Logger.recordOutput("ShotCalculator/Parameters", shotCalculator.getParameters());
+    }
     shotCalculator.resetShotParameters();
 
     LoggedTracer.record("Robot/Periodic");
@@ -595,7 +628,13 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void disabledPeriodic() {
-    Logger.recordOutput("Autos/SelectedAuto", autoChooser.selectedCommand().getName());
+    boolean shouldLogSelectedAuto = selectedAutoLogCounter++ % dashboardUpdateDivisor == 0;
+    if (Constants.tuningMode) {
+      shouldLogSelectedAuto = true;
+    }
+    if (shouldLogSelectedAuto) {
+      Logger.recordOutput("Autos/SelectedAuto", autoChooser.selectedCommand().getName());
+    }
   }
 
   @Override
@@ -644,4 +683,20 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void testExit() {}
+
+  private boolean shouldLogTelemetryThisCycle() {
+    boolean shouldLog = telemetryLogCounter++ % telemetryLogDivisor == 0;
+    if (Constants.tuningMode) {
+      shouldLog = true;
+    }
+    return shouldLog;
+  }
+
+  private boolean shouldLogPathPlannerTelemetry() {
+    boolean shouldLog = pathPlannerLogCounter++ % telemetryLogDivisor == 0;
+    if (Constants.tuningMode) {
+      shouldLog = true;
+    }
+    return shouldLog;
+  }
 }

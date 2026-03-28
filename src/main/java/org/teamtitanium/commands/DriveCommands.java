@@ -24,6 +24,7 @@ import org.littletonrobotics.junction.Logger;
 import org.teamtitanium.RobotState;
 import org.teamtitanium.subsystems.swerve.Swerve;
 import org.teamtitanium.utils.AllianceFlipUtil;
+import org.teamtitanium.utils.Constants;
 import org.teamtitanium.utils.FieldConstants;
 
 public class DriveCommands {
@@ -33,9 +34,11 @@ public class DriveCommands {
   private static final double WHEEL_RADIUS_MAX_VELOCITY = 0.25;
   private static final double WHEEL_RADIUS_RAMP_RATE = 0.1;
   private static final double TRENCH_WALL_CLEARANCE_OFFSET_METERS = Units.inchesToMeters(6.0);
+  private static final int trenchLogDivisor = 5;
 
   private static final PIDController TRENCH_CONTROLLER = new PIDController(5.0, 0.0, 0.0);
   private static final PIDController ROTATIONAL_CONTROLLER = new PIDController(5.0, 0.0, 0.0);
+  private static int trenchLogCounter = 0;
 
   static {
     TRENCH_CONTROLLER.setTolerance(Units.inchesToMeters(5.0));
@@ -151,8 +154,14 @@ public class DriveCommands {
                       RobotState.getInstance().getEstimatedPose().getX(),
                       TRENCH_CONTROLLER.getSetpoint(),
                       new Rotation2d(getTrenchAngleRad()));
-              Logger.recordOutput("AutoAlign/Trench/TargetPose", targetPose);
-              Logger.recordOutput("AutoAlign/Trench/TargetSpeeds", speeds);
+              boolean shouldLogTrenchData = trenchLogCounter++ % trenchLogDivisor == 0;
+              if (Constants.tuningMode) {
+                shouldLogTrenchData = true;
+              }
+              if (shouldLogTrenchData) {
+                Logger.recordOutput("AutoAlign/Trench/TargetPose", targetPose);
+                Logger.recordOutput("AutoAlign/Trench/TargetSpeeds", speeds);
+              }
 
               swerve.runVelocity(
                   ChassisSpeeds.fromFieldRelativeSpeeds(
