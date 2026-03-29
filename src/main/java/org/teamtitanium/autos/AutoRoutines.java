@@ -8,7 +8,6 @@ import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.path.Waypoint;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -100,43 +99,32 @@ public class AutoRoutines {
     return routine.cmd();
   }
 
-  public Command rightDHAuto() {
-    final AutoRoutine routine = factory.newRoutine("Right Double Pass Auto");
-    Path[] paths = new Path[] {Path.RTS_RFME, Path.RFME_RTSB, Path.RTSB_ROB, Path.ROB_RBB};
-    Command autoCmd = resetPose(paths[0]);
+  public Command rightDoublePassBump() {
+    final AutoRoutine routine = factory.newRoutine("Right Double Pass Bump");
+    Command autoCmd = resetPose(Path.RTSR_RFME);
 
     autoCmd =
         autoCmd.andThen(
             Commands.sequence(
-                followPath(Path.RTS_RFME, routine),
-                followPath(Path.RFME_RTSB, routine),
-                followPath(Path.RTSB_RTSHB, routine)));
+                followPath(Path.RTSR_RFME, routine), followPath(Path.RFME_RBSH, routine)));
 
     autoCmd =
         autoCmd.andThen(
-            Commands.parallel(
-                    setAutoScore(true),
-                    Commands.repeatingSequence(
-                        setAutoIntakeOverride(true),
-                        Commands.waitSeconds(1.0),
-                        setAutoIntakeOverride(false),
-                        Commands.waitSeconds(0.75)))
-                .withTimeout(5.0));
+            Commands.deadline(
+                followPath(Path.RBSH_RTSR, routine),
+                Commands.waitSeconds(1.0).andThen(shuffleIntake())));
 
     autoCmd =
         autoCmd.andThen(
             Commands.sequence(
-                followPath(Path.RTSHB_ROB, routine), followPath(Path.ROB_RBB, routine)));
+                followPath(Path.RTSR_RCME, routine), followPath(Path.RCME_RBSH, routine)));
 
     autoCmd =
         autoCmd.andThen(
-            Commands.parallel(
-                setAutoScore(true),
-                Commands.repeatingSequence(
-                    setAutoIntakeOverride(true),
-                    Commands.waitSeconds(1.0),
-                    setAutoIntakeOverride(false),
-                    Commands.waitSeconds(0.75))));
+            Commands.deadline(
+                followPath(Path.RBSH_RTSR, routine),
+                Commands.waitSeconds(1.0).andThen(shuffleIntake())));
+
     routine.active().onTrue(autoCmd);
 
     return routine.cmd();
@@ -220,15 +208,7 @@ public class AutoRoutines {
                 followPath(Path.LTS_LB, routine)));
 
     autoCmd =
-        autoCmd.andThen(
-            Commands.parallel(
-                    setAutoScore(true),
-                    Commands.repeatingSequence(
-                        setAutoIntakeOverride(true),
-                        Commands.waitSeconds(0.75),
-                        setAutoIntakeOverride(false),
-                        Commands.waitSeconds(0.75)))
-                .withTimeout(4.5));
+        autoCmd.andThen(Commands.parallel(setAutoScore(true), shuffleIntake()).withTimeout(4.5));
 
     routine.active().onTrue(autoCmd);
 
@@ -262,7 +242,6 @@ public class AutoRoutines {
         setAutoSpinUp(true),
         setAutoIntakeOverride(deployIntake),
         path.getPathCommand(),
-        // setAutoSpinUp(false),
         setAutoIntakeOverride(false));
   }
 
@@ -290,6 +269,18 @@ public class AutoRoutines {
                         path.getPathPlannerPath()
                             .getStartingHolonomicPose()
                             .orElse(Pose2d.kZero))));
+  }
+
+  private Command shuffleIntake() {
+    return shuffleIntake(0.75, 0.75);
+  }
+
+  private Command shuffleIntake(double outDelay, double inDelay) {
+    return Commands.repeatingSequence(
+        setAutoIntakeOverride(true),
+        Commands.waitSeconds(outDelay),
+        setAutoIntakeOverride(false),
+        Commands.waitSeconds(inDelay));
   }
 
   private Command setAutoIntake(boolean value) {
@@ -339,16 +330,21 @@ public class AutoRoutines {
    */
   public enum Path {
     RTS_RFME(PathAction.INTAKE),
-    RFME_RTS(PathAction.NOTHING, true),
-    RFME_RTSB(PathAction.NOTHING),
+    RTS_RCME(PathAction.INTAKE),
     RTS_RB(PathAction.SPIN_UP, true),
+    RTSR_RFME(PathAction.INTAKE),
+    RTSR_RCME(PathAction.INTAKE),
+    RFME_RTS(PathAction.NOTHING, true),
+    RFME_RBSH(PathAction.SPIN_UP, true),
+    RFME_RTSB(PathAction.NOTHING),
+    RCME_RBSH(PathAction.SPIN_UP, true),
     RTSB_RTSHB(PathAction.SPIN_UP, true),
     RTSB_ROB(PathAction.INTAKE),
     RTSHB_ROB(PathAction.INTAKE),
+    RCME_RTS(PathAction.NOTHING, true),
     ROB_RBB(PathAction.SPIN_UP, true),
     RB_RTS(PathAction.INTAKE),
-    RTS_RCME(PathAction.INTAKE),
-    RCME_RTS(PathAction.NOTHING, true),
+    RBSH_RTSR(PathAction.SCORE),
     LTS_LFME(PathAction.INTAKE),
     LFME_LTS(PathAction.NOTHING, true),
     LTS_LB(PathAction.SCORE, true),
@@ -393,11 +389,13 @@ public class AutoRoutines {
         Logger.recordOutput(
             "AutoRoutines/PathLoadError",
             "Failed to load PathPlanner path for auto '" + this.toString() + "': " + e);
+        Translation2d currentTranslation =
+            RobotState.getInstance().getEstimatedPose().getTranslation();
         return new PathPlannerPath(
-            List.of(new Waypoint(new Translation2d(), new Translation2d(), new Translation2d())),
+            List.of(new Waypoint(currentTranslation, currentTranslation, currentTranslation)),
             PathConstraints.unlimitedConstraints(12.0),
             null,
-            new GoalEndState(0.0, Rotation2d.kZero));
+            new GoalEndState(0.0, RobotState.getInstance().getEstimatedPose().getRotation()));
       }
     }
   }
