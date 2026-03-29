@@ -211,4 +211,8 @@ public class IntakeRack extends SubsystemBase {
               rackZeroed = true;
             }));
   }
+
+  public Command zeroIntakeMotor() {
+    return runOnce(() -> io.setMotorPosition(0.0));
+  }
 }
