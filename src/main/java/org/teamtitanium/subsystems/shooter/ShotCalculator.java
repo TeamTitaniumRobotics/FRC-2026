@@ -139,8 +139,14 @@ public class ShotCalculator {
         predictedTurretPose.transformBy(TURRET_TO_ROBOT.toTransform2d().inverse());
 
     Rotation2d turretAngle = getTurretAngle(predictedRobotPose, target);
-    double hoodAngleRots = shotMap.get(predictedDistance).getHoodAngleRots();
-    double flywheelRPM = shotMap.get(predictedDistance).flywheelRPM() + flywheelOffset;
+    double hoodAngleRots =
+        passing
+            ? passingMap.get(predictedDistance).getHoodAngleRots()
+            : shotMap.get(predictedDistance).getHoodAngleRots();
+    double flywheelRPM =
+        passing
+            ? passingMap.get(predictedDistance).flywheelRPM() + flywheelOffset
+            : shotMap.get(predictedDistance).flywheelRPM() + flywheelOffset;
     double flywheelIdleRPM = MathUtil.clamp(flywheelRPM, 0.0, maxFlywheelIdleRPM.get());
 
     boolean isValid =

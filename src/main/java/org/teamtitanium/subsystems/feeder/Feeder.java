@@ -23,13 +23,13 @@ public class Feeder extends GenericRoller {
   @RequiredArgsConstructor
   public enum FeederState {
     IDLE(() -> 0.0),
-    FEED(() -> 7.8);
+    FEED(() -> 6.0);
 
     @Getter private final Supplier<Double> feederVoltage;
   }
 
   public static final LoggedTunableNumber configNumber =
-      new LoggedTunableNumber("Feeder/Roller/ConfigShotNum", 9.0);
+      new LoggedTunableNumber("Feeder/Roller/ConfigShotNum", 0.0);
 
   public static final AngularVelocity IDLE_VELOCITY = RotationsPerSecond.of(0.0);
   public static final AngularVelocity FEED_VELOCITY = RotationsPerSecond.of(24.0);
@@ -43,7 +43,7 @@ public class Feeder extends GenericRoller {
   public static final double STATOR_CURRENT_LIMIT = 40.0;
   public static final double SUPPLY_CURRENT_LIMIT = 30.0;
 
-  public static final double FEEDER_GEAR_RATIO = 2.0;
+  public static final double FEEDER_GEAR_RATIO = 0.5;
 
   public static final Gains FEEDER_GAINS = new Gains(0.0, 0.0, 0.0, 0.19, 0.0, 0.0, 0.0);
   public static final Constraints FEEDER_CONSTRAINTS = new Constraints(24.0, 36.0);

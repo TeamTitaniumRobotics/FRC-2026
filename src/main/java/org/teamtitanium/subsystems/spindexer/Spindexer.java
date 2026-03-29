@@ -23,14 +23,14 @@ public class Spindexer extends GenericRoller {
   @RequiredArgsConstructor
   public enum SpindexerState {
     IDLE(() -> 0.0),
-    AGITATE(() -> 10.2),
-    FEED(() -> 10.2);
+    AGITATE(() -> 10.8),
+    FEED(() -> 10.8);
 
     @Getter private final Supplier<Double> spindexerVoltage;
   }
 
   public static final LoggedTunableNumber configNumber =
-      new LoggedTunableNumber("Spindexer/Roller/ConfigShotNum", 10.2);
+      new LoggedTunableNumber("Spindexer/Roller/ConfigShotNum", 0.0);
 
   public static final int SPINDEXER_MOTOR_ID = 35;
   public static final CANBus SPINDEXER_CAN_BUS = Constants.RIO_CAN_BUS;
