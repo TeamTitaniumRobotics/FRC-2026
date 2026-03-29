@@ -277,10 +277,11 @@ public class AutoRoutines {
 
   private Command shuffleIntake(double outDelay, double inDelay) {
     return Commands.repeatingSequence(
-        setAutoIntakeOverride(true),
-        Commands.waitSeconds(outDelay),
-        setAutoIntakeOverride(false),
-        Commands.waitSeconds(inDelay));
+            setAutoIntakeOverride(true),
+            Commands.waitSeconds(outDelay),
+            setAutoIntakeOverride(false),
+            Commands.waitSeconds(inDelay))
+        .finallyDo(interrupted -> autoIntakeOverride = false);
   }
 
   private Command setAutoIntake(boolean value) {
