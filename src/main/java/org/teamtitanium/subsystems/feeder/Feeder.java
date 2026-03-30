@@ -7,7 +7,6 @@ import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.util.function.Supplier;
 import lombok.Getter;
@@ -55,8 +54,8 @@ public class Feeder extends GenericRoller {
   public static final DCMotor FEEDER_MOTOR_GEARBOX = DCMotor.getKrakenX44(1);
   public static final double FEEDER_MOI = 0.08;
 
-  private final Debouncer currentDebouncer = new Debouncer(0.5, DebounceType.kRising);
-  private final Debouncer velocityDebouncer = new Debouncer(0.5, DebounceType.kRising);
+  private final Debouncer currentDebouncer = new Debouncer(1.0, DebounceType.kRising);
+  private final Debouncer velocityDebouncer = new Debouncer(1.0, DebounceType.kRising);
   private final Trigger stallTrigger =
       new Trigger(
           () ->
@@ -85,15 +84,15 @@ public class Feeder extends GenericRoller {
 
   public Feeder(GenericRollerIO io) {
     super("Feeder", io, CONSTANTS);
-    stallTrigger.onTrue(
-        Commands.sequence(
-            runOnce(
-                () -> {
-                  lastState = state;
-                  setState(FeederState.UNJAM);
-                }),
-            Commands.waitSeconds(1.0),
-            runOnce(() -> setState(lastState))));
+    // stallTrigger.onTrue(
+    //     Commands.sequence(
+    //         runOnce(
+    //             () -> {
+    //               lastState = state;
+    //               setState(FeederState.UNJAM);
+    //             }),
+    //         Commands.waitSeconds(0.5),
+    //         runOnce(() -> setState(lastState))));
     setDefaultCommand(setVoltage(() -> state.getFeederVoltage().get()));
   }
 }
