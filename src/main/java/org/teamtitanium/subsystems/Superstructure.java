@@ -263,9 +263,11 @@ public class Superstructure extends VirtualSubsystem {
     }
 
     // --- Resolve Feeder state ---
-    switch (state) {
-      case SCORE, PASS, EJECT -> feeder.setState(FeederState.FEED);
-      default -> feeder.setState(FeederState.IDLE);
+    if (feeder.getState() != FeederState.UNJAM) {
+      switch (state) {
+        case SCORE, PASS, EJECT -> feeder.setState(FeederState.FEED);
+        default -> feeder.setState(FeederState.IDLE);
+      }
     }
 
     // --- Resolve Spindexer state ---

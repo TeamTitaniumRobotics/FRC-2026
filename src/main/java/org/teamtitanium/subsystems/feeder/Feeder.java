@@ -3,8 +3,11 @@ package org.teamtitanium.subsystems.feeder;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import com.ctre.phoenix6.CANBus;
+import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.util.function.Supplier;
 import lombok.Getter;
@@ -23,6 +26,7 @@ public class Feeder extends GenericRoller {
   @RequiredArgsConstructor
   public enum FeederState {
     IDLE(() -> 0.0),
+    UNJAM(() -> -6.0),
     FEED(() -> 6.0);
 
     @Getter private final Supplier<Double> feederVoltage;
@@ -40,7 +44,7 @@ public class Feeder extends GenericRoller {
 
   public static final boolean FEEDER_INVERTED = true;
 
-  public static final double STATOR_CURRENT_LIMIT = 40.0;
+  public static final double STATOR_CURRENT_LIMIT = 45.0;
   public static final double SUPPLY_CURRENT_LIMIT = 30.0;
 
   public static final double FEEDER_GEAR_RATIO = 0.5;
@@ -50,6 +54,15 @@ public class Feeder extends GenericRoller {
 
   public static final DCMotor FEEDER_MOTOR_GEARBOX = DCMotor.getKrakenX44(1);
   public static final double FEEDER_MOI = 0.08;
+
+  private final Debouncer currentDebouncer = new Debouncer(0.5, DebounceType.kRising);
+  private final Debouncer velocityDebouncer = new Debouncer(0.5, DebounceType.kRising);
+  private final Trigger stallTrigger =
+      new Trigger(
+          () ->
+              currentDebouncer.calculate(
+                      Math.abs(inputs.torqueCurrentAmps) >= STATOR_CURRENT_LIMIT - 10)
+                  && velocityDebouncer.calculate(Math.abs(inputs.velocityRps) <= 2.0));
 
   public static final GenericRollerConstants CONSTANTS =
       new GenericRollerConstants(
@@ -68,11 +81,19 @@ public class Feeder extends GenericRoller {
   @AutoLogOutput(key = "Feeder/State")
   private FeederState state = FeederState.IDLE;
 
+  private FeederState lastState = state;
+
   public Feeder(GenericRollerIO io) {
     super("Feeder", io, CONSTANTS);
+    stallTrigger.onTrue(
+        Commands.sequence(
+            runOnce(
+                () -> {
+                  lastState = state;
+                  setState(FeederState.UNJAM);
+                }),
+            Commands.waitSeconds(1.0),
+            runOnce(() -> setState(lastState))));
     setDefaultCommand(setVoltage(() -> state.getFeederVoltage().get()));
   }
-
-  public Trigger hasFuel =
-      new Trigger(() -> true); // TODO: Replace with actual logic to determine if feeder has fuel
 }
