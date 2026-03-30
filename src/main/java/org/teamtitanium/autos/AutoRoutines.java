@@ -277,10 +277,11 @@ public class AutoRoutines {
 
   private Command shuffleIntake(double outDelay, double inDelay) {
     return Commands.repeatingSequence(
-        setAutoIntakeOverride(true),
-        Commands.waitSeconds(outDelay),
-        setAutoIntakeOverride(false),
-        Commands.waitSeconds(inDelay));
+            setAutoIntakeOverride(true),
+            Commands.waitSeconds(outDelay),
+            setAutoIntakeOverride(false),
+            Commands.waitSeconds(inDelay))
+        .finallyDo(interrupted -> autoIntakeOverride = false);
   }
 
   private Command setAutoIntake(boolean value) {
@@ -389,13 +390,14 @@ public class AutoRoutines {
         Logger.recordOutput(
             "AutoRoutines/PathLoadError",
             "Failed to load PathPlanner path for auto '" + this.toString() + "': " + e);
-        Translation2d currentTranslation =
-            RobotState.getInstance().getEstimatedPose().getTranslation();
+
+        Pose2d fallbackPose = AllianceFlipUtil.apply(RobotState.getInstance().getEstimatedPose());
+        Translation2d fallbackTranslation = fallbackPose.getTranslation();
         return new PathPlannerPath(
-            List.of(new Waypoint(currentTranslation, currentTranslation, currentTranslation)),
+            List.of(new Waypoint(fallbackTranslation, fallbackTranslation, fallbackTranslation)),
             PathConstraints.unlimitedConstraints(12.0),
             null,
-            new GoalEndState(0.0, RobotState.getInstance().getEstimatedPose().getRotation()));
+            new GoalEndState(0.0, fallbackPose.getRotation()));
       }
     }
   }
