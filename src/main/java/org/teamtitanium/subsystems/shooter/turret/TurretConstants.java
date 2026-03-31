@@ -53,8 +53,7 @@ public class TurretConstants {
   public static final double ANGLE_TOLERANCE_ROTS = Units.degreesToRotations(3.5);
 
   // Motion Magic Constraints
-  public static final Constraints TURRET_CONSTRAINTS =
-      new Constraints(1.5, 8.0); // Max velocity (rps), accel (rps^2)
+  public static final Constraints TURRET_CONSTRAINTS = new Constraints(1.6, 12.0);
 
   // PID Gains
   public static final Gains TURRET_GAINS = new Gains(75.0, 0.0, 0.0, 0.35, 3.5, 0.0, 0.0);
