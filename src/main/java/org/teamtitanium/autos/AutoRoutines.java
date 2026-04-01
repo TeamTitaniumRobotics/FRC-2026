@@ -132,39 +132,48 @@ public class AutoRoutines {
 
   public Command rightDoublePass() {
     final AutoRoutine routine = factory.newRoutine("Right Double Pass");
-    Command autoCmd = resetPose(Path.RTS_RFME);
+    // Command autoCmd = resetPose(Path.RTS_RFME);
+    Command autoCmd =
+        Commands.sequence(
+            resetPose(Path.RTS_RFME),
+            followPath(Path.RTS_RFME, routine),
+            followPath(Path.RFME_RTSH, routine),
+            shuffleIntake().withTimeout(4.0),
+            followPath(Path.RTSH_RCME, routine),
+            followPath(Path.RCME_RTSH, routine),
+            shuffleIntake().withTimeout(4.0));
 
-    autoCmd =
-        autoCmd.andThen(
-            Commands.sequence(
-                followPath(Path.RTS_RFME, routine), followPath(Path.RFME_RTSH, routine)));
+    // autoCmd =
+    //     autoCmd.andThen(
+    //         Commands.sequence(
+    //             followPath(Path.RTS_RFME, routine), followPath(Path.RFME_RTSH, routine)));
 
-    autoCmd =
-        autoCmd.andThen(
-            Commands.parallel(
-                    setAutoScore(true),
-                    Commands.repeatingSequence(
-                        setAutoIntakeOverride(true),
-                        Commands.waitSeconds(0.8),
-                        setAutoIntakeOverride(false),
-                        Commands.waitSeconds(0.75)))
-                .withTimeout(4.5));
+    // autoCmd =
+    //     autoCmd.andThen(
+    //         Commands.parallel(
+    //                 setAutoScore(true),
+    //                 Commands.repeatingSequence(
+    //                     setAutoIntakeOverride(true),
+    //                     Commands.waitSeconds(0.8),
+    //                     setAutoIntakeOverride(false),
+    //                     Commands.waitSeconds(0.75)))
+    //             .withTimeout(4.5));
 
-    autoCmd =
-        autoCmd.andThen(
-            Commands.sequence(
-                followPath(Path.RTSH_RCME, routine), followPath(Path.RCME_RTSH, routine)));
+    // autoCmd =
+    //     autoCmd.andThen(
+    //         Commands.sequence(
+    //             followPath(Path.RTSH_RCME, routine), followPath(Path.RCME_RTSH, routine)));
 
-    autoCmd =
-        autoCmd.andThen(
-            Commands.parallel(
-                    setAutoScore(true),
-                    Commands.repeatingSequence(
-                        setAutoIntakeOverride(true),
-                        Commands.waitSeconds(0.75),
-                        setAutoIntakeOverride(false),
-                        Commands.waitSeconds(0.75)))
-                .withTimeout(4.5));
+    // autoCmd =
+    //     autoCmd.andThen(
+    //         Commands.parallel(
+    //                 setAutoScore(true),
+    //                 Commands.repeatingSequence(
+    //                     setAutoIntakeOverride(true),
+    //                     Commands.waitSeconds(0.75),
+    //                     setAutoIntakeOverride(false),
+    //                     Commands.waitSeconds(0.75)))
+    //             .withTimeout(4.5));
 
     routine.active().onTrue(autoCmd);
 
@@ -227,28 +236,25 @@ public class AutoRoutines {
   }
 
   private Command intakePath(Path path, AutoRoutine routine) {
-    return Commands.sequence(
-        setAutoIntake(true), setAutoScore(false), path.getPathCommand(), setAutoIntake(false));
+    return Commands.deadline(path.getPathCommand(), setAutoIntake(true), setAutoScore(false))
+        .andThen(setAutoIntake(false));
   }
 
   private Command spinUpPath(Path path, AutoRoutine routine) {
     boolean deployIntake = path.intakeDeployed;
-    return Commands.sequence(
-        setAutoSpinUp(true),
-        setAutoIntakeOverride(deployIntake),
-        path.getPathCommand(),
-        setAutoIntakeOverride(false));
+    return Commands.deadline(
+            path.getPathCommand(), setAutoSpinUp(true), setAutoIntakeOverride(deployIntake))
+        .andThen(setAutoIntakeOverride(false));
   }
 
   private Command scorePath(Path path, AutoRoutine routine) {
     boolean deployIntake = path.intakeDeployed;
-    return Commands.sequence(
-        setAutoScore(true),
-        setAutoSpinUp(false),
-        setAutoIntakeOverride(deployIntake),
-        path.getPathCommand(),
-        setAutoScore(false),
-        setAutoIntakeOverride(false));
+    return Commands.deadline(
+            path.getPathCommand(),
+            setAutoScore(true),
+            setAutoSpinUp(false),
+            setAutoIntakeOverride(deployIntake))
+        .andThen(setAutoScore(false), setAutoIntakeOverride(false));
   }
 
   private Command emptyPath(Path path, AutoRoutine routine) {
