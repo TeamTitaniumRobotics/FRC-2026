@@ -112,7 +112,7 @@ public class AutoRoutines {
         autoCmd.andThen(
             Commands.deadline(
                 followPath(Path.RBSH_RTSR, routine),
-                Commands.waitSeconds(1.0).andThen(shuffleIntake())));
+                Commands.waitSeconds(1.0).andThen(shuffleShoot())));
 
     autoCmd =
         autoCmd.andThen(
@@ -123,7 +123,7 @@ public class AutoRoutines {
         autoCmd.andThen(
             Commands.deadline(
                 followPath(Path.RBSH_RTSR, routine),
-                Commands.waitSeconds(1.0).andThen(shuffleIntake())));
+                Commands.waitSeconds(1.0).andThen(shuffleShoot())));
 
     routine.active().onTrue(autoCmd);
 
@@ -138,10 +138,10 @@ public class AutoRoutines {
             resetPose(Path.RTS_RFME),
             followPath(Path.RTS_RFME, routine),
             followPath(Path.RFME_RTSH, routine),
-            shuffleIntake().withTimeout(4.0),
+            shuffleShoot().withTimeout(4.0),
             followPath(Path.RTSH_RCME, routine),
             followPath(Path.RCME_RTSH, routine),
-            shuffleIntake().withTimeout(4.0));
+            shuffleShoot().withTimeout(4.0));
 
     // autoCmd =
     //     autoCmd.andThen(
@@ -212,7 +212,7 @@ public class AutoRoutines {
                 followPath(Path.LTS_LB, routine)));
 
     autoCmd =
-        autoCmd.andThen(Commands.parallel(setAutoScore(true), shuffleIntake()).withTimeout(4.5));
+        autoCmd.andThen(Commands.parallel(setAutoScore(true), shuffleShoot()).withTimeout(4.5));
 
     routine.active().onTrue(autoCmd);
 
@@ -273,8 +273,8 @@ public class AutoRoutines {
         });
   }
 
-  private Command shuffleIntake() {
-    return shuffleIntake(0.75, 0.75);
+  private Command shuffleShoot() {
+    return Commands.sequence(setAutoScore(true), shuffleIntake(0.75, 0.75), setAutoScore(false));
   }
 
   private Command shuffleIntake(double outDelay, double inDelay) {
