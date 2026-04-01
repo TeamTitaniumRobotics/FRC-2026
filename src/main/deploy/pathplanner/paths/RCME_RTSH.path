@@ -16,16 +16,32 @@
     },
     {
       "anchor": {
-        "x": 4.325,
+        "x": 5.25,
         "y": 0.65
       },
       "prevControl": {
-        "x": 6.7398145657226705,
-        "y": 0.0029523872436976184
+        "x": 6.25,
+        "y": 0.6499999999999998
+      },
+      "nextControl": {
+        "x": 4.7576761101673,
+        "y": 0.6500000000000001
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 3.65,
+        "y": 0.65
+      },
+      "prevControl": {
+        "x": 5.649999999999999,
+        "y": 0.6499999999999998
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "RTS"
+      "linkedName": "RTSH"
     }
   ],
   "rotationTargets": [],
@@ -41,7 +57,7 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 3.0,
+    "velocity": 0.0,
     "rotation": 0.0
   },
   "reversed": false,

@@ -137,9 +137,7 @@ public class AutoRoutines {
     autoCmd =
         autoCmd.andThen(
             Commands.sequence(
-                followPath(Path.RTS_RFME, routine),
-                followPath(Path.RFME_RTS, routine),
-                followPath(Path.RTS_RB, routine)));
+                followPath(Path.RTS_RFME, routine), followPath(Path.RFME_RTSH, routine)));
 
     autoCmd =
         autoCmd.andThen(
@@ -155,10 +153,7 @@ public class AutoRoutines {
     autoCmd =
         autoCmd.andThen(
             Commands.sequence(
-                followPath(Path.RB_RTS, routine),
-                followPath(Path.RTS_RCME, routine),
-                followPath(Path.RCME_RTS, routine),
-                followPath(Path.RTS_RB, routine)));
+                followPath(Path.RTSH_RCME, routine), followPath(Path.RCME_RTSH, routine)));
 
     autoCmd =
         autoCmd.andThen(
@@ -262,13 +257,14 @@ public class AutoRoutines {
 
   private Command resetPose(Path path) {
     return Commands.runOnce(
-        () ->
-            RobotState.getInstance()
-                .setEstimatedPose(
-                    AllianceFlipUtil.apply(
-                        path.getPathPlannerPath()
-                            .getStartingHolonomicPose()
-                            .orElse(Pose2d.kZero))));
+        () -> {
+          Logger.recordOutput("Autos/CurrentState", "Resetting Pose");
+          RobotState.getInstance()
+              .setEstimatedPose(
+                  AllianceFlipUtil.apply(
+                      path.getPathPlannerPath().getStartingHolonomicPose().orElse(Pose2d.kZero)));
+          Logger.recordOutput("Autos/CurrentState", "Pose Reset");
+        });
   }
 
   private Command shuffleIntake() {
@@ -285,15 +281,27 @@ public class AutoRoutines {
   }
 
   private Command setAutoIntake(boolean value) {
-    return Commands.runOnce(() -> autoIntake = value);
+    return Commands.runOnce(
+        () -> {
+          autoIntake = value;
+          Logger.recordOutput("Autos/CurrentState", "Auto Intake: " + value);
+        });
   }
 
   private Command setAutoIntakeOverride(boolean value) {
-    return Commands.runOnce(() -> autoIntakeOverride = value);
+    return Commands.runOnce(
+        () -> {
+          autoIntakeOverride = value;
+          Logger.recordOutput("Autos/CurrentState", "Auto Intake Override: " + value);
+        });
   }
 
   private Command setAutoSpinUp(boolean value) {
-    return Commands.runOnce(() -> autoSpinUp = value);
+    return Commands.runOnce(
+        () -> {
+          autoSpinUp = value;
+          Logger.recordOutput("Autos/CurrentState", "Auto Spin Up: " + value);
+        });
   }
 
   private Command setAutoScore(boolean value) {
@@ -303,6 +311,7 @@ public class AutoRoutines {
           if (value) {
             autoSpinUp = false;
           }
+          Logger.recordOutput("Autos/CurrentState", "Auto Score: " + value);
         });
   }
 
@@ -333,12 +342,15 @@ public class AutoRoutines {
     RTS_RFME(PathAction.INTAKE),
     RTS_RCME(PathAction.INTAKE),
     RTS_RB(PathAction.SPIN_UP, true),
+    RTSH_RCME(PathAction.INTAKE),
     RTSR_RFME(PathAction.INTAKE),
     RTSR_RCME(PathAction.INTAKE),
     RFME_RTS(PathAction.NOTHING, true),
+    RFME_RTSH(PathAction.SPIN_UP, true),
     RFME_RBSH(PathAction.SPIN_UP, true),
     RFME_RTSB(PathAction.NOTHING),
     RCME_RBSH(PathAction.SPIN_UP, true),
+    RCME_RTSH(PathAction.SPIN_UP, true),
     RTSB_RTSHB(PathAction.SPIN_UP, true),
     RTSB_ROB(PathAction.INTAKE),
     RTSHB_ROB(PathAction.INTAKE),
@@ -368,7 +380,14 @@ public class AutoRoutines {
 
     public Command getPathCommand() {
       try {
-        return AutoBuilder.followPath(PathPlannerPath.fromPathFile(this.toString()));
+        return Commands.sequence(
+            Commands.runOnce(
+                () ->
+                    Logger.recordOutput("Autos/CurrentState", "Starting Path: " + this.toString())),
+            AutoBuilder.followPath(PathPlannerPath.fromPathFile(this.toString())),
+            Commands.runOnce(
+                () ->
+                    Logger.recordOutput("Autos/CurrentState", "Ending Path: " + this.toString())));
       } catch (Exception e) {
         DriverStation.reportError(
             "Failed to load PathPlanner path for auto '" + this.toString() + "'.",

@@ -43,7 +43,7 @@ public class Feeder extends GenericRoller {
 
   public static final boolean FEEDER_INVERTED = true;
 
-  public static final double STATOR_CURRENT_LIMIT = 45.0;
+  public static final double STATOR_CURRENT_LIMIT = 50.0;
   public static final double SUPPLY_CURRENT_LIMIT = 30.0;
 
   public static final double FEEDER_GEAR_RATIO = 0.5;

@@ -265,16 +265,20 @@ public class Superstructure extends VirtualSubsystem {
     // --- Resolve Feeder state ---
     if (feeder.getState() != FeederState.UNJAM) {
       switch (state) {
-        case SPIN_UP_SCORE, SCORE, PASS, EJECT -> feeder.setState(FeederState.FEED);
+        case SCORE, PASS, EJECT -> feeder.setState(FeederState.FEED);
         default -> feeder.setState(FeederState.IDLE);
       }
     }
 
     // --- Resolve Spindexer state ---
-    switch (state) {
-      case INTAKE, SPIN_UP_SCORE, SPIN_UP_PASS -> spindexer.setState(SpindexerState.IDLE);
-      case SCORE, PASS, EJECT -> spindexer.setState(SpindexerState.FEED);
-      default -> spindexer.setState(SpindexerState.IDLE);
+    if (state == SuperstructureState.SCORE && stateTimer.hasElapsed(0.25)) {
+      spindexer.setState(SpindexerState.FEED);
+    } else {
+      switch (state) {
+        case INTAKE, SPIN_UP_SCORE, SPIN_UP_PASS -> spindexer.setState(SpindexerState.IDLE);
+        case PASS, EJECT -> spindexer.setState(SpindexerState.FEED);
+        default -> spindexer.setState(SpindexerState.IDLE);
+      }
     }
   }
 
