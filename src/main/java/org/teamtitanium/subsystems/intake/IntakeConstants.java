@@ -72,7 +72,7 @@ public class IntakeConstants {
     public static final Distance MIN_EXTENSION = Inches.of(0.0);
     public static final Distance CLIMB_STOW_EXTENSION = Inches.of(0.0);
     public static final Distance STOW_EXTENSION = Inches.of(4.0);
-    public static final Distance DEPLOY_EXTENSION = Inches.of(11.75);
+    public static final Distance DEPLOY_EXTENSION = Inches.of(11.5);
     public static final Distance MAX_EXTENSION = Inches.of(12.0);
     public static final Distance EXTENSION_TOLERANCE = Inches.of(2.0);
 
@@ -88,7 +88,8 @@ public class IntakeConstants {
     public static final Constraints RACK_CONSTRAINTS =
         new Constraints(
             MAX_LINEAR_VELOCITY_MPS / GEAR_CIRCUMFERENCE_METERS, // 15rps
-            MAX_LINEAR_ACCELERATION_MPS2 / GEAR_CIRCUMFERENCE_METERS); // 50rps
+            MAX_LINEAR_ACCELERATION_MPS2 / GEAR_CIRCUMFERENCE_METERS, // 50rpss
+            9999);
 
     private static final double AGITATE_LINEAR_VELOCITY_MPS = 0.5;
     private static final double AGITATE_LINEAR_ACCELERATION_MPS2 = 2.0;

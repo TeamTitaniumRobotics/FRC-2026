@@ -61,8 +61,10 @@ public class ShotCalculator {
     shotMap.put(4.00, new ShotData(3400, 14.5, 1.12));
     shotMap.put(4.25, new ShotData(3600, 14.5, 1.12));
     shotMap.put(4.55, new ShotData(3800, 15, 1.12));
-    shotMap.put(4.75, new ShotData(3700, 16, 1.13));
-    shotMap.put(5.0, new ShotData(3875, 18, 1.13));
+    shotMap.put(4.75, new ShotData(4000, 16, 1.13));
+    shotMap.put(5.0, new ShotData(4100, 18, 1.13));
+    shotMap.put(5.25, new ShotData(4250, 19, 1.13));
+    shotMap.put(5.5, new ShotData(4450, 20, 1.13));
 
     passingMap.put(5.0, new ShotData(3350, 20.0, 1.13));
     passingMap.put(6.0, new ShotData(3600, 22.5, 1.13));
