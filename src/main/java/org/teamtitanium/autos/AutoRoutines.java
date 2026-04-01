@@ -39,9 +39,9 @@ public class AutoRoutines {
   public static Trigger autoIntakeOverrideReq =
       new Trigger(() -> autoIntakeOverride).and(DriverStation::isAutonomous);
 
-  @AutoLogOutput(key = "Superstructure/AutoSpinUp")
-  public static Trigger autoSpinUpReq =
-      new Trigger(() -> autoSpinUp).and(DriverStation::isAutonomous);
+  // @AutoLogOutput(key = "Superstructure/AutoSpinUp")
+  // public static Trigger autoSpinUpReq =
+  //     new Trigger(() -> autoSpinUp).and(DriverStation::isAutonomous);
 
   @AutoLogOutput(key = "Superstructure/AutoScore")
   public static Trigger autoScoreReq =
