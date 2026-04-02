@@ -182,37 +182,48 @@ public class AutoRoutines {
 
   public Command leftDoublePass() {
     final AutoRoutine routine = factory.newRoutine("Left Double Pass Auto");
-    Path[] paths = new Path[] {Path.LTS_LFME, Path.LFME_LTS, Path.LTS_LB};
-    Command autoCmd = resetPose(paths[0]);
 
-    autoCmd =
-        autoCmd.andThen(
-            Commands.sequence(
-                followPath(Path.LTS_LFME, routine),
-                followPath(Path.LFME_LTS, routine),
-                followPath(Path.LTS_LB, routine)));
+    Command autoCmd =
+        Commands.sequence(
+            resetPose(Path.LTS_LFME),
+            followPath(Path.LTS_LFME, routine),
+            followPath(Path.LFME_LTSH, routine),
+            shuffleShoot().withTimeout(4.0),
+            followPath(Path.LTSH_LCME, routine),
+            followPath(Path.LCME_LTSH, routine),
+            shuffleShoot().withTimeout(4.0));
 
-    autoCmd =
-        autoCmd.andThen(
-            Commands.parallel(
-                    setAutoScore(true),
-                    Commands.repeatingSequence(
-                        setAutoIntakeOverride(true),
-                        Commands.waitSeconds(0.8),
-                        setAutoIntakeOverride(false),
-                        Commands.waitSeconds(0.75)))
-                .withTimeout(4.5));
+    // Path[] paths = new Path[] {Path.LTS_LFME, Path.LFME_LTS, Path.LTS_LB};
+    // Command autoCmd = resetPose(paths[0]);
 
-    autoCmd =
-        autoCmd.andThen(
-            Commands.sequence(
-                followPath(Path.LB_LTS, routine),
-                followPath(Path.LTS_LCME, routine),
-                followPath(Path.LCME_LTS, routine),
-                followPath(Path.LTS_LB, routine)));
+    // autoCmd =
+    //     autoCmd.andThen(
+    //         Commands.sequence(
+    //             followPath(Path.LTS_LFME, routine),
+    //             followPath(Path.LFME_LTS, routine),
+    //             followPath(Path.LTS_LB, routine)));
 
-    autoCmd =
-        autoCmd.andThen(Commands.parallel(setAutoScore(true), shuffleShoot()).withTimeout(4.5));
+    // autoCmd =
+    //     autoCmd.andThen(
+    //         Commands.parallel(
+    //                 setAutoScore(true),
+    //                 Commands.repeatingSequence(
+    //                     setAutoIntakeOverride(true),
+    //                     Commands.waitSeconds(0.8),
+    //                     setAutoIntakeOverride(false),
+    //                     Commands.waitSeconds(0.75)))
+    //             .withTimeout(4.5));
+
+    // autoCmd =
+    //     autoCmd.andThen(
+    //         Commands.sequence(
+    //             followPath(Path.LB_LTS, routine),
+    //             followPath(Path.LTS_LCME, routine),
+    //             followPath(Path.LCME_LTS, routine),
+    //             followPath(Path.LTS_LB, routine)));
+
+    // autoCmd =
+    //     autoCmd.andThen(Commands.parallel(setAutoScore(true), shuffleShoot()).withTimeout(4.5));
 
     routine.active().onTrue(autoCmd);
 
@@ -365,11 +376,14 @@ public class AutoRoutines {
     RB_RTS(PathAction.INTAKE),
     RBSH_RTSR(PathAction.SCORE),
     LTS_LFME(PathAction.INTAKE),
+    LTSH_LCME(PathAction.INTAKE),
     LFME_LTS(PathAction.NOTHING, true),
+    LFME_LTSH(PathAction.SPIN_UP, true),
     LTS_LB(PathAction.SCORE, true),
     LB_LTS(PathAction.INTAKE),
     LTS_LCME(PathAction.INTAKE),
-    LCME_LTS(PathAction.NOTHING, true);
+    LCME_LTS(PathAction.NOTHING, true),
+    LCME_LTSH(PathAction.SPIN_UP, true);
 
     private final PathAction action;
     private final boolean intakeDeployed;
