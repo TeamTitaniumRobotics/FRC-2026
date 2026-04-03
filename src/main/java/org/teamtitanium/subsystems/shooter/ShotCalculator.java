@@ -128,20 +128,15 @@ public class ShotCalculator {
     Pose2d predictedTurretPose = turretPosition;
     double predictedDistance = targetToTurretDistance;
 
-    if (!passing) {
-      for (int i = 0; i < 5; i++) {
-        tof = shotMap.get(predictedDistance).tof();
-        double offsetX = turretVelocity.vxMetersPerSecond * tof;
-        double offsetY = turretVelocity.vyMetersPerSecond * tof;
-        predictedTurretPose =
-            new Pose2d(
-                turretPosition.getTranslation().plus(new Translation2d(offsetX, offsetY)),
-                turretPosition.getRotation());
-        predictedDistance = target.getDistance(predictedTurretPose.getTranslation());
-      }
-      Logger.recordOutput("ShotCalculator/ToF", true);
-    } else {
-      Logger.recordOutput("ShotCalculator/ToF", false);
+    for (int i = 0; i < 5; i++) {
+      tof = shotMap.get(predictedDistance).tof();
+      double offsetX = turretVelocity.vxMetersPerSecond * tof;
+      double offsetY = turretVelocity.vyMetersPerSecond * tof;
+      predictedTurretPose =
+          new Pose2d(
+              turretPosition.getTranslation().plus(new Translation2d(offsetX, offsetY)),
+              turretPosition.getRotation());
+      predictedDistance = target.getDistance(predictedTurretPose.getTranslation());
     }
 
     Pose2d predictedRobotPose =
