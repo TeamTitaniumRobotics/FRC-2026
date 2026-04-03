@@ -78,13 +78,13 @@ public class Shooter {
     //     flywheel.setVelocity(() -> RPM.of(flywheel.flywheelConfigNumber1.get())));
     // hood.setDefaultCommand(hood.setPosition(() -> Degrees.of(hood.hoodConfigNumber1.get())));
     hood.setDefaultCommand(hood.setPosition(() -> state.getHoodAngle().get()));
-    // turret.setDefaultCommand(
-    //     turret.setPosition(() -> Degrees.of(turret.turretConfigNumber1.get())));
     turret.setDefaultCommand(
-        Commands.either(
-            turret.setPosition(() -> state.getTurretAngle().get()),
-            turret.setPosition(() -> turret.getPosition()),
-            () -> !turretDisabled));
+        turret.setPosition(() -> Degrees.of(turret.turretConfigNumber1.get())));
+    // turret.setDefaultCommand(
+    //     Commands.either(
+    //         turret.setPosition(() -> state.getTurretAngle().get()),
+    //         turret.setPosition(() -> turret.getPosition()),
+    //         () -> !turretDisabled));
   }
 
   @AutoLogOutput(key = "Shooter/AtSetpoint")
