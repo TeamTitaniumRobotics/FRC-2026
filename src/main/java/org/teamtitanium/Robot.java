@@ -125,6 +125,10 @@ public class Robot extends LoggedRobot {
 
   private final ShotCalculator shotCalculator = ShotCalculator.getInstance();
 
+  @AutoLogOutput(key = "Robot/NotValidTrigger")
+  private final Trigger notValidTrigger =
+      new Trigger(() -> !shotCalculator.getParameters().isValid()).and(RobotModeTriggers.teleop());
+
   private double autoStartTime = 0.0;
   private boolean autoMessagePrinted = false;
   private final Timer canInitialErrorTimer = new Timer();
@@ -386,6 +390,10 @@ public class Robot extends LoggedRobot {
     RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());
 
     CommandScheduler.getInstance().schedule(FollowPathCommand.warmupCommand());
+
+    notValidTrigger
+        .onTrue(Commands.runOnce(() -> driver.setRumble(RumbleType.kBothRumble, 0.05)))
+        .onFalse(Commands.runOnce(() -> driver.setRumble(RumbleType.kBothRumble, 0.0)));
 
     configureButtonBindings();
     configureDashboard();

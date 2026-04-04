@@ -48,6 +48,8 @@ public class FieldConstants {
    */
   public static class Zones {
     // General Zones
+    public static final RectangleZone FIELD_ZONE =
+        new RectangleZone(new Translation2d(fieldLength, fieldWidth), Translation2d.kZero);
     public static final RectangleZone NEUTRAL_ZONE =
         new RectangleZone(
             new Translation2d(LinesVertical.neutralZoneNear, fieldWidth),
@@ -110,7 +112,7 @@ public class FieldConstants {
             new Translation2d(0.0, LinesHorizontal.towerStart));
 
     public static final IZone NO_SHOOT_ZONE =
-        NO_PASS_ZONE.union(FAR_NO_PASS_ZONE).union(TOWER_ZONE);
+        NO_PASS_ZONE.union(FAR_NO_PASS_ZONE).union(TOWER_ZONE).union(FIELD_ZONE.complement());
   }
 
   /**

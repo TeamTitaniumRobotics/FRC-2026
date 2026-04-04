@@ -16,6 +16,7 @@ import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.teamtitanium.RobotState;
 import org.teamtitanium.utils.AllianceFlipUtil;
+import org.teamtitanium.utils.Constants;
 import org.teamtitanium.utils.FieldConstants;
 import org.teamtitanium.utils.LoggedTunableNumber;
 import org.teamtitanium.utils.math.GeomUtil;
@@ -108,11 +109,13 @@ public class ShotCalculator {
       }
     }
 
-    Logger.recordOutput("ShotCalculator/TargetPose", new Pose2d(target, Rotation2d.kZero));
-
     Pose2d turretPosition = estimatedPose.transformBy(TURRET_TO_ROBOT.toTransform2d());
     double targetToTurretDistance = target.getDistance(turretPosition.getTranslation());
-    Logger.recordOutput("ShotCalculator/TurretPose", turretPosition);
+
+    if (Constants.tuningMode) {
+      Logger.recordOutput("ShotCalculator/TargetPose", new Pose2d(target, Rotation2d.kZero));
+      Logger.recordOutput("ShotCalculator/TurretPose", turretPosition);
+    }
 
     ChassisSpeeds fieldVelocity = RobotState.getInstance().getFieldVelocity();
     ChassisSpeeds turretVelocity =
@@ -155,7 +158,7 @@ public class ShotCalculator {
 
     boolean isValid =
         FieldConstants.Zones.NO_SHOOT_ZONE
-            .containsRobot(() -> RobotState.getInstance().getEstimatedPose(), false)
+            .contains(() -> turretPosition.getTranslation())
             .negate()
             .getAsBoolean();
 
@@ -171,8 +174,10 @@ public class ShotCalculator {
             tof,
             passing);
 
-    Logger.recordOutput("ShotCalculator/PredictedPose", predictedRobotPose);
-    Logger.recordOutput("ShotCalculator/PredictedDistance", predictedDistance);
+    if (Constants.tuningMode) {
+      Logger.recordOutput("ShotCalculator/PredictedPose", predictedRobotPose);
+      Logger.recordOutput("ShotCalculator/PredictedDistance", predictedDistance);
+    }
 
     return latestParameters;
   }
