@@ -52,6 +52,7 @@ import org.teamtitanium.subsystems.intake.IntakeConstants;
 import org.teamtitanium.subsystems.intake.rack.IntakeRack;
 import org.teamtitanium.subsystems.intake.rack.IntakeRackIO;
 import org.teamtitanium.subsystems.intake.rack.IntakeRackIOSim;
+import org.teamtitanium.subsystems.intake.rack.IntakeRackIOTalonFX;
 import org.teamtitanium.subsystems.intake.roller.IntakeRoller;
 import org.teamtitanium.subsystems.leds.LEDs;
 import org.teamtitanium.subsystems.leds.LEDsIO;
@@ -270,11 +271,9 @@ public class Robot extends LoggedRobot {
         turret = new Turret(new TurretIOTalonFX());
         feeder = new Feeder(new GenericRollerIOTalonFX(Feeder.CONSTANTS));
         spindexer = new Spindexer(new GenericRollerIOTalonFX(Spindexer.CONSTANTS));
-        intakeRack = new IntakeRack(new IntakeRackIO() {});
-        // intakeRoller =
-        //     new IntakeRoller(new
-        // GenericRollerIOTalonFX(IntakeConstants.RollerConstants.CONSTANTS));
-        intakeRoller = new IntakeRoller(new GenericRollerIO() {});
+        intakeRack = new IntakeRack(new IntakeRackIOTalonFX());
+        intakeRoller =
+            new IntakeRoller(new GenericRollerIOTalonFX(IntakeConstants.RollerConstants.CONSTANTS));
 
         leds = new LEDs(new LEDsIOReal());
         vision =
