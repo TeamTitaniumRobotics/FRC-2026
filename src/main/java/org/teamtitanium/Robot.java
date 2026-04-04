@@ -52,7 +52,6 @@ import org.teamtitanium.subsystems.intake.IntakeConstants;
 import org.teamtitanium.subsystems.intake.rack.IntakeRack;
 import org.teamtitanium.subsystems.intake.rack.IntakeRackIO;
 import org.teamtitanium.subsystems.intake.rack.IntakeRackIOSim;
-import org.teamtitanium.subsystems.intake.rack.IntakeRackIOTalonFX;
 import org.teamtitanium.subsystems.intake.roller.IntakeRoller;
 import org.teamtitanium.subsystems.leds.LEDs;
 import org.teamtitanium.subsystems.leds.LEDsIO;
@@ -125,9 +124,9 @@ public class Robot extends LoggedRobot {
 
   private final ShotCalculator shotCalculator = ShotCalculator.getInstance();
 
-  @AutoLogOutput(key = "Robot/NotValidTrigger")
-  private final Trigger notValidTrigger =
-      new Trigger(() -> !shotCalculator.getParameters().isValid()).and(RobotModeTriggers.teleop());
+  // @AutoLogOutput(key = "Robot/NotValidTrigger")
+  // private final Trigger notValidTrigger =
+  //     new Trigger(() -> !shotCalculator.getParameters().isValid()).and(DriverStation::isEnabled);
 
   private double autoStartTime = 0.0;
   private boolean autoMessagePrinted = false;
@@ -271,9 +270,12 @@ public class Robot extends LoggedRobot {
         turret = new Turret(new TurretIOTalonFX());
         feeder = new Feeder(new GenericRollerIOTalonFX(Feeder.CONSTANTS));
         spindexer = new Spindexer(new GenericRollerIOTalonFX(Spindexer.CONSTANTS));
-        intakeRack = new IntakeRack(new IntakeRackIOTalonFX());
-        intakeRoller =
-            new IntakeRoller(new GenericRollerIOTalonFX(IntakeConstants.RollerConstants.CONSTANTS));
+        intakeRack = new IntakeRack(new IntakeRackIO() {});
+        // intakeRoller =
+        //     new IntakeRoller(new
+        // GenericRollerIOTalonFX(IntakeConstants.RollerConstants.CONSTANTS));
+        intakeRoller = new IntakeRoller(new GenericRollerIO() {});
+
         leds = new LEDs(new LEDsIOReal());
         vision =
             new Vision(
@@ -391,9 +393,9 @@ public class Robot extends LoggedRobot {
 
     CommandScheduler.getInstance().schedule(FollowPathCommand.warmupCommand());
 
-    notValidTrigger
-        .onTrue(Commands.runOnce(() -> driver.setRumble(RumbleType.kBothRumble, 0.05)))
-        .onFalse(Commands.runOnce(() -> driver.setRumble(RumbleType.kBothRumble, 0.0)));
+    // notValidTrigger
+    //     .onTrue(Commands.runOnce(() -> driver.setRumble(RumbleType.kBothRumble, 0.05)))
+    //     .onFalse(Commands.runOnce(() -> driver.setRumble(RumbleType.kBothRumble, 0.0)));
 
     configureButtonBindings();
     configureDashboard();
