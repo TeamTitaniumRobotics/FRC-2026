@@ -9,22 +9,22 @@
       "prevControl": null,
       "nextControl": {
         "x": 7.94,
-        "y": 6.775000000000001
+        "y": 7.275
       },
       "isLocked": false,
       "linkedName": "LFME"
     },
     {
       "anchor": {
-        "x": 5.5,
+        "x": 5.0,
         "y": 7.45
       },
       "prevControl": {
-        "x": 5.920999999999999,
+        "x": 5.421,
         "y": 7.45
       },
       "nextControl": {
-        "x": 5.0,
+        "x": 4.5,
         "y": 7.45
       },
       "isLocked": false,
@@ -32,22 +32,22 @@
     },
     {
       "anchor": {
-        "x": 4.325,
+        "x": 3.65,
         "y": 7.45
       },
       "prevControl": {
-        "x": 4.825,
-        "y": 7.45
+        "x": 4.15,
+        "y": 7.449999999999999
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "LTS"
+      "linkedName": "LTSH"
     }
   ],
   "rotationTargets": [
     {
-      "waypointRelativePos": 0.4,
-      "rotationDegrees": -45.0
+      "waypointRelativePos": 1.0,
+      "rotationDegrees": 0.0
     }
   ],
   "constraintZones": [],
@@ -62,7 +62,7 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 2.0,
+    "velocity": 0.0,
     "rotation": 0.0
   },
   "reversed": false,

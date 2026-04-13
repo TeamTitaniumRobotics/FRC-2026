@@ -6,19 +6,22 @@ import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
-import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
+import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.wpilibj.Notifier;
 import java.util.List;
+import org.littletonrobotics.junction.Logger;
 import org.teamtitanium.utils.Constants;
 import org.teamtitanium.utils.Constants.Constraints;
 import org.teamtitanium.utils.Constants.Gains;
@@ -30,8 +33,8 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 
   private final TalonFXConfiguration config = new TalonFXConfiguration();
 
-  private final VelocityTorqueCurrentFOC velocityTorqueCurrentFOC =
-      new VelocityTorqueCurrentFOC(0.0).withUpdateFreqHz(250.0);
+  private final VelocityVoltage velocityVoltage =
+      new VelocityVoltage(0.0).withUpdateFreqHz(250.0).withEnableFOC(true);
   private final VoltageOut voltageOut = new VoltageOut(0.0).withEnableFOC(true);
 
   private final StatusSignal<Angle> position;
@@ -41,6 +44,15 @@ public class FlywheelIOTalonFX implements FlywheelIO {
   private final List<StatusSignal<Current>> supplyCurrent;
   private final List<StatusSignal<Current>> torqueCurrent;
   private final List<StatusSignal<Temperature>> temperature;
+
+  private final Object controlLock = new Object();
+  private final Object signalLock = new Object();
+  private volatile double targetVelocityRps = 0.0;
+  private volatile double measuredVelocityRps = 0.0;
+  private volatile int activeSlot = 0;
+  private volatile boolean velocityMode = false;
+
+  private final Notifier gainNotifier;
 
   public FlywheelIOTalonFX() {
     leftMotor = new TalonFX(FLYWHEEL_LEFT_MOTOR_ID, Constants.RIO_CAN_BUS);
@@ -69,6 +81,13 @@ public class FlywheelIOTalonFX implements FlywheelIO {
     config.Slot0.kV = FLYWHEEL_GAINS.kV();
     config.Slot0.kA = FLYWHEEL_GAINS.kA();
 
+    config.Slot1.kP = FLYWHEEL_RECOVERY_GAINS.kP();
+    config.Slot1.kI = FLYWHEEL_RECOVERY_GAINS.kI();
+    config.Slot1.kD = FLYWHEEL_RECOVERY_GAINS.kD();
+    config.Slot1.kS = FLYWHEEL_RECOVERY_GAINS.kS();
+    config.Slot1.kV = FLYWHEEL_RECOVERY_GAINS.kV();
+    config.Slot1.kA = FLYWHEEL_RECOVERY_GAINS.kA();
+
     config.MotionMagic.MotionMagicCruiseVelocity = FLYWHEEL_CONSTRAINTS.maxVelocity();
     config.MotionMagic.MotionMagicAcceleration = FLYWHEEL_CONSTRAINTS.maxAcceleration();
     config.MotionMagic.MotionMagicJerk = FLYWHEEL_CONSTRAINTS.kJerk();
@@ -95,11 +114,10 @@ public class FlywheelIOTalonFX implements FlywheelIO {
     temperature = List.of(leftMotor.getDeviceTemp(), rightMotor.getDeviceTemp());
 
     // Set update frequencies
-    BaseStatusSignal.setUpdateFrequencyForAll(400, velocity);
+    BaseStatusSignal.setUpdateFrequencyForAll(250, velocity, velocitySetpoint);
     BaseStatusSignal.setUpdateFrequencyForAll(
         100,
         position,
-        velocitySetpoint,
         appliedVolts.get(0),
         appliedVolts.get(1),
         supplyCurrent.get(0),
@@ -115,8 +133,6 @@ public class FlywheelIOTalonFX implements FlywheelIO {
     PhoenixUtil.registerSignals(
         FlywheelConstants.FLYWHEEL_CANBUS,
         position,
-        velocity,
-        velocitySetpoint,
         appliedVolts.get(0),
         appliedVolts.get(1),
         supplyCurrent.get(0),
@@ -125,6 +141,45 @@ public class FlywheelIOTalonFX implements FlywheelIO {
         torqueCurrent.get(1),
         temperature.get(0),
         temperature.get(1));
+
+    gainNotifier =
+        new Notifier(
+            () -> {
+              synchronized (signalLock) {
+                BaseStatusSignal.refreshAll(velocity, velocitySetpoint);
+                measuredVelocityRps = velocity.getValueAsDouble();
+              }
+
+              final double error = targetVelocityRps - measuredVelocityRps;
+
+              final double enterRecovery = VELOCITY_GAIN_TOLERANCE_RPS;
+              final double exitRecovery = VELOCITY_GAIN_TOLERANCE_RPS * 0.5;
+              final double recoveryBoundary = VELOCITY_GAIN_TOLERANCE_RPS * 7.5;
+
+              int newSlot = activeSlot;
+              boolean inRange =
+                  MathUtil.isNear(targetVelocityRps, measuredVelocityRps, recoveryBoundary);
+              if (inRange) {
+                if (activeSlot == 0 && error > enterRecovery) {
+                  newSlot = 1;
+                } else if (activeSlot == 1 && error < exitRecovery) {
+                  newSlot = 0;
+                }
+              } else if (activeSlot == 1) {
+                newSlot = 0;
+              }
+
+              if (newSlot != activeSlot) {
+                synchronized (controlLock) {
+                  activeSlot = newSlot;
+                  velocityVoltage.Slot = activeSlot;
+                  if (velocityMode) {
+                    leftMotor.setControl(velocityVoltage.withVelocity(targetVelocityRps));
+                  }
+                }
+              }
+            });
+    gainNotifier.startPeriodic(0.004);
   }
 
   @Override
@@ -147,38 +202,61 @@ public class FlywheelIOTalonFX implements FlywheelIO {
             torqueCurrent.get(1),
             temperature.get(1));
 
+    synchronized (signalLock) {
+      inputs.velocityRps = velocity.getValueAsDouble();
+      inputs.velocitySetpoint = velocitySetpoint.getValueAsDouble();
+    }
+
     inputs.positionRots = position.getValueAsDouble();
-    inputs.velocityRps = velocity.getValueAsDouble();
-    inputs.velocitySetpoint = velocitySetpoint.getValueAsDouble();
     inputs.appliedVolts = appliedVolts.stream().mapToDouble(s -> s.getValueAsDouble()).toArray();
     inputs.supplyCurrentAmps =
         supplyCurrent.stream().mapToDouble(s -> s.getValueAsDouble()).toArray();
     inputs.torqueCurrentAmps =
         torqueCurrent.stream().mapToDouble(s -> s.getValueAsDouble()).toArray();
     inputs.tempCelsius = temperature.stream().mapToDouble(s -> s.getValueAsDouble()).toArray();
-    temperature.stream().mapToDouble(s -> s.getValueAsDouble()).toArray();
+
+    Logger.recordOutput("Flywheel/MotorSlot", leftMotor.getClosedLoopSlot(true).getValue());
+    Logger.recordOutput("Flywheel/ActiveSlot", activeSlot);
   }
 
   @Override
   public void setVelocity(double velocityRps) {
-    leftMotor.setControl(velocityTorqueCurrentFOC.withVelocity(velocityRps));
+    targetVelocityRps = velocityRps;
+    velocityMode = true;
+    synchronized (controlLock) {
+      leftMotor.setControl(velocityVoltage.withVelocity(velocityRps));
+    }
   }
 
   @Override
   public void setVoltage(double volts) {
-    leftMotor.setControl(voltageOut.withOutput(volts));
+    velocityMode = false;
+    synchronized (controlLock) {
+      leftMotor.setControl(voltageOut.withOutput(volts));
+    }
   }
 
   @Override
-  public void setGains(Gains gains) {
-    config.Slot0.kP = gains.kP();
-    config.Slot0.kI = gains.kI();
-    config.Slot0.kD = gains.kD();
-    config.Slot0.kS = gains.kS();
-    config.Slot0.kV = gains.kV();
-    config.Slot0.kA = gains.kA();
-    PhoenixUtil.tryUntilOk(5, () -> leftMotor.getConfigurator().apply(config.Slot0));
-    PhoenixUtil.tryUntilOk(5, () -> rightMotor.getConfigurator().apply(config.Slot0));
+  public void setGains(Gains gains, int slotId) {
+    if (slotId == 0) {
+      config.Slot0.kP = gains.kP();
+      config.Slot0.kI = gains.kI();
+      config.Slot0.kD = gains.kD();
+      config.Slot0.kS = gains.kS();
+      config.Slot0.kV = gains.kV();
+      config.Slot0.kA = gains.kA();
+      PhoenixUtil.tryUntilOk(5, () -> leftMotor.getConfigurator().apply(config.Slot0));
+      PhoenixUtil.tryUntilOk(5, () -> rightMotor.getConfigurator().apply(config.Slot0));
+    } else {
+      config.Slot1.kP = gains.kP();
+      config.Slot1.kI = gains.kI();
+      config.Slot1.kD = gains.kD();
+      config.Slot1.kS = gains.kS();
+      config.Slot1.kV = gains.kV();
+      config.Slot1.kA = gains.kA();
+      PhoenixUtil.tryUntilOk(5, () -> leftMotor.getConfigurator().apply(config.Slot1));
+      PhoenixUtil.tryUntilOk(5, () -> rightMotor.getConfigurator().apply(config.Slot1));
+    }
   }
 
   @Override

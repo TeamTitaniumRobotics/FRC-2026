@@ -7,6 +7,7 @@ import static edu.wpi.first.units.Units.Rotations;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.util.function.Supplier;
 import lombok.Getter;
@@ -68,7 +69,11 @@ public class Shooter {
     this.hood = hood;
     this.turret = turret;
 
-    flywheel.setDefaultCommand(flywheel.setVelocity(() -> state.getFlywheelVelocity().get()));
+    flywheel.setDefaultCommand(
+        Commands.either(
+            flywheel.setVelocity(() -> ShooterState.AIM.getFlywheelVelocity().get()),
+            flywheel.setVelocity(() -> state.getFlywheelVelocity().get()),
+            RobotModeTriggers.autonomous()));
     // flywheel.setDefaultCommand(
     //     flywheel.setVelocity(() -> RPM.of(flywheel.flywheelConfigNumber1.get())));
     // hood.setDefaultCommand(hood.setPosition(() -> Degrees.of(hood.hoodConfigNumber1.get())));

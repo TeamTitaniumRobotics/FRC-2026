@@ -64,10 +64,10 @@ public class IntakeRackIOTalonFX implements IntakeRackIO {
     motorConfig.MotionMagic.MotionMagicAcceleration = RACK_CONSTRAINTS.maxAcceleration();
     motorConfig.MotionMagic.MotionMagicJerk = RACK_CONSTRAINTS.kJerk();
 
-    motorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = false;
+    motorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
     motorConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold =
         metersToMotorRotations(MAX_EXTENSION.in(Meters));
-    motorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = false;
+    motorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
     motorConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold =
         metersToMotorRotations(MIN_EXTENSION.in(Meters));
 

@@ -17,6 +17,7 @@ import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.teamtitanium.Robot;
+import org.teamtitanium.utils.Constants;
 import org.teamtitanium.utils.Constants.Constraints;
 import org.teamtitanium.utils.Constants.Gains;
 import org.teamtitanium.utils.LoggedTracer;
@@ -26,6 +27,8 @@ import yams.units.EasyCRTConfig;
 import yams.units.EasyCRTConfig.CrtGearPair;
 
 public class Turret extends SubsystemBase {
+  private static final int dashboardLogDivisor = 5;
+
   // Real-time tunable PID gains
   private final LoggedTunableNumber turretkP =
       new LoggedTunableNumber("Turret/kP", TURRET_GAINS.kP());
@@ -64,6 +67,8 @@ public class Turret extends SubsystemBase {
 
   @AutoLogOutput(key = "Turret/TargetPositionRots")
   private double targetPositionRots = 0.0;
+
+  private int dashboardLogCounter = 0;
 
   private Trigger atSetpoint =
       new Trigger(() -> Math.abs(inputs.positionRots - targetPositionRots) < ANGLE_TOLERANCE_ROTS);
@@ -127,7 +132,13 @@ public class Turret extends SubsystemBase {
       zeroTurretCRT();
     }
 
-    SmartDashboard.putNumber("Dashboard/Turret/Angle", getPosition().in(Degrees));
+    boolean shouldLogDashboardData = dashboardLogCounter++ % dashboardLogDivisor == 0;
+    if (Constants.tuningMode) {
+      shouldLogDashboardData = true;
+    }
+    if (shouldLogDashboardData) {
+      SmartDashboard.putNumber("Dashboard/Turret/Angle", getPosition().in(Degrees));
+    }
 
     // Log the turret loop time
     LoggedTracer.record("Turret");

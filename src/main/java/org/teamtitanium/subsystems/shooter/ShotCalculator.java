@@ -16,6 +16,7 @@ import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.teamtitanium.RobotState;
 import org.teamtitanium.utils.AllianceFlipUtil;
+import org.teamtitanium.utils.Constants;
 import org.teamtitanium.utils.FieldConstants;
 import org.teamtitanium.utils.LoggedTunableNumber;
 import org.teamtitanium.utils.math.GeomUtil;
@@ -47,27 +48,31 @@ public class ShotCalculator {
       new InterpolatingTreeMap<>(InverseInterpolator.forDouble(), ShotData::interpolate);
 
   static {
-    shotMap.put(1.25, new ShotData(2450, 3));
-    shotMap.put(1.50, new ShotData(2500, 4));
-    shotMap.put(2.00, new ShotData(2650, 6));
-    shotMap.put(2.50, new ShotData(2850, 8, 1.1));
-    shotMap.put(2.75, new ShotData(2950, 9, 1.1));
-    shotMap.put(3.00, new ShotData(3050, 10, 1.1));
-    shotMap.put(3.25, new ShotData(3150, 11, 1.1));
-    shotMap.put(3.50, new ShotData(3250, 12, 1.1));
-    shotMap.put(3.75, new ShotData(3350, 13, 1.1));
-    shotMap.put(4.00, new ShotData(3450, 14, 1.12));
-    shotMap.put(4.25, new ShotData(3550, 14.5, 1.12));
-    shotMap.put(4.55, new ShotData(3700, 15, 1.12));
-    shotMap.put(4.75, new ShotData(3775, 16, 1.14));
-    shotMap.put(5.0, new ShotData(3950, 18, 1.14));
+    shotMap.put(1.15, new ShotData(2500, 0));
+    shotMap.put(1.25, new ShotData(2525, 0));
+    shotMap.put(1.50, new ShotData(2550, 2.5));
+    shotMap.put(1.75, new ShotData(2600, 4));
+    shotMap.put(2.00, new ShotData(2650, 5));
+    shotMap.put(2.50, new ShotData(2750, 7, 1.1));
+    shotMap.put(2.75, new ShotData(2750, 10, 1.1));
+    shotMap.put(3.00, new ShotData(2850, 11, 1.1));
+    shotMap.put(3.25, new ShotData(3000, 12, 1.1));
+    shotMap.put(3.50, new ShotData(3075, 13, 1.1));
+    shotMap.put(3.75, new ShotData(3200, 14, 1.1));
+    shotMap.put(4.00, new ShotData(3400, 14.5, 1.12));
+    shotMap.put(4.25, new ShotData(3600, 14.5, 1.12));
+    shotMap.put(4.55, new ShotData(3800, 15, 1.12));
+    shotMap.put(4.75, new ShotData(4000, 16, 1.13));
+    shotMap.put(5.0, new ShotData(4100, 18, 1.13));
+    shotMap.put(5.25, new ShotData(4250, 19, 1.13));
+    shotMap.put(5.5, new ShotData(4450, 20, 1.13));
 
-    passingMap.put(5.0, new ShotData(3350, 20.0, 1.2));
-    passingMap.put(6.0, new ShotData(3600, 22.5, 1.2));
-    passingMap.put(7.0, new ShotData(4150, 25.0, 1.25));
-    passingMap.put(8.0, new ShotData(4650, 27.5, 1.25));
-    passingMap.put(9.0, new ShotData(5650, 27.5, 1.3));
-    passingMap.put(10.0, new ShotData(6650, 27.5, 1.3));
+    passingMap.put(5.0, new ShotData(3350, 20.0, 1.13));
+    passingMap.put(6.0, new ShotData(3600, 22.5, 1.13));
+    passingMap.put(7.0, new ShotData(4000, 25.0, 1.14));
+    passingMap.put(8.0, new ShotData(4500, 27.5, 1.14));
+    passingMap.put(9.0, new ShotData(5250, 27.5, 1.15));
+    passingMap.put(10.0, new ShotData(5700, 27.5, 1.15));
   }
 
   public ShotParameters getParameters() {
@@ -104,11 +109,13 @@ public class ShotCalculator {
       }
     }
 
-    Logger.recordOutput("ShotCalculator/TargetPose", new Pose2d(target, Rotation2d.kZero));
-
     Pose2d turretPosition = estimatedPose.transformBy(TURRET_TO_ROBOT.toTransform2d());
     double targetToTurretDistance = target.getDistance(turretPosition.getTranslation());
-    Logger.recordOutput("ShotCalculator/TurretPose", turretPosition);
+
+    if (Constants.tuningMode) {
+      Logger.recordOutput("ShotCalculator/TargetPose", new Pose2d(target, Rotation2d.kZero));
+      Logger.recordOutput("ShotCalculator/TurretPose", turretPosition);
+    }
 
     ChassisSpeeds fieldVelocity = RobotState.getInstance().getFieldVelocity();
     ChassisSpeeds turretVelocity =
@@ -139,13 +146,19 @@ public class ShotCalculator {
         predictedTurretPose.transformBy(TURRET_TO_ROBOT.toTransform2d().inverse());
 
     Rotation2d turretAngle = getTurretAngle(predictedRobotPose, target);
-    double hoodAngleRots = shotMap.get(predictedDistance).getHoodAngleRots();
-    double flywheelRPM = shotMap.get(predictedDistance).flywheelRPM() + flywheelOffset;
+    double hoodAngleRots =
+        passing
+            ? passingMap.get(predictedDistance).getHoodAngleRots()
+            : shotMap.get(predictedDistance).getHoodAngleRots();
+    double flywheelRPM =
+        passing
+            ? passingMap.get(predictedDistance).flywheelRPM() + flywheelOffset
+            : shotMap.get(predictedDistance).flywheelRPM() + flywheelOffset;
     double flywheelIdleRPM = MathUtil.clamp(flywheelRPM, 0.0, maxFlywheelIdleRPM.get());
 
     boolean isValid =
         FieldConstants.Zones.NO_SHOOT_ZONE
-            .containsRobot(() -> RobotState.getInstance().getEstimatedPose(), false)
+            .contains(() -> turretPosition.getTranslation())
             .negate()
             .getAsBoolean();
 
@@ -161,8 +174,10 @@ public class ShotCalculator {
             tof,
             passing);
 
-    Logger.recordOutput("ShotCalculator/PredictedPose", predictedRobotPose);
-    Logger.recordOutput("ShotCalculator/PredictedDistance", predictedDistance);
+    if (Constants.tuningMode) {
+      Logger.recordOutput("ShotCalculator/PredictedPose", predictedRobotPose);
+      Logger.recordOutput("ShotCalculator/PredictedDistance", predictedDistance);
+    }
 
     return latestParameters;
   }

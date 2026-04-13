@@ -21,18 +21,31 @@ import org.teamtitanium.utils.LoggedTunableNumber;
 
 public class Flywheel extends SubsystemBase {
   // Real-time tunable PID gains
-  private final LoggedTunableNumber flywheelkP =
-      new LoggedTunableNumber("Flywheel/kP", FLYWHEEL_GAINS.kP());
-  private final LoggedTunableNumber flywheelkI =
-      new LoggedTunableNumber("Flywheel/kI", FLYWHEEL_GAINS.kI());
-  private final LoggedTunableNumber flywheelkD =
-      new LoggedTunableNumber("Flywheel/kD", FLYWHEEL_GAINS.kD());
-  private final LoggedTunableNumber flywheelkS =
-      new LoggedTunableNumber("Flywheel/kS", FLYWHEEL_GAINS.kS());
-  private final LoggedTunableNumber flywheelkV =
-      new LoggedTunableNumber("Flywheel/kV", FLYWHEEL_GAINS.kV());
-  private final LoggedTunableNumber flywheelkA =
-      new LoggedTunableNumber("Flywheel/kA", FLYWHEEL_GAINS.kA());
+  private final LoggedTunableNumber flywheelSlot0kP =
+      new LoggedTunableNumber("Flywheel/Slot0/kP", FLYWHEEL_GAINS.kP());
+  private final LoggedTunableNumber flywheelSlot0kI =
+      new LoggedTunableNumber("Flywheel/Slot0/kI", FLYWHEEL_GAINS.kI());
+  private final LoggedTunableNumber flywheelSlot0kD =
+      new LoggedTunableNumber("Flywheel/Slot0/kD", FLYWHEEL_GAINS.kD());
+  private final LoggedTunableNumber flywheelSlot0kS =
+      new LoggedTunableNumber("Flywheel/Slot0/kS", FLYWHEEL_GAINS.kS());
+  private final LoggedTunableNumber flywheelSlot0kV =
+      new LoggedTunableNumber("Flywheel/Slot0/kV", FLYWHEEL_GAINS.kV());
+  private final LoggedTunableNumber flywheelSlot0kA =
+      new LoggedTunableNumber("Flywheel/Slot0/kA", FLYWHEEL_GAINS.kA());
+
+  private final LoggedTunableNumber flywheelSlot1kP =
+      new LoggedTunableNumber("Flywheel/Slot1/kP", FLYWHEEL_RECOVERY_GAINS.kP());
+  private final LoggedTunableNumber flywheelSlot1kI =
+      new LoggedTunableNumber("Flywheel/Slot1/kI", FLYWHEEL_RECOVERY_GAINS.kI());
+  private final LoggedTunableNumber flywheelSlot1kD =
+      new LoggedTunableNumber("Flywheel/Slot1/kD", FLYWHEEL_RECOVERY_GAINS.kD());
+  private final LoggedTunableNumber flywheelSlot1kS =
+      new LoggedTunableNumber("Flywheel/Slot1/kS", FLYWHEEL_RECOVERY_GAINS.kS());
+  private final LoggedTunableNumber flywheelSlot1kV =
+      new LoggedTunableNumber("Flywheel/Slot1/kV", FLYWHEEL_RECOVERY_GAINS.kV());
+  private final LoggedTunableNumber flywheelSlot1kA =
+      new LoggedTunableNumber("Flywheel/Slot1/kA", FLYWHEEL_RECOVERY_GAINS.kA());
 
   private final LoggedTunableNumber flywheelMaxVelocty =
       new LoggedTunableNumber("Flywheel/MaxVelocity", FLYWHEEL_CONSTRAINTS.maxVelocity());
@@ -76,21 +89,40 @@ public class Flywheel extends SubsystemBase {
     io.updateInputs(inputs);
     Logger.processInputs("Flywheel", inputs);
 
-    if (flywheelkP.hasChanged(hashCode())
-        || flywheelkI.hasChanged(hashCode())
-        || flywheelkD.hasChanged(hashCode())
-        || flywheelkS.hasChanged(hashCode())
-        || flywheelkV.hasChanged(hashCode())
-        || flywheelkA.hasChanged(hashCode())) {
+    if (flywheelSlot0kP.hasChanged(hashCode())
+        || flywheelSlot0kI.hasChanged(hashCode())
+        || flywheelSlot0kD.hasChanged(hashCode())
+        || flywheelSlot0kS.hasChanged(hashCode())
+        || flywheelSlot0kV.hasChanged(hashCode())
+        || flywheelSlot0kA.hasChanged(hashCode())) {
       io.setGains(
           new Gains(
-              flywheelkP.get(),
-              flywheelkI.get(),
-              flywheelkD.get(),
-              flywheelkS.get(),
-              flywheelkV.get(),
+              flywheelSlot0kP.get(),
+              flywheelSlot0kI.get(),
+              flywheelSlot0kD.get(),
+              flywheelSlot0kS.get(),
+              flywheelSlot0kV.get(),
               0.0,
-              flywheelkA.get()));
+              flywheelSlot0kA.get()),
+          0);
+    }
+
+    if (flywheelSlot1kP.hasChanged(hashCode())
+        || flywheelSlot1kI.hasChanged(hashCode())
+        || flywheelSlot1kD.hasChanged(hashCode())
+        || flywheelSlot1kS.hasChanged(hashCode())
+        || flywheelSlot1kV.hasChanged(hashCode())
+        || flywheelSlot1kA.hasChanged(hashCode())) {
+      io.setGains(
+          new Gains(
+              flywheelSlot1kP.get(),
+              flywheelSlot1kI.get(),
+              flywheelSlot1kD.get(),
+              flywheelSlot1kS.get(),
+              flywheelSlot1kV.get(),
+              0.0,
+              flywheelSlot1kA.get()),
+          1);
     }
 
     if (flywheelMaxVelocty.hasChanged(hashCode())

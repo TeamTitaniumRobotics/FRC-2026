@@ -8,6 +8,7 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import org.littletonrobotics.junction.Logger;
+import org.teamtitanium.utils.Constants;
 
 /**
  * Custom odometry class for swerve drive robots that calculates the robot's position based on
@@ -17,11 +18,14 @@ import org.littletonrobotics.junction.Logger;
  * <p>Inspired by FRC Team 581's implementation of FRC Team 1690's custom odometry
  */
 public class CustomOdometry extends SwerveDriveOdometry {
+  private static final int odometryLogDivisor = 10;
+
   private final int numberOfModules;
   private final Translation2d[] robotRelativeModuleOffsets;
 
   private Pose2d robotPose = Pose2d.kZero;
   private final SwerveModulePosition[] previousWheelPositions;
+  private int odometryLogCounter = 0;
 
   public CustomOdometry(
       SwerveDriveKinematics kinematics,
@@ -62,7 +66,9 @@ public class CustomOdometry extends SwerveDriveOdometry {
     // Calculate the radius of the arc traveled by the wheel. Positive = left turn,
     // negative = right turn
     double radius = differenceVectorLength / differenceVectorAngle;
-    Logger.recordOutput("CustomOdometry/GetModuleDisplacement/Radius", radius);
+    if (Constants.tuningMode) {
+      Logger.recordOutput("CustomOdometry/GetModuleDisplacement/Radius", radius);
+    }
 
     // Calculate the center of the circle that the wheel is turning around
     // and the displacement from the previous position to the current position
@@ -121,17 +127,23 @@ public class CustomOdometry extends SwerveDriveOdometry {
     double updatedPoseY = sumOfFieldRelativeModuleDisplacements.getY() / numberOfModules;
     Pose2d updatedPose = new Pose2d(updatedPoseX, updatedPoseY, gyroAngle);
 
-    // Logging for debugging, will remove if this works later
-    Logger.recordOutput("CustomOdometry/UpdatedPose", updatedPose);
-    Logger.recordOutput("CustomOdometry/PreviousPose", robotPose);
-    Logger.recordOutput("CustomOdometry/PreviousWheelPositions", previousWheelPositions);
-    Logger.recordOutput("CustomOdometry/CurrentWheelPositions", modulePositions);
-    Logger.recordOutput("CustomOdometry/ModuleDisplacements", moduleDisplacements);
-    for (int i = 0; i < numberOfModules; i++) {
-      Logger.recordOutput(
-          "CustomOdometry/FieldRelativeModuleDisplacements/" + i,
-          new Pose2d(
-              fieldRelativeModuleDisplacements[i], gyroAngle.plus(modulePositions[i].angle)));
+    boolean shouldLogDetailedData = odometryLogCounter++ % odometryLogDivisor == 0;
+    if (Constants.tuningMode) {
+      shouldLogDetailedData = true;
+    }
+    if (shouldLogDetailedData) {
+      // Logging for debugging, will remove if this works later
+      Logger.recordOutput("CustomOdometry/UpdatedPose", updatedPose);
+      Logger.recordOutput("CustomOdometry/PreviousPose", robotPose);
+      Logger.recordOutput("CustomOdometry/PreviousWheelPositions", previousWheelPositions);
+      Logger.recordOutput("CustomOdometry/CurrentWheelPositions", modulePositions);
+      Logger.recordOutput("CustomOdometry/ModuleDisplacements", moduleDisplacements);
+      for (int i = 0; i < numberOfModules; i++) {
+        Logger.recordOutput(
+            "CustomOdometry/FieldRelativeModuleDisplacements/" + i,
+            new Pose2d(
+                fieldRelativeModuleDisplacements[i], gyroAngle.plus(modulePositions[i].angle)));
+      }
     }
 
     // Update the robot pose and previous wheel positions for the next update

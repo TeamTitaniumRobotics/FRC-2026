@@ -22,7 +22,7 @@ public class IntakeConstants {
 
     public static final AngularVelocity IDLE_VELOCITY = RotationsPerSecond.of(0.0);
     public static final AngularVelocity AGITATE_VELOCITY = RotationsPerSecond.of(16.0);
-    public static final AngularVelocity INTAKE_VELOCITY = RotationsPerSecond.of(36.0);
+    public static final AngularVelocity INTAKE_VELOCITY = RotationsPerSecond.of(42.0);
     public static final AngularVelocity EJECT_VELOCITY = RotationsPerSecond.of(-24.0);
 
     public static final double STATOR_CURRENT_LIMIT = 30.0;
@@ -31,7 +31,7 @@ public class IntakeConstants {
     public static final double ROLLER_GEAR_RATIO = (18.0 / 12.0);
 
     public static final Gains ROLLER_GAINS = new Gains(0.05, 0.0, 0.0, 0.195, 0.185, 0.0, 0.0);
-    public static final Constraints ROLLER_CONSTRAINTS = new Constraints(36.0, 75.0);
+    public static final Constraints ROLLER_CONSTRAINTS = new Constraints(48.0, 75.0);
 
     public static final DCMotor ROLLER_MOTOR_GEARBOX = DCMotor.getKrakenX44(1);
     public static final double ROLLER_MOI = 0.004;
@@ -59,8 +59,8 @@ public class IntakeConstants {
     public static final boolean RACK_INVERTED = true;
 
     // Current limits
-    public static final double STATOR_CURRENT_LIMIT = 30.0;
-    public static final double SUPPLY_CURRENT_LIMIT = 20.0;
+    public static final double STATOR_CURRENT_LIMIT = 40.0;
+    public static final double SUPPLY_CURRENT_LIMIT = 30.0;
 
     // Gearbox + mechanism geometry
     public static final double RACK_GEAR_RATIO =
@@ -72,8 +72,7 @@ public class IntakeConstants {
     public static final Distance MIN_EXTENSION = Inches.of(0.0);
     public static final Distance CLIMB_STOW_EXTENSION = Inches.of(0.0);
     public static final Distance STOW_EXTENSION = Inches.of(4.0);
-    // public static final Distance DEPLOY_EXTENSION = Inches.of(11.5);
-    public static final Distance DEPLOY_EXTENSION = Inches.of(9.5);
+    public static final Distance DEPLOY_EXTENSION = Inches.of(11.5);
     public static final Distance MAX_EXTENSION = Inches.of(12.0);
     public static final Distance EXTENSION_TOLERANCE = Inches.of(2.0);
 
@@ -89,7 +88,8 @@ public class IntakeConstants {
     public static final Constraints RACK_CONSTRAINTS =
         new Constraints(
             MAX_LINEAR_VELOCITY_MPS / GEAR_CIRCUMFERENCE_METERS, // 15rps
-            MAX_LINEAR_ACCELERATION_MPS2 / GEAR_CIRCUMFERENCE_METERS); // 50rps
+            MAX_LINEAR_ACCELERATION_MPS2 / GEAR_CIRCUMFERENCE_METERS, // 50rpss
+            9999);
 
     private static final double AGITATE_LINEAR_VELOCITY_MPS = 0.5;
     private static final double AGITATE_LINEAR_ACCELERATION_MPS2 = 2.0;

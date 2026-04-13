@@ -163,22 +163,16 @@ public class Superstructure extends VirtualSubsystem {
     bindTransition(SuperstructureState.SCORE, SuperstructureState.IDLE, stowReq);
 
     // IDLE -> SPIN_UP_SCORE -> SCORE
-    bindTransition(
-        SuperstructureState.IDLE,
-        SuperstructureState.SPIN_UP_SCORE,
-        scoreReq.or(AutoRoutines.autoSpinUpReq));
+    bindTransition(SuperstructureState.IDLE, SuperstructureState.SPIN_UP_SCORE, scoreReq);
     bindTransition(
         SuperstructureState.SPIN_UP_SCORE,
         SuperstructureState.SCORE,
-        shooter.atSetpoint().and(scoreReq).and(() -> stateTimer.hasElapsed(0.35)));
+        shooter.atSetpoint().and(scoreReq).and(() -> stateTimer.hasElapsed(0.25)));
     bindTransition(
         SuperstructureState.SCORE,
         SuperstructureState.SPIN_UP_SCORE,
         scoreReq.and(shooter.atSetpoint().negate().debounce(0.2)));
-    bindTransition(
-        SuperstructureState.SPIN_UP_SCORE,
-        SuperstructureState.IDLE,
-        scoreReq.negate().and(AutoRoutines.autoSpinUpReq.negate()));
+    bindTransition(SuperstructureState.SPIN_UP_SCORE, SuperstructureState.IDLE, scoreReq.negate());
     bindTransition(SuperstructureState.SCORE, SuperstructureState.IDLE, scoreReq.negate());
 
     // IDLE -> EJECT (spit fuel out the front)
@@ -263,16 +257,22 @@ public class Superstructure extends VirtualSubsystem {
     }
 
     // --- Resolve Feeder state ---
-    switch (state) {
-      case SCORE, PASS, EJECT -> feeder.setState(FeederState.FEED);
-      default -> feeder.setState(FeederState.IDLE);
+    if (feeder.getState() != FeederState.UNJAM) {
+      switch (state) {
+        case SCORE, PASS, EJECT -> feeder.setState(FeederState.FEED);
+        default -> feeder.setState(FeederState.IDLE);
+      }
     }
 
     // --- Resolve Spindexer state ---
-    switch (state) {
-      case INTAKE, SPIN_UP_SCORE, SPIN_UP_PASS -> spindexer.setState(SpindexerState.IDLE);
-      case SCORE, PASS, EJECT -> spindexer.setState(SpindexerState.FEED);
-      default -> spindexer.setState(SpindexerState.IDLE);
+    if (state == SuperstructureState.SCORE && stateTimer.hasElapsed(0.25)) {
+      spindexer.setState(SpindexerState.FEED);
+    } else {
+      switch (state) {
+        case INTAKE, SPIN_UP_SCORE, SPIN_UP_PASS -> spindexer.setState(SpindexerState.IDLE);
+        case PASS, EJECT -> spindexer.setState(SpindexerState.FEED);
+        default -> spindexer.setState(SpindexerState.IDLE);
+      }
     }
   }
 

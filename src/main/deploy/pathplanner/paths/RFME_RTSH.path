@@ -4,50 +4,50 @@
     {
       "anchor": {
         "x": 7.94,
-        "y": 4.775
+        "y": 3.3
       },
       "prevControl": null,
       "nextControl": {
         "x": 7.94,
-        "y": 6.775000000000001
+        "y": 0.7999999999999998
       },
       "isLocked": false,
-      "linkedName": "LFME"
+      "linkedName": "RFME"
     },
     {
       "anchor": {
-        "x": 5.5,
-        "y": 7.45
+        "x": 5.0,
+        "y": 0.65
       },
       "prevControl": {
-        "x": 5.920999999999999,
-        "y": 7.45
+        "x": 5.421,
+        "y": 0.65
       },
       "nextControl": {
-        "x": 5.0,
-        "y": 7.45
+        "x": 4.5,
+        "y": 0.6500000000000001
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 4.325,
-        "y": 7.45
+        "x": 3.65,
+        "y": 0.65
       },
       "prevControl": {
-        "x": 4.825,
-        "y": 7.45
+        "x": 4.15,
+        "y": 0.6499999999999999
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "LTS"
+      "linkedName": "RTSH"
     }
   ],
   "rotationTargets": [
     {
-      "waypointRelativePos": 0.4,
-      "rotationDegrees": -45.0
+      "waypointRelativePos": 1.0,
+      "rotationDegrees": 0.0
     }
   ],
   "constraintZones": [],
@@ -62,14 +62,14 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 2.0,
+    "velocity": 0.0,
     "rotation": 0.0
   },
   "reversed": false,
-  "folder": "LT",
+  "folder": "RT",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -90.0
+    "rotation": 90.0
   },
   "useDefaultConstraints": true
 }

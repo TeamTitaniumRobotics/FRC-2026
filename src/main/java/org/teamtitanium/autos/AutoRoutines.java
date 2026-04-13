@@ -39,9 +39,9 @@ public class AutoRoutines {
   public static Trigger autoIntakeOverrideReq =
       new Trigger(() -> autoIntakeOverride).and(DriverStation::isAutonomous);
 
-  @AutoLogOutput(key = "Superstructure/AutoSpinUp")
-  public static Trigger autoSpinUpReq =
-      new Trigger(() -> autoSpinUp).and(DriverStation::isAutonomous);
+  // @AutoLogOutput(key = "Superstructure/AutoSpinUp")
+  // public static Trigger autoSpinUpReq =
+  //     new Trigger(() -> autoSpinUp).and(DriverStation::isAutonomous);
 
   @AutoLogOutput(key = "Superstructure/AutoScore")
   public static Trigger autoScoreReq =
@@ -112,7 +112,7 @@ public class AutoRoutines {
         autoCmd.andThen(
             Commands.deadline(
                 followPath(Path.RBSH_RTSR, routine),
-                Commands.waitSeconds(1.0).andThen(shuffleIntake())));
+                Commands.waitSeconds(1.0).andThen(shuffleShoot())));
 
     autoCmd =
         autoCmd.andThen(
@@ -123,7 +123,7 @@ public class AutoRoutines {
         autoCmd.andThen(
             Commands.deadline(
                 followPath(Path.RBSH_RTSR, routine),
-                Commands.waitSeconds(1.0).andThen(shuffleIntake())));
+                Commands.waitSeconds(1.0).andThen(shuffleShoot())));
 
     routine.active().onTrue(autoCmd);
 
@@ -132,44 +132,48 @@ public class AutoRoutines {
 
   public Command rightDoublePass() {
     final AutoRoutine routine = factory.newRoutine("Right Double Pass");
-    Command autoCmd = resetPose(Path.RTS_RFME);
+    // Command autoCmd = resetPose(Path.RTS_RFME);
+    Command autoCmd =
+        Commands.sequence(
+            resetPose(Path.RTS_RFME),
+            followPath(Path.RTS_RFME, routine),
+            followPath(Path.RFME_RTSH, routine),
+            shuffleShoot().withTimeout(4.0),
+            followPath(Path.RTSH_RCME, routine),
+            followPath(Path.RCME_RTSH, routine),
+            shuffleShoot().withTimeout(4.0));
 
-    autoCmd =
-        autoCmd.andThen(
-            Commands.sequence(
-                followPath(Path.RTS_RFME, routine),
-                followPath(Path.RFME_RTS, routine),
-                followPath(Path.RTS_RB, routine)));
+    // autoCmd =
+    //     autoCmd.andThen(
+    //         Commands.sequence(
+    //             followPath(Path.RTS_RFME, routine), followPath(Path.RFME_RTSH, routine)));
 
-    autoCmd =
-        autoCmd.andThen(
-            Commands.parallel(
-                    setAutoScore(true),
-                    Commands.repeatingSequence(
-                        setAutoIntakeOverride(true),
-                        Commands.waitSeconds(0.8),
-                        setAutoIntakeOverride(false),
-                        Commands.waitSeconds(0.75)))
-                .withTimeout(4.5));
+    // autoCmd =
+    //     autoCmd.andThen(
+    //         Commands.parallel(
+    //                 setAutoScore(true),
+    //                 Commands.repeatingSequence(
+    //                     setAutoIntakeOverride(true),
+    //                     Commands.waitSeconds(0.8),
+    //                     setAutoIntakeOverride(false),
+    //                     Commands.waitSeconds(0.75)))
+    //             .withTimeout(4.5));
 
-    autoCmd =
-        autoCmd.andThen(
-            Commands.sequence(
-                followPath(Path.RB_RTS, routine),
-                followPath(Path.RTS_RCME, routine),
-                followPath(Path.RCME_RTS, routine),
-                followPath(Path.RTS_RB, routine)));
+    // autoCmd =
+    //     autoCmd.andThen(
+    //         Commands.sequence(
+    //             followPath(Path.RTSH_RCME, routine), followPath(Path.RCME_RTSH, routine)));
 
-    autoCmd =
-        autoCmd.andThen(
-            Commands.parallel(
-                    setAutoScore(true),
-                    Commands.repeatingSequence(
-                        setAutoIntakeOverride(true),
-                        Commands.waitSeconds(0.75),
-                        setAutoIntakeOverride(false),
-                        Commands.waitSeconds(0.75)))
-                .withTimeout(4.5));
+    // autoCmd =
+    //     autoCmd.andThen(
+    //         Commands.parallel(
+    //                 setAutoScore(true),
+    //                 Commands.repeatingSequence(
+    //                     setAutoIntakeOverride(true),
+    //                     Commands.waitSeconds(0.75),
+    //                     setAutoIntakeOverride(false),
+    //                     Commands.waitSeconds(0.75)))
+    //             .withTimeout(4.5));
 
     routine.active().onTrue(autoCmd);
 
@@ -178,37 +182,48 @@ public class AutoRoutines {
 
   public Command leftDoublePass() {
     final AutoRoutine routine = factory.newRoutine("Left Double Pass Auto");
-    Path[] paths = new Path[] {Path.LTS_LFME, Path.LFME_LTS, Path.LTS_LB};
-    Command autoCmd = resetPose(paths[0]);
 
-    autoCmd =
-        autoCmd.andThen(
-            Commands.sequence(
-                followPath(Path.LTS_LFME, routine),
-                followPath(Path.LFME_LTS, routine),
-                followPath(Path.LTS_LB, routine)));
+    Command autoCmd =
+        Commands.sequence(
+            resetPose(Path.LTS_LFME),
+            followPath(Path.LTS_LFME, routine),
+            followPath(Path.LFME_LTSH, routine),
+            shuffleShoot().withTimeout(4.0),
+            followPath(Path.LTSH_LCME, routine),
+            followPath(Path.LCME_LTSH, routine),
+            shuffleShoot().withTimeout(4.0));
 
-    autoCmd =
-        autoCmd.andThen(
-            Commands.parallel(
-                    setAutoScore(true),
-                    Commands.repeatingSequence(
-                        setAutoIntakeOverride(true),
-                        Commands.waitSeconds(0.8),
-                        setAutoIntakeOverride(false),
-                        Commands.waitSeconds(0.75)))
-                .withTimeout(4.5));
+    // Path[] paths = new Path[] {Path.LTS_LFME, Path.LFME_LTS, Path.LTS_LB};
+    // Command autoCmd = resetPose(paths[0]);
 
-    autoCmd =
-        autoCmd.andThen(
-            Commands.sequence(
-                followPath(Path.LB_LTS, routine),
-                followPath(Path.LTS_LCME, routine),
-                followPath(Path.LCME_LTS, routine),
-                followPath(Path.LTS_LB, routine)));
+    // autoCmd =
+    //     autoCmd.andThen(
+    //         Commands.sequence(
+    //             followPath(Path.LTS_LFME, routine),
+    //             followPath(Path.LFME_LTS, routine),
+    //             followPath(Path.LTS_LB, routine)));
 
-    autoCmd =
-        autoCmd.andThen(Commands.parallel(setAutoScore(true), shuffleIntake()).withTimeout(4.5));
+    // autoCmd =
+    //     autoCmd.andThen(
+    //         Commands.parallel(
+    //                 setAutoScore(true),
+    //                 Commands.repeatingSequence(
+    //                     setAutoIntakeOverride(true),
+    //                     Commands.waitSeconds(0.8),
+    //                     setAutoIntakeOverride(false),
+    //                     Commands.waitSeconds(0.75)))
+    //             .withTimeout(4.5));
+
+    // autoCmd =
+    //     autoCmd.andThen(
+    //         Commands.sequence(
+    //             followPath(Path.LB_LTS, routine),
+    //             followPath(Path.LTS_LCME, routine),
+    //             followPath(Path.LCME_LTS, routine),
+    //             followPath(Path.LTS_LB, routine)));
+
+    // autoCmd =
+    //     autoCmd.andThen(Commands.parallel(setAutoScore(true), shuffleShoot()).withTimeout(4.5));
 
     routine.active().onTrue(autoCmd);
 
@@ -232,28 +247,25 @@ public class AutoRoutines {
   }
 
   private Command intakePath(Path path, AutoRoutine routine) {
-    return Commands.sequence(
-        setAutoIntake(true), setAutoScore(false), path.getPathCommand(), setAutoIntake(false));
+    return Commands.deadline(path.getPathCommand(), setAutoIntake(true), setAutoScore(false))
+        .andThen(setAutoIntake(false));
   }
 
   private Command spinUpPath(Path path, AutoRoutine routine) {
     boolean deployIntake = path.intakeDeployed;
-    return Commands.sequence(
-        setAutoSpinUp(true),
-        setAutoIntakeOverride(deployIntake),
-        path.getPathCommand(),
-        setAutoIntakeOverride(false));
+    return Commands.deadline(
+            path.getPathCommand(), setAutoSpinUp(true), setAutoIntakeOverride(deployIntake))
+        .andThen(setAutoIntakeOverride(false));
   }
 
   private Command scorePath(Path path, AutoRoutine routine) {
     boolean deployIntake = path.intakeDeployed;
-    return Commands.sequence(
-        setAutoScore(true),
-        setAutoSpinUp(false),
-        setAutoIntakeOverride(deployIntake),
-        path.getPathCommand(),
-        setAutoScore(false),
-        setAutoIntakeOverride(false));
+    return Commands.deadline(
+            path.getPathCommand(),
+            setAutoScore(true),
+            setAutoSpinUp(false),
+            setAutoIntakeOverride(deployIntake))
+        .andThen(setAutoScore(false), setAutoIntakeOverride(false));
   }
 
   private Command emptyPath(Path path, AutoRoutine routine) {
@@ -262,17 +274,18 @@ public class AutoRoutines {
 
   private Command resetPose(Path path) {
     return Commands.runOnce(
-        () ->
-            RobotState.getInstance()
-                .setEstimatedPose(
-                    AllianceFlipUtil.apply(
-                        path.getPathPlannerPath()
-                            .getStartingHolonomicPose()
-                            .orElse(Pose2d.kZero))));
+        () -> {
+          Logger.recordOutput("Autos/CurrentState", "Resetting Pose");
+          RobotState.getInstance()
+              .setEstimatedPose(
+                  AllianceFlipUtil.apply(
+                      path.getPathPlannerPath().getStartingHolonomicPose().orElse(Pose2d.kZero)));
+          Logger.recordOutput("Autos/CurrentState", "Pose Reset");
+        });
   }
 
-  private Command shuffleIntake() {
-    return shuffleIntake(0.75, 0.75);
+  private Command shuffleShoot() {
+    return Commands.sequence(setAutoScore(true), shuffleIntake(0.75, 0.75), setAutoScore(false));
   }
 
   private Command shuffleIntake(double outDelay, double inDelay) {
@@ -285,15 +298,27 @@ public class AutoRoutines {
   }
 
   private Command setAutoIntake(boolean value) {
-    return Commands.runOnce(() -> autoIntake = value);
+    return Commands.runOnce(
+        () -> {
+          autoIntake = value;
+          Logger.recordOutput("Autos/CurrentState", "Auto Intake: " + value);
+        });
   }
 
   private Command setAutoIntakeOverride(boolean value) {
-    return Commands.runOnce(() -> autoIntakeOverride = value);
+    return Commands.runOnce(
+        () -> {
+          autoIntakeOverride = value;
+          Logger.recordOutput("Autos/CurrentState", "Auto Intake Override: " + value);
+        });
   }
 
   private Command setAutoSpinUp(boolean value) {
-    return Commands.runOnce(() -> autoSpinUp = value);
+    return Commands.runOnce(
+        () -> {
+          autoSpinUp = value;
+          Logger.recordOutput("Autos/CurrentState", "Auto Spin Up: " + value);
+        });
   }
 
   private Command setAutoScore(boolean value) {
@@ -303,6 +328,7 @@ public class AutoRoutines {
           if (value) {
             autoSpinUp = false;
           }
+          Logger.recordOutput("Autos/CurrentState", "Auto Score: " + value);
         });
   }
 
@@ -333,12 +359,15 @@ public class AutoRoutines {
     RTS_RFME(PathAction.INTAKE),
     RTS_RCME(PathAction.INTAKE),
     RTS_RB(PathAction.SPIN_UP, true),
+    RTSH_RCME(PathAction.INTAKE),
     RTSR_RFME(PathAction.INTAKE),
     RTSR_RCME(PathAction.INTAKE),
     RFME_RTS(PathAction.NOTHING, true),
+    RFME_RTSH(PathAction.SPIN_UP, true),
     RFME_RBSH(PathAction.SPIN_UP, true),
     RFME_RTSB(PathAction.NOTHING),
     RCME_RBSH(PathAction.SPIN_UP, true),
+    RCME_RTSH(PathAction.SPIN_UP, true),
     RTSB_RTSHB(PathAction.SPIN_UP, true),
     RTSB_ROB(PathAction.INTAKE),
     RTSHB_ROB(PathAction.INTAKE),
@@ -347,11 +376,14 @@ public class AutoRoutines {
     RB_RTS(PathAction.INTAKE),
     RBSH_RTSR(PathAction.SCORE),
     LTS_LFME(PathAction.INTAKE),
+    LTSH_LCME(PathAction.INTAKE),
     LFME_LTS(PathAction.NOTHING, true),
+    LFME_LTSH(PathAction.SPIN_UP, true),
     LTS_LB(PathAction.SCORE, true),
     LB_LTS(PathAction.INTAKE),
     LTS_LCME(PathAction.INTAKE),
-    LCME_LTS(PathAction.NOTHING, true);
+    LCME_LTS(PathAction.NOTHING, true),
+    LCME_LTSH(PathAction.SPIN_UP, true);
 
     private final PathAction action;
     private final boolean intakeDeployed;
@@ -368,7 +400,14 @@ public class AutoRoutines {
 
     public Command getPathCommand() {
       try {
-        return AutoBuilder.followPath(PathPlannerPath.fromPathFile(this.toString()));
+        return Commands.sequence(
+            Commands.runOnce(
+                () ->
+                    Logger.recordOutput("Autos/CurrentState", "Starting Path: " + this.toString())),
+            AutoBuilder.followPath(PathPlannerPath.fromPathFile(this.toString())),
+            Commands.runOnce(
+                () ->
+                    Logger.recordOutput("Autos/CurrentState", "Ending Path: " + this.toString())));
       } catch (Exception e) {
         DriverStation.reportError(
             "Failed to load PathPlanner path for auto '" + this.toString() + "'.",

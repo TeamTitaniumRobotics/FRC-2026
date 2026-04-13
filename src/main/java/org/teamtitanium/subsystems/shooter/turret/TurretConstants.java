@@ -29,8 +29,8 @@ public class TurretConstants {
   public static final boolean TURRET_INVERTED = false;
   public static final boolean CANCODER_1_INVERTED = true;
   public static final boolean CANCODER_2_INVERTED = true;
-  public static final double CANCODER_1_OFFSET = -0.079834;
-  public static final double CANCODER_2_OFFSET = 0.231934;
+  public static final double CANCODER_1_OFFSET = -0.619873;
+  public static final double CANCODER_2_OFFSET = -0.946533;
 
   // CANcoder Gear Ratios from Turret
   public static final double CANCODER_COMMON_RATIO = (85.0 / 10.0); // 8.5:1 reduction
@@ -43,9 +43,9 @@ public class TurretConstants {
   public static final double CANCODER_2_RATIO =
       CANCODER_COMMON_RATIO
           * (CANCODER_DRIVE_GEAR_TEETH / (double) CANCODER_2_GEAR_TEETH); // 21.25:1 reduction
-  public static final Angle CRT_OFFSET = Degrees.of(223.0);
+  public static final Angle CRT_OFFSET = Degrees.of(0.0);
   // Mechanical Limits
-  public static final Angle MIN_ANGLE = Degrees.of(-360.0);
+  public static final Angle MIN_ANGLE = Degrees.of(-390.0);
   public static final Angle MAX_ANGLE = Degrees.of(90.0);
   public static final Angle TURRET_RANGE = MAX_ANGLE.minus(MIN_ANGLE); // 450 degrees
 
@@ -53,8 +53,7 @@ public class TurretConstants {
   public static final double ANGLE_TOLERANCE_ROTS = Units.degreesToRotations(3.5);
 
   // Motion Magic Constraints
-  public static final Constraints TURRET_CONSTRAINTS =
-      new Constraints(1.25, 8.0); // Max velocity (rps), accel (rps^2)
+  public static final Constraints TURRET_CONSTRAINTS = new Constraints(1.6, 12.0);
 
   // PID Gains
   public static final Gains TURRET_GAINS = new Gains(75.0, 0.0, 0.0, 0.35, 3.5, 0.0, 0.0);
