@@ -39,6 +39,9 @@ deploy {
                     jvmArgs.add("-XX:GCTimeRatio=5")
                     jvmArgs.add("-XX:+UseSerialGC")
                     jvmArgs.add("-XX:MaxGCPauseMillis=50")
+                    // Enable class loading logs for debugging class loading issues.
+                    jvmArgs.add("-verbose:class")
+                    jvmArgs.add("-Xlog:class+load=info")
                 }
 
                 // Static files artifact

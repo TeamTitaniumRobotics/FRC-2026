@@ -23,8 +23,10 @@ public class Spindexer extends GenericRoller {
   @RequiredArgsConstructor
   public enum SpindexerState {
     IDLE(() -> 0.0),
-    AGITATE(() -> 0.78 * 12),
-    FEED(() -> 0.78 * 12);
+    // AGITATE(() -> 0.78 * 12),
+    // FEED(() -> 0.78 * 12);
+    AGITATE(() -> Spindexer.configNumber.get() * 12.0),
+    FEED(() -> Spindexer.configNumber.get() * 12.0);
 
     @Getter private final Supplier<Double> spindexerVoltage;
   }
