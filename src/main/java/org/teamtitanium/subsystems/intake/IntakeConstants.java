@@ -15,7 +15,8 @@ import org.teamtitanium.utils.Constants.Gains;
 
 public class IntakeConstants {
   public static class RollerConstants {
-    public static final int ROLLER_MOTOR_ID = 30;
+    public static final int LEFT_ROLLER_MOTOR_ID = 30;
+    public static final int RIGHT_ROLLER_MOTOR_ID = 31;
     public static final CANBus ROLLER_CAN_BUS = Constants.RIO_CAN_BUS;
 
     public static final boolean ROLLER_INVERTED = false;
@@ -25,20 +26,20 @@ public class IntakeConstants {
     public static final AngularVelocity INTAKE_VELOCITY = RotationsPerSecond.of(42.0);
     public static final AngularVelocity EJECT_VELOCITY = RotationsPerSecond.of(-24.0);
 
-    public static final double STATOR_CURRENT_LIMIT = 30.0;
+    public static final double STATOR_CURRENT_LIMIT = 40.0;
     public static final double SUPPLY_CURRENT_LIMIT = 30.0;
 
-    public static final double ROLLER_GEAR_RATIO = (18.0 / 12.0);
+    public static final double ROLLER_GEAR_RATIO = (27.0 / 12.0);
 
     public static final Gains ROLLER_GAINS = new Gains(0.05, 0.0, 0.0, 0.195, 0.185, 0.0, 0.0);
     public static final Constraints ROLLER_CONSTRAINTS = new Constraints(48.0, 75.0);
 
-    public static final DCMotor ROLLER_MOTOR_GEARBOX = DCMotor.getKrakenX44(1);
+    public static final DCMotor ROLLER_MOTOR_GEARBOX = DCMotor.getKrakenX44(2);
     public static final double ROLLER_MOI = 0.004;
 
     public static final GenericRollerConstants CONSTANTS =
         new GenericRollerConstants(
-            ROLLER_MOTOR_ID,
+            LEFT_ROLLER_MOTOR_ID,
             ROLLER_CAN_BUS,
             ROLLER_GEAR_RATIO,
             ROLLER_GAINS,
@@ -51,7 +52,7 @@ public class IntakeConstants {
 
   public static class RackConstants {
     // CAN IDs
-    public static final int RACK_MOTOR_ID = 31;
+    public static final int RACK_MOTOR_ID = 32;
     public static final CANBus RACK_CAN_BUS =
         Constants.getMode() == Constants.Mode.REAL ? Constants.CANIVORE : Constants.RIO_CAN_BUS;
 

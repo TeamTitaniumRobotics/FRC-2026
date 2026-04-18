@@ -48,12 +48,14 @@ import org.teamtitanium.subsystems.genericroller.GenericRollerIO;
 import org.teamtitanium.subsystems.genericroller.GenericRollerIOSim;
 import org.teamtitanium.subsystems.genericroller.GenericRollerIOTalonFX;
 import org.teamtitanium.subsystems.intake.Intake;
-import org.teamtitanium.subsystems.intake.IntakeConstants;
 import org.teamtitanium.subsystems.intake.rack.IntakeRack;
 import org.teamtitanium.subsystems.intake.rack.IntakeRackIO;
 import org.teamtitanium.subsystems.intake.rack.IntakeRackIOSim;
 import org.teamtitanium.subsystems.intake.rack.IntakeRackIOTalonFX;
 import org.teamtitanium.subsystems.intake.roller.IntakeRoller;
+import org.teamtitanium.subsystems.intake.roller.IntakeRollerIO;
+import org.teamtitanium.subsystems.intake.roller.IntakeRollerIOSim;
+import org.teamtitanium.subsystems.intake.roller.IntakeRollerIOTalonFX;
 import org.teamtitanium.subsystems.leds.LEDs;
 import org.teamtitanium.subsystems.leds.LEDsIO;
 import org.teamtitanium.subsystems.leds.LEDsIOReal;
@@ -272,8 +274,7 @@ public class Robot extends LoggedRobot {
         feeder = new Feeder(new GenericRollerIOTalonFX(Feeder.CONSTANTS));
         spindexer = new Spindexer(new GenericRollerIOTalonFX(Spindexer.CONSTANTS));
         intakeRack = new IntakeRack(new IntakeRackIOTalonFX());
-        intakeRoller =
-            new IntakeRoller(new GenericRollerIOTalonFX(IntakeConstants.RollerConstants.CONSTANTS));
+        intakeRoller = new IntakeRoller(new IntakeRollerIOTalonFX());
 
         leds = new LEDs(new LEDsIOReal());
         vision =
@@ -306,12 +307,7 @@ public class Robot extends LoggedRobot {
                     Spindexer.SPINDEXER_MOTOR_GEARBOX,
                     Spindexer.SPINDEXER_MOI));
         intakeRack = new IntakeRack(new IntakeRackIOSim());
-        intakeRoller =
-            new IntakeRoller(
-                new GenericRollerIOSim(
-                    IntakeConstants.RollerConstants.CONSTANTS,
-                    IntakeConstants.RollerConstants.ROLLER_MOTOR_GEARBOX,
-                    IntakeConstants.RollerConstants.ROLLER_MOI));
+        intakeRoller = new IntakeRoller(new IntakeRollerIOSim());
         leds = new LEDs(new LEDsIO() {});
         vision =
             new Vision(
@@ -342,7 +338,8 @@ public class Robot extends LoggedRobot {
         feeder = new Feeder(new GenericRollerIO() {});
         spindexer = new Spindexer(new GenericRollerIO() {});
         intakeRack = new IntakeRack(new IntakeRackIO() {});
-        intakeRoller = new IntakeRoller(new GenericRollerIO() {});
+        intakeRoller = new IntakeRoller(new IntakeRollerIO() {});
+
         leds = new LEDs(new LEDsIO() {});
         vision = new Vision(new VisionIO() {}, new VisionIO() {}, new VisionIO() {});
       }

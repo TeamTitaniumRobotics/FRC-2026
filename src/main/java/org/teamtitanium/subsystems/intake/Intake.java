@@ -43,21 +43,6 @@ public class Intake {
     this.rack = rack;
     this.roller = roller;
 
-    // rack.setDefaultCommand(
-    //     Commands.select(
-    //         Map.ofEntries(
-    //             Map.entry(
-    //                 IntakeState.CLIMB_STOW, rack.setExtension(() ->
-    // state.getRackDistance().get())),
-    //             Map.entry(IntakeState.STOW, rack.stow()),
-    //             Map.entry(
-    //                 IntakeState.INTAKE, rack.setExtension(() -> state.getRackDistance().get())),
-    //             Map.entry(IntakeState.AGITATE, rack.stow()),
-    //             // rack.setExtension(() -> state.getRackDistance().get(), AGITATE_CONSTRAINTS)),
-    //             Map.entry(
-    //                 IntakeState.EJECT, rack.setExtension(() -> state.getRackDistance().get()))),
-    //         () -> state));
-
     rack.setDefaultCommand(
         Commands.either(
             rack.setExtension(() -> state.getRackDistance().get(), AGITATE_CONSTRAINTS),
