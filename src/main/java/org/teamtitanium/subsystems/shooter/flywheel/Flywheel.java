@@ -47,7 +47,7 @@ public class Flywheel extends SubsystemBase {
   private final LoggedTunableNumber flywheelSlot1kA =
       new LoggedTunableNumber("Shooter/Flywheel/Slot1/kA", FLYWHEEL_RECOVERY_GAINS.kA());
 
-  private final LoggedTunableNumber flywheelMaxVelocty =
+  private final LoggedTunableNumber flywheelMaxVelocity =
       new LoggedTunableNumber("Shooter/Flywheel/MaxVelocity", FLYWHEEL_CONSTRAINTS.maxVelocity());
   private final LoggedTunableNumber flywheelMaxAcceleration =
       new LoggedTunableNumber(
@@ -126,9 +126,9 @@ public class Flywheel extends SubsystemBase {
           1);
     }
 
-    if (flywheelMaxVelocty.hasChanged(hashCode())
+    if (flywheelMaxVelocity.hasChanged(hashCode())
         || flywheelMaxAcceleration.hasChanged(hashCode())) {
-      io.setConstraints(new Constraints(flywheelMaxVelocty.get(), flywheelMaxAcceleration.get()));
+      io.setConstraints(new Constraints(flywheelMaxVelocity.get(), flywheelMaxAcceleration.get()));
     }
 
     LoggedTracer.record("Shooter/Flywheel");

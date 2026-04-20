@@ -40,5 +40,5 @@ public class BackRollerConstants {
   public static final double SUPPLY_CURRENT_LIMIT = 40.0;
 
   // Simulation
-  public static final DCMotor BACK_ROLLER_GEARBOX = DCMotor.getKrakenX60Foc(2);
+  public static final DCMotor BACK_ROLLER_GEARBOX = DCMotor.getKrakenX44(1);
 }

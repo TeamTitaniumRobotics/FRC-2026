@@ -15,7 +15,6 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
-import org.teamtitanium.subsystems.shooter.flywheel.FlywheelConstants;
 import org.teamtitanium.utils.Constants.Constraints;
 import org.teamtitanium.utils.Constants.Gains;
 import org.teamtitanium.utils.PhoenixUtil;
@@ -95,7 +94,7 @@ public class BackRollerIOTalonFX implements BackRollerIO {
     PhoenixUtil.tryUntilOk(5, () -> ParentDevice.optimizeBusUtilizationForAll(rollerMotor));
 
     PhoenixUtil.registerSignals(
-        FlywheelConstants.FLYWHEEL_CANBUS,
+        BackRollerConstants.BACK_ROLLER_CANBUS,
         velocity,
         velocitySetpoint,
         appliedVolts,

@@ -45,7 +45,10 @@ public class IntakeRollerIOTalonFX implements IntakeRollerIO {
     rightMotor = new TalonFX(RIGHT_ROLLER_MOTOR_ID, ROLLER_CAN_BUS);
 
     // Configure motors
-    config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+    config.MotorOutput.Inverted =
+        ROLLER_INVERTED
+            ? InvertedValue.Clockwise_Positive
+            : InvertedValue.CounterClockwise_Positive;
     config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
 
     // Current limits
