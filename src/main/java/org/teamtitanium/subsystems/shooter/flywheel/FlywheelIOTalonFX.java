@@ -170,12 +170,10 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 
               if (newSlot != activeSlot) {
                 synchronized (controlLock) {
+                  activeSlot = newSlot;
+                  velocityVoltage.Slot = activeSlot;
                   if (velocityMode) {
-                    activeSlot = newSlot;
-                    velocityVoltage.Slot = activeSlot;
                     leftMotor.setControl(velocityVoltage.withVelocity(targetVelocityRps));
-                  } else {
-                    activeSlot = newSlot;
                   }
                 }
               }
