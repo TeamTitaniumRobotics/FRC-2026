@@ -23,35 +23,43 @@ import org.teamtitanium.utils.LoggedTunableNumber;
 
 public class Hood extends SubsystemBase {
   // Real-time tunable PID gains
-  private final LoggedTunableNumber hoodkP = new LoggedTunableNumber("Hood/kP", HOOD_GAINS.kP());
-  private final LoggedTunableNumber hoodkI = new LoggedTunableNumber("Hood/kI", HOOD_GAINS.kI());
-  private final LoggedTunableNumber hoodkD = new LoggedTunableNumber("Hood/kD", HOOD_GAINS.kD());
-  private final LoggedTunableNumber hoodkS = new LoggedTunableNumber("Hood/kS", HOOD_GAINS.kS());
-  private final LoggedTunableNumber hoodkV = new LoggedTunableNumber("Hood/kV", HOOD_GAINS.kV());
-  private final LoggedTunableNumber hoodkG = new LoggedTunableNumber("Hood/kG", HOOD_GAINS.kG());
-  private final LoggedTunableNumber hoodkA = new LoggedTunableNumber("Hood/kA", HOOD_GAINS.kA());
+  private final LoggedTunableNumber hoodkP =
+      new LoggedTunableNumber("Shooter/Hood/kP", HOOD_GAINS.kP());
+  private final LoggedTunableNumber hoodkI =
+      new LoggedTunableNumber("Shooter/Hood/kI", HOOD_GAINS.kI());
+  private final LoggedTunableNumber hoodkD =
+      new LoggedTunableNumber("Shooter/Hood/kD", HOOD_GAINS.kD());
+  private final LoggedTunableNumber hoodkS =
+      new LoggedTunableNumber("Shooter/Hood/kS", HOOD_GAINS.kS());
+  private final LoggedTunableNumber hoodkV =
+      new LoggedTunableNumber("Shooter/Hood/kV", HOOD_GAINS.kV());
+  private final LoggedTunableNumber hoodkG =
+      new LoggedTunableNumber("Shooter/Hood/kG", HOOD_GAINS.kG());
+  private final LoggedTunableNumber hoodkA =
+      new LoggedTunableNumber("Shooter/Hood/kA", HOOD_GAINS.kA());
 
   // Real-time tunable constraints
   private final LoggedTunableNumber hoodMaxVelocity =
-      new LoggedTunableNumber("Hood/MaxVelocity", HOOD_MOTION_CONSTRAINTS.maxVelocity());
+      new LoggedTunableNumber("Shooter/Hood/MaxVelocity", HOOD_MOTION_CONSTRAINTS.maxVelocity());
   private final LoggedTunableNumber hoodMaxAcceleration =
-      new LoggedTunableNumber("Hood/MaxAcceleration", HOOD_MOTION_CONSTRAINTS.maxAcceleration());
+      new LoggedTunableNumber(
+          "Shooter/Hood/MaxAcceleration", HOOD_MOTION_CONSTRAINTS.maxAcceleration());
 
   public final LoggedTunableNumber hoodConfigNumber1 =
-      new LoggedTunableNumber("Hood/ConfigNumber1", 0.0);
+      new LoggedTunableNumber("Shooter/Hood/ConfigNumber1", 0.0);
   public final LoggedTunableNumber hoodConfigNumber2 =
-      new LoggedTunableNumber("Hood/ConfigNumber2", 0.0);
+      new LoggedTunableNumber("Shooter/Hood/ConfigNumber2", 0.0);
 
   private final HoodIO io;
   private final HoodIOInputsAutoLogged inputs = new HoodIOInputsAutoLogged();
 
-  @AutoLogOutput(key = "Hood/TargetAngleRots")
+  @AutoLogOutput(key = "Shooter/Hood/TargetAngleRots")
   private double targetPositionRots = 0.0;
 
   private Trigger atSetpoint =
       new Trigger(() -> Math.abs(inputs.positionRots - targetPositionRots) < ANGLE_TOLERANCE_ROTS);
 
-  @AutoLogOutput(key = "Hood/HoodZeroed")
+  @AutoLogOutput(key = "Shooter/Hood/HoodZeroed")
   private boolean hoodZeroed = false;
 
   private final Debouncer currentDebouncer = new Debouncer(0.1, Debouncer.DebounceType.kRising);
@@ -81,7 +89,7 @@ public class Hood extends SubsystemBase {
   @Override
   public void periodic() {
     io.updateInputs(inputs);
-    Logger.processInputs("Hood", inputs);
+    Logger.processInputs("Shooter/Hood", inputs);
 
     if (hoodkP.hasChanged(hashCode())
         || hoodkI.hasChanged(hashCode())
@@ -105,7 +113,7 @@ public class Hood extends SubsystemBase {
       io.setConstraints(new Constraints(hoodMaxVelocity.get(), hoodMaxAcceleration.get()));
     }
 
-    LoggedTracer.record("Hood");
+    LoggedTracer.record("Shooter/Hood");
   }
 
   /**
@@ -178,7 +186,7 @@ public class Hood extends SubsystemBase {
    *
    * @return A trigger that is true if at target within tolerance
    */
-  @AutoLogOutput(key = "Hood/AtSetpoint")
+  @AutoLogOutput(key = "Shooter/Hood/AtSetpoint")
   public Trigger atSetpoint() {
     return atSetpoint;
   }

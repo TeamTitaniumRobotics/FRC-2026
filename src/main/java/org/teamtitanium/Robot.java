@@ -61,6 +61,10 @@ import org.teamtitanium.subsystems.leds.LEDsIO;
 import org.teamtitanium.subsystems.leds.LEDsIOReal;
 import org.teamtitanium.subsystems.shooter.Shooter;
 import org.teamtitanium.subsystems.shooter.ShotCalculator;
+import org.teamtitanium.subsystems.shooter.backroller.BackRoller;
+import org.teamtitanium.subsystems.shooter.backroller.BackRollerIO;
+import org.teamtitanium.subsystems.shooter.backroller.BackRollerIOSim;
+import org.teamtitanium.subsystems.shooter.backroller.BackRollerIOTalonFX;
 import org.teamtitanium.subsystems.shooter.flywheel.Flywheel;
 import org.teamtitanium.subsystems.shooter.flywheel.FlywheelIO;
 import org.teamtitanium.subsystems.shooter.flywheel.FlywheelIOSim;
@@ -111,6 +115,7 @@ public class Robot extends LoggedRobot {
   private final Swerve swerve;
   private final Shooter shooter;
   private final Flywheel flywheel;
+  private final BackRoller backRoller;
   private final Hood hood;
   private final Turret turret;
   private final Feeder feeder;
@@ -269,6 +274,7 @@ public class Robot extends LoggedRobot {
                 new SwerveModuleIOTalonFX(TunerConstants.BackLeft),
                 new SwerveModuleIOTalonFX(TunerConstants.BackRight));
         flywheel = new Flywheel(new FlywheelIOTalonFX());
+        backRoller = new BackRoller(new BackRollerIOTalonFX());
         hood = new Hood(new HoodIOTalonFX());
         turret = new Turret(new TurretIOTalonFX());
         feeder = new Feeder(new GenericRollerIOTalonFX(Feeder.CONSTANTS));
@@ -294,6 +300,7 @@ public class Robot extends LoggedRobot {
                 new SwerveModuleIOSim(TunerConstants.BackLeft),
                 new SwerveModuleIOSim(TunerConstants.BackRight));
         flywheel = new Flywheel(new FlywheelIOSim());
+        backRoller = new BackRoller(new BackRollerIOSim());
         hood = new Hood(new HoodIOSim());
         turret = new Turret(new TurretIOSim());
         feeder =
@@ -333,6 +340,7 @@ public class Robot extends LoggedRobot {
                 new SwerveModuleIO() {},
                 new SwerveModuleIO() {});
         flywheel = new Flywheel(new FlywheelIO() {});
+        backRoller = new BackRoller(new BackRollerIO() {});
         hood = new Hood(new HoodIO() {});
         turret = new Turret(new TurretIO() {});
         feeder = new Feeder(new GenericRollerIO() {});
@@ -346,7 +354,7 @@ public class Robot extends LoggedRobot {
     }
 
     intake = new Intake(intakeRack, intakeRoller);
-    shooter = new Shooter(flywheel, hood, turret);
+    shooter = new Shooter(flywheel, backRoller, hood, turret);
     superstructure = new Superstructure(shooter, feeder, spindexer, intake, driver);
 
     PathPlannerLogging.setLogCurrentPoseCallback(

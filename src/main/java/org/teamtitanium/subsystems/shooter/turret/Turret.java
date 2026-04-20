@@ -31,28 +31,29 @@ public class Turret extends SubsystemBase {
 
   // Real-time tunable PID gains
   private final LoggedTunableNumber turretkP =
-      new LoggedTunableNumber("Turret/kP", TURRET_GAINS.kP());
+      new LoggedTunableNumber("Shooter/Turret/kP", TURRET_GAINS.kP());
   private final LoggedTunableNumber turretkI =
-      new LoggedTunableNumber("Turret/kI", TURRET_GAINS.kI());
+      new LoggedTunableNumber("Shooter/Turret/kI", TURRET_GAINS.kI());
   private final LoggedTunableNumber turretkD =
-      new LoggedTunableNumber("Turret/kD", TURRET_GAINS.kD());
+      new LoggedTunableNumber("Shooter/Turret/kD", TURRET_GAINS.kD());
   private final LoggedTunableNumber turretkS =
-      new LoggedTunableNumber("Turret/kS", TURRET_GAINS.kS());
+      new LoggedTunableNumber("Shooter/Turret/kS", TURRET_GAINS.kS());
   private final LoggedTunableNumber turretkV =
-      new LoggedTunableNumber("Turret/kV", TURRET_GAINS.kV());
+      new LoggedTunableNumber("Shooter/Turret/kV", TURRET_GAINS.kV());
   private final LoggedTunableNumber turretkA =
-      new LoggedTunableNumber("Turret/kA", TURRET_GAINS.kA());
+      new LoggedTunableNumber("Shooter/Turret/kA", TURRET_GAINS.kA());
 
   // Real-time tunable constraints
   private final LoggedTunableNumber turretMaxVelocity =
-      new LoggedTunableNumber("Turret/MaxVelocity", TURRET_CONSTRAINTS.maxVelocity());
+      new LoggedTunableNumber("Shooter/Turret/MaxVelocity", TURRET_CONSTRAINTS.maxVelocity());
   private final LoggedTunableNumber turretMaxAcceleration =
-      new LoggedTunableNumber("Turret/MaxAcceleration", TURRET_CONSTRAINTS.maxAcceleration());
+      new LoggedTunableNumber(
+          "Shooter/Turret/MaxAcceleration", TURRET_CONSTRAINTS.maxAcceleration());
 
   public final LoggedTunableNumber turretConfigNumber1 =
-      new LoggedTunableNumber("Turret/ConfigNumber1", 0.0);
+      new LoggedTunableNumber("Shooter/Turret/ConfigNumber1", 0.0);
   public final LoggedTunableNumber turretConfigNumber2 =
-      new LoggedTunableNumber("Turret/ConfigNumber2", 0.0);
+      new LoggedTunableNumber("Shooter/Turret/ConfigNumber2", 0.0);
 
   private final TurretIO io;
   private final TurretIOInputsAutoLogged inputs = new TurretIOInputsAutoLogged();
@@ -60,12 +61,12 @@ public class Turret extends SubsystemBase {
   private final EasyCRT easyCRT;
   private final EasyCRTConfig crtConfig;
 
-  @AutoLogOutput(key = "Turret/IsZeroed")
+  @AutoLogOutput(key = "Shooter/Turret/IsZeroed")
   private boolean isZeroed = false;
 
   private final Alert crtErrorAlert = new Alert("Turret CRT Error", Alert.AlertType.kWarning);
 
-  @AutoLogOutput(key = "Turret/TargetPositionRots")
+  @AutoLogOutput(key = "Shooter/Turret/TargetPositionRots")
   private double targetPositionRots = 0.0;
 
   private int dashboardLogCounter = 0;
@@ -102,7 +103,7 @@ public class Turret extends SubsystemBase {
   public void periodic() {
     // Process turret inputs and ouputs
     io.updateInputs(inputs);
-    Logger.processInputs("Turret", inputs);
+    Logger.processInputs("Shooter/Turret", inputs);
 
     // Check if PID or FF gains have changed
     if (turretkP.hasChanged(hashCode())
@@ -141,7 +142,7 @@ public class Turret extends SubsystemBase {
     }
 
     // Log the turret loop time
-    LoggedTracer.record("Turret");
+    LoggedTracer.record("Shooter/Turret");
   }
 
   public Angle getTargetAngle(Angle targetAngle, Angle currentAngle) {
@@ -175,8 +176,8 @@ public class Turret extends SubsystemBase {
       bestTarget = distToMin < distToMax ? minRad : maxRad;
     }
 
-    Logger.recordOutput("Turret/DeltaAngle", bestTarget - currentRad);
-    Logger.recordOutput("Turret/OptimalAngle", bestTarget);
+    // Logger.recordOutput("Shooter/Turret/DeltaAngle", bestTarget - currentRad);
+    // Logger.recordOutput("Shooter/Turret/OptimalAngle", bestTarget);
 
     return Radians.of(bestTarget);
   }
@@ -244,7 +245,7 @@ public class Turret extends SubsystemBase {
    *
    * @return A trigger that is true if at target within tolerance
    */
-  @AutoLogOutput(key = "Turret/AtSetpoint")
+  @AutoLogOutput(key = "Shooter/Turret/AtSetpoint")
   public Trigger atSetpoint() {
     return atSetpoint;
   }

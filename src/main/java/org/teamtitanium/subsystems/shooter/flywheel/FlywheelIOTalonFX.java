@@ -21,7 +21,6 @@ import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.Notifier;
 import java.util.List;
-import org.littletonrobotics.junction.Logger;
 import org.teamtitanium.utils.Constants;
 import org.teamtitanium.utils.Constants.Constraints;
 import org.teamtitanium.utils.Constants.Gains;
@@ -216,9 +215,6 @@ public class FlywheelIOTalonFX implements FlywheelIO {
     inputs.torqueCurrentAmps =
         torqueCurrent.stream().mapToDouble(s -> s.getValueAsDouble()).toArray();
     inputs.tempCelsius = temperature.stream().mapToDouble(s -> s.getValueAsDouble()).toArray();
-
-    Logger.recordOutput("Flywheel/MotorSlot", leftMotor.getClosedLoopSlot(true).getValue());
-    Logger.recordOutput("Flywheel/ActiveSlot", activeSlot);
   }
 
   @Override

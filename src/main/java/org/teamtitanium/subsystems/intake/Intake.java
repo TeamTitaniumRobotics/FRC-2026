@@ -52,11 +52,12 @@ public class Intake {
     // roller.setDefaultCommand(roller.setVelocity(() -> state.getIntakeVelocity().get()));
     // roller.setDefaultCommand(
     //     roller.setVelocity(() -> RotationsPerSecond.of(roller.configurableNumber.get())));
-    roller.setDefaultCommand(
-        Commands.either(
-            roller.setVelocity(() -> RollerConstants.INTAKE_VELOCITY),
-            roller.setVelocity(() -> state.getIntakeVelocity().get()),
-            () -> state == IntakeState.STOW && rack.atSetpoint().negate().getAsBoolean()));
+    roller.setDefaultCommand(roller.setVoltage(() -> roller.configurableNumber.get() * 12.0));
+    // roller.setDefaultCommand(
+    //     Commands.either(
+    //         roller.setVelocity(() -> RollerConstants.INTAKE_VELOCITY),
+    //         roller.setVelocity(() -> state.getIntakeVelocity().get()),
+    //         () -> state == IntakeState.STOW && rack.atSetpoint().negate().getAsBoolean()));
   }
 
   public Command zeroIntake() {

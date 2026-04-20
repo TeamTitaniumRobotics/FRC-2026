@@ -35,7 +35,7 @@ public class IntakeRoller extends SubsystemBase {
       new LoggedTunableNumber(
           "Intake/Roller/Max Acceleration", ROLLER_CONSTRAINTS.maxAcceleration());
 
-  private final LoggedTunableNumber configurableNumber =
+  public final LoggedTunableNumber configurableNumber =
       new LoggedTunableNumber("Intake/Roller/ConfigurableNumber", 0.0);
 
   private final IntakeRollerIO io;

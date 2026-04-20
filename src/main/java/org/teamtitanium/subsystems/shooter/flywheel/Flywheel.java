@@ -22,45 +22,46 @@ import org.teamtitanium.utils.LoggedTunableNumber;
 public class Flywheel extends SubsystemBase {
   // Real-time tunable PID gains
   private final LoggedTunableNumber flywheelSlot0kP =
-      new LoggedTunableNumber("Flywheel/Slot0/kP", FLYWHEEL_GAINS.kP());
+      new LoggedTunableNumber("Shooter/Flywheel/Slot0/kP", FLYWHEEL_GAINS.kP());
   private final LoggedTunableNumber flywheelSlot0kI =
-      new LoggedTunableNumber("Flywheel/Slot0/kI", FLYWHEEL_GAINS.kI());
+      new LoggedTunableNumber("Shooter/Flywheel/Slot0/kI", FLYWHEEL_GAINS.kI());
   private final LoggedTunableNumber flywheelSlot0kD =
-      new LoggedTunableNumber("Flywheel/Slot0/kD", FLYWHEEL_GAINS.kD());
+      new LoggedTunableNumber("Shooter/Flywheel/Slot0/kD", FLYWHEEL_GAINS.kD());
   private final LoggedTunableNumber flywheelSlot0kS =
-      new LoggedTunableNumber("Flywheel/Slot0/kS", FLYWHEEL_GAINS.kS());
+      new LoggedTunableNumber("Shooter/Flywheel/Slot0/kS", FLYWHEEL_GAINS.kS());
   private final LoggedTunableNumber flywheelSlot0kV =
-      new LoggedTunableNumber("Flywheel/Slot0/kV", FLYWHEEL_GAINS.kV());
+      new LoggedTunableNumber("Shooter/Flywheel/Slot0/kV", FLYWHEEL_GAINS.kV());
   private final LoggedTunableNumber flywheelSlot0kA =
-      new LoggedTunableNumber("Flywheel/Slot0/kA", FLYWHEEL_GAINS.kA());
+      new LoggedTunableNumber("Shooter/Flywheel/Slot0/kA", FLYWHEEL_GAINS.kA());
 
   private final LoggedTunableNumber flywheelSlot1kP =
-      new LoggedTunableNumber("Flywheel/Slot1/kP", FLYWHEEL_RECOVERY_GAINS.kP());
+      new LoggedTunableNumber("Shooter/Flywheel/Slot1/kP", FLYWHEEL_RECOVERY_GAINS.kP());
   private final LoggedTunableNumber flywheelSlot1kI =
-      new LoggedTunableNumber("Flywheel/Slot1/kI", FLYWHEEL_RECOVERY_GAINS.kI());
+      new LoggedTunableNumber("Shooter/Flywheel/Slot1/kI", FLYWHEEL_RECOVERY_GAINS.kI());
   private final LoggedTunableNumber flywheelSlot1kD =
-      new LoggedTunableNumber("Flywheel/Slot1/kD", FLYWHEEL_RECOVERY_GAINS.kD());
+      new LoggedTunableNumber("Shooter/Flywheel/Slot1/kD", FLYWHEEL_RECOVERY_GAINS.kD());
   private final LoggedTunableNumber flywheelSlot1kS =
-      new LoggedTunableNumber("Flywheel/Slot1/kS", FLYWHEEL_RECOVERY_GAINS.kS());
+      new LoggedTunableNumber("Shooter/Flywheel/Slot1/kS", FLYWHEEL_RECOVERY_GAINS.kS());
   private final LoggedTunableNumber flywheelSlot1kV =
-      new LoggedTunableNumber("Flywheel/Slot1/kV", FLYWHEEL_RECOVERY_GAINS.kV());
+      new LoggedTunableNumber("Shooter/Flywheel/Slot1/kV", FLYWHEEL_RECOVERY_GAINS.kV());
   private final LoggedTunableNumber flywheelSlot1kA =
-      new LoggedTunableNumber("Flywheel/Slot1/kA", FLYWHEEL_RECOVERY_GAINS.kA());
+      new LoggedTunableNumber("Shooter/Flywheel/Slot1/kA", FLYWHEEL_RECOVERY_GAINS.kA());
 
   private final LoggedTunableNumber flywheelMaxVelocty =
-      new LoggedTunableNumber("Flywheel/MaxVelocity", FLYWHEEL_CONSTRAINTS.maxVelocity());
+      new LoggedTunableNumber("Shooter/Flywheel/MaxVelocity", FLYWHEEL_CONSTRAINTS.maxVelocity());
   private final LoggedTunableNumber flywheelMaxAcceleration =
-      new LoggedTunableNumber("Flywheel/MaxAcceleration", FLYWHEEL_CONSTRAINTS.maxAcceleration());
+      new LoggedTunableNumber(
+          "Shooter/Flywheel/MaxAcceleration", FLYWHEEL_CONSTRAINTS.maxAcceleration());
 
   public final LoggedTunableNumber flywheelConfigNumber1 =
-      new LoggedTunableNumber("Flywheel/ConfigNumber1", 0.0);
+      new LoggedTunableNumber("Shooter/Flywheel/ConfigNumber1", 0.0);
   public final LoggedTunableNumber flywheelConfigNumber2 =
-      new LoggedTunableNumber("Flywheel/ConfigNumber2", 0.0);
+      new LoggedTunableNumber("Shooter/Flywheel/ConfigNumber2", 0.0);
 
   private final FlywheelIO io;
   private final FlywheelIOInputsAutoLogged inputs = new FlywheelIOInputsAutoLogged();
 
-  @AutoLogOutput(key = "Flywheel/TargetVelocityRps")
+  @AutoLogOutput(key = "Shooter/Flywheel/TargetVelocityRps")
   private double targetVelocityRps = 0.0;
 
   private final Trigger atSetpoint =
@@ -87,7 +88,7 @@ public class Flywheel extends SubsystemBase {
   @Override
   public void periodic() {
     io.updateInputs(inputs);
-    Logger.processInputs("Flywheel", inputs);
+    Logger.processInputs("Shooter/Flywheel", inputs);
 
     if (flywheelSlot0kP.hasChanged(hashCode())
         || flywheelSlot0kI.hasChanged(hashCode())
@@ -130,7 +131,7 @@ public class Flywheel extends SubsystemBase {
       io.setConstraints(new Constraints(flywheelMaxVelocty.get(), flywheelMaxAcceleration.get()));
     }
 
-    LoggedTracer.record("Flywheel");
+    LoggedTracer.record("Shooter/Flywheel");
   }
 
   /**
@@ -199,7 +200,7 @@ public class Flywheel extends SubsystemBase {
    *
    * @return A trigger that is true if at target within tolerance
    */
-  @AutoLogOutput(key = "Flywheel/AtSetpoint")
+  @AutoLogOutput(key = "Shooter/Flywheel/AtSetpoint")
   public Trigger atSetpoint() {
     return atSetpoint;
   }

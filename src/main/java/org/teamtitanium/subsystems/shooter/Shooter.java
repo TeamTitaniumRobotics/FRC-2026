@@ -14,6 +14,8 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.littletonrobotics.junction.AutoLogOutput;
+import org.teamtitanium.subsystems.shooter.backroller.BackRoller;
+import org.teamtitanium.subsystems.shooter.backroller.BackRollerConstants;
 import org.teamtitanium.subsystems.shooter.flywheel.Flywheel;
 import org.teamtitanium.subsystems.shooter.flywheel.FlywheelConstants;
 import org.teamtitanium.subsystems.shooter.hood.Hood;
@@ -41,9 +43,14 @@ public class Shooter {
     @Getter private final Supplier<AngularVelocity> flywheelVelocity;
     @Getter private final Supplier<Angle> hoodAngle;
     @Getter private final Supplier<Angle> turretAngle;
+
+    public Supplier<AngularVelocity> getBackRollerVelocity() {
+      return () -> getFlywheelVelocity().get().div(BackRollerConstants.WHEEL_RATIO);
+    }
   }
 
   private final Flywheel flywheel;
+  private final BackRoller backRoller;
   private final Hood hood;
   private final Turret turret;
 
@@ -64,8 +71,9 @@ public class Shooter {
    * @param hood
    * @param turret
    */
-  public Shooter(Flywheel flywheel, Hood hood, Turret turret) {
+  public Shooter(Flywheel flywheel, BackRoller backRoller, Hood hood, Turret turret) {
     this.flywheel = flywheel;
+    this.backRoller = backRoller;
     this.hood = hood;
     this.turret = turret;
 
@@ -76,6 +84,13 @@ public class Shooter {
             RobotModeTriggers.autonomous()));
     // flywheel.setDefaultCommand(
     //     flywheel.setVelocity(() -> RPM.of(flywheel.flywheelConfigNumber1.get())));
+    backRoller.setDefaultCommand(
+        Commands.either(
+            backRoller.setVelocity(() -> ShooterState.AIM.getBackRollerVelocity().get()),
+            backRoller.setVelocity(() -> state.getBackRollerVelocity().get()),
+            RobotModeTriggers.autonomous()));
+    // backRoller.setDefaultCommand(backRoller.setVoltage(() ->
+    // BackRoller.configurableNumber.get()));
     // hood.setDefaultCommand(hood.setPosition(() -> Degrees.of(hood.hoodConfigNumber1.get())));
     hood.setDefaultCommand(hood.setPosition(() -> state.getHoodAngle().get()));
     // turret.setDefaultCommand(
