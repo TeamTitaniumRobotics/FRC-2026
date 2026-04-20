@@ -34,10 +34,10 @@ public class BackRoller extends SubsystemBase {
 
   private static final LoggedTunableNumber rollerMaxVelocity =
       new LoggedTunableNumber(
-          "Shooter/BackRoller/Max Velocity", BACK_ROLLER_CONSTRAINTS.maxVelocity());
+          "Shooter/BackRoller/MaxVelocity", BACK_ROLLER_CONSTRAINTS.maxVelocity());
   private static final LoggedTunableNumber rollerMaxAcceleration =
       new LoggedTunableNumber(
-          "Shooter/BackRoller/Max Acceleration", BACK_ROLLER_CONSTRAINTS.maxAcceleration());
+          "Shooter/BackRoller/MaxAcceleration", BACK_ROLLER_CONSTRAINTS.maxAcceleration());
 
   public static final LoggedTunableNumber configurableNumber =
       new LoggedTunableNumber("Shooter/BackRoller/ConfigurableNumber", 0.0);
