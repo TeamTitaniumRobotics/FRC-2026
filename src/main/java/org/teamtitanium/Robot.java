@@ -48,17 +48,23 @@ import org.teamtitanium.subsystems.genericroller.GenericRollerIO;
 import org.teamtitanium.subsystems.genericroller.GenericRollerIOSim;
 import org.teamtitanium.subsystems.genericroller.GenericRollerIOTalonFX;
 import org.teamtitanium.subsystems.intake.Intake;
-import org.teamtitanium.subsystems.intake.IntakeConstants;
 import org.teamtitanium.subsystems.intake.rack.IntakeRack;
 import org.teamtitanium.subsystems.intake.rack.IntakeRackIO;
 import org.teamtitanium.subsystems.intake.rack.IntakeRackIOSim;
 import org.teamtitanium.subsystems.intake.rack.IntakeRackIOTalonFX;
 import org.teamtitanium.subsystems.intake.roller.IntakeRoller;
+import org.teamtitanium.subsystems.intake.roller.IntakeRollerIO;
+import org.teamtitanium.subsystems.intake.roller.IntakeRollerIOSim;
+import org.teamtitanium.subsystems.intake.roller.IntakeRollerIOTalonFX;
 import org.teamtitanium.subsystems.leds.LEDs;
 import org.teamtitanium.subsystems.leds.LEDsIO;
 import org.teamtitanium.subsystems.leds.LEDsIOReal;
 import org.teamtitanium.subsystems.shooter.Shooter;
 import org.teamtitanium.subsystems.shooter.ShotCalculator;
+import org.teamtitanium.subsystems.shooter.backroller.BackRoller;
+import org.teamtitanium.subsystems.shooter.backroller.BackRollerIO;
+import org.teamtitanium.subsystems.shooter.backroller.BackRollerIOSim;
+import org.teamtitanium.subsystems.shooter.backroller.BackRollerIOTalonFX;
 import org.teamtitanium.subsystems.shooter.flywheel.Flywheel;
 import org.teamtitanium.subsystems.shooter.flywheel.FlywheelIO;
 import org.teamtitanium.subsystems.shooter.flywheel.FlywheelIOSim;
@@ -109,6 +115,7 @@ public class Robot extends LoggedRobot {
   private final Swerve swerve;
   private final Shooter shooter;
   private final Flywheel flywheel;
+  private final BackRoller backRoller;
   private final Hood hood;
   private final Turret turret;
   private final Feeder feeder;
@@ -267,13 +274,13 @@ public class Robot extends LoggedRobot {
                 new SwerveModuleIOTalonFX(TunerConstants.BackLeft),
                 new SwerveModuleIOTalonFX(TunerConstants.BackRight));
         flywheel = new Flywheel(new FlywheelIOTalonFX());
+        backRoller = new BackRoller(new BackRollerIOTalonFX());
         hood = new Hood(new HoodIOTalonFX());
         turret = new Turret(new TurretIOTalonFX());
         feeder = new Feeder(new GenericRollerIOTalonFX(Feeder.CONSTANTS));
         spindexer = new Spindexer(new GenericRollerIOTalonFX(Spindexer.CONSTANTS));
         intakeRack = new IntakeRack(new IntakeRackIOTalonFX());
-        intakeRoller =
-            new IntakeRoller(new GenericRollerIOTalonFX(IntakeConstants.RollerConstants.CONSTANTS));
+        intakeRoller = new IntakeRoller(new IntakeRollerIOTalonFX());
 
         leds = new LEDs(new LEDsIOReal());
         vision =
@@ -293,6 +300,7 @@ public class Robot extends LoggedRobot {
                 new SwerveModuleIOSim(TunerConstants.BackLeft),
                 new SwerveModuleIOSim(TunerConstants.BackRight));
         flywheel = new Flywheel(new FlywheelIOSim());
+        backRoller = new BackRoller(new BackRollerIOSim());
         hood = new Hood(new HoodIOSim());
         turret = new Turret(new TurretIOSim());
         feeder =
@@ -306,12 +314,7 @@ public class Robot extends LoggedRobot {
                     Spindexer.SPINDEXER_MOTOR_GEARBOX,
                     Spindexer.SPINDEXER_MOI));
         intakeRack = new IntakeRack(new IntakeRackIOSim());
-        intakeRoller =
-            new IntakeRoller(
-                new GenericRollerIOSim(
-                    IntakeConstants.RollerConstants.CONSTANTS,
-                    IntakeConstants.RollerConstants.ROLLER_MOTOR_GEARBOX,
-                    IntakeConstants.RollerConstants.ROLLER_MOI));
+        intakeRoller = new IntakeRoller(new IntakeRollerIOSim());
         leds = new LEDs(new LEDsIO() {});
         vision =
             new Vision(
@@ -337,19 +340,21 @@ public class Robot extends LoggedRobot {
                 new SwerveModuleIO() {},
                 new SwerveModuleIO() {});
         flywheel = new Flywheel(new FlywheelIO() {});
+        backRoller = new BackRoller(new BackRollerIO() {});
         hood = new Hood(new HoodIO() {});
         turret = new Turret(new TurretIO() {});
         feeder = new Feeder(new GenericRollerIO() {});
         spindexer = new Spindexer(new GenericRollerIO() {});
         intakeRack = new IntakeRack(new IntakeRackIO() {});
-        intakeRoller = new IntakeRoller(new GenericRollerIO() {});
+        intakeRoller = new IntakeRoller(new IntakeRollerIO() {});
+
         leds = new LEDs(new LEDsIO() {});
         vision = new Vision(new VisionIO() {}, new VisionIO() {}, new VisionIO() {});
       }
     }
 
     intake = new Intake(intakeRack, intakeRoller);
-    shooter = new Shooter(flywheel, hood, turret);
+    shooter = new Shooter(flywheel, backRoller, hood, turret);
     superstructure = new Superstructure(shooter, feeder, spindexer, intake, driver);
 
     PathPlannerLogging.setLogCurrentPoseCallback(

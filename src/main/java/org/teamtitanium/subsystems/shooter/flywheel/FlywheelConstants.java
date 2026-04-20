@@ -20,7 +20,7 @@ public class FlywheelConstants {
   public static final AngularVelocity EJECT_VELOCITY = RPM.of(1000);
 
   // Physical Constants
-  public static final double FLYWHEEL_GEAR_RATIO = (18.0 / 24.0); // 1:1.33 reduction
+  public static final double FLYWHEEL_GEAR_RATIO = (16.0 / 24.0); // 1:1.5 reduction
   public static final double FLYWHEEL_MOMENT_OF_INERTIA = 0.008; // kg*m^2
 
   // Tolerance
