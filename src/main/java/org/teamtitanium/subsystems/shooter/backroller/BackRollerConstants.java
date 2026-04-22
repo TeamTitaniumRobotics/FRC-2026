@@ -12,7 +12,7 @@ import org.teamtitanium.utils.Constants.Gains;
 
 public class BackRollerConstants {
   // CAN IDs
-  public static final int BACK_ROLLER_MOTOR_ID = 20;
+  public static final int BACK_ROLLER_MOTOR_ID = 21;
   public static final CANBus BACK_ROLLER_CANBUS = Constants.RIO_CAN_BUS;
 
   public static final AngularVelocity MAX_VELOCITY = RPM.of(0.0);
@@ -31,13 +31,12 @@ public class BackRollerConstants {
   public static final double VELOCITY_GAIN_TOLERANCE_RPS = 2.0;
 
   // PID Gains (Velocity control)
-  public static final Gains BACK_ROLLER_GAINS =
-      new Gains(0.3, 0.0, 0.0, 0.22791, 0.093687, 0.0, 0.012626);
+  public static final Gains BACK_ROLLER_GAINS = new Gains(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
   public static final Constraints BACK_ROLLER_CONSTRAINTS = new Constraints(100.0, 175.0);
 
   // Current Limits
-  public static final double STATOR_CURRENT_LIMIT = 60.0;
-  public static final double SUPPLY_CURRENT_LIMIT = 40.0;
+  public static final double STATOR_CURRENT_LIMIT = 80.0;
+  public static final double SUPPLY_CURRENT_LIMIT = 60.0;
 
   // Simulation
   public static final DCMotor BACK_ROLLER_GEARBOX = DCMotor.getKrakenX44(1);

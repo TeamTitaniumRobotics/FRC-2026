@@ -73,7 +73,7 @@ public class Spindexer extends GenericRoller {
 
   public Spindexer(GenericRollerIO io) {
     super("Spindexer", io, CONSTANTS);
-    setDefaultCommand(setVoltage(() -> state.getSpindexerVoltage().get()));
+    // setDefaultCommand(setVoltage(() -> state.getSpindexerVoltage().get()));
   }
 
   public Trigger hasFuel =

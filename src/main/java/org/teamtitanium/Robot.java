@@ -4,13 +4,14 @@
 
 package org.teamtitanium;
 
+import static edu.wpi.first.units.Units.Degrees;
+
 import choreo.auto.AutoChooser;
 import com.ctre.phoenix6.SignalLogger;
 import com.pathplanner.lib.commands.FollowPathCommand;
 import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.hal.AllianceStationID;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -520,57 +521,79 @@ public class Robot extends LoggedRobot {
   }
 
   private void configureButtonBindings() {
-    swerve.setDefaultCommand(
-        DriveCommands.joystickDrive(
-            swerve,
-            () -> -driver.getLeftY(),
-            () -> -driver.getLeftX(),
-            () -> -driver.getRightX(),
-            () -> false));
+    // swerve.setDefaultCommand(
+    //     DriveCommands.joystickDrive(
+    //         swerve,
+    //         () -> -driver.getLeftY(),
+    //         () -> -driver.getLeftX(),
+    //         () -> -driver.getRightX(),
+    //         () -> false));
 
-    driver
-        .start()
-        .onTrue(
-            Commands.runOnce(
-                    () ->
-                        RobotState.getInstance()
-                            .setEstimatedPose(
-                                new Pose2d(
-                                    RobotState.getInstance().getEstimatedPose().getTranslation(),
-                                    Rotation2d.kZero)))
-                .ignoringDisable(true));
+    // driver
+    //     .start()
+    //     .onTrue(
+    //         Commands.runOnce(
+    //                 () ->
+    //                     RobotState.getInstance()
+    //                         .setEstimatedPose(
+    //                             new Pose2d(
+    //                                 RobotState.getInstance().getEstimatedPose().getTranslation(),
+    //                                 Rotation2d.kZero)))
+    //             .ignoringDisable(true));
 
-    driver
-        .rightBumper()
-        .whileTrue(
-            DriveCommands.trenchDrive(
-                swerve,
-                () -> -driver.getLeftY(),
-                () -> -driver.getLeftX(),
-                () -> -driver.getRightX()));
+    // driver
+    //     .rightBumper()
+    //     .whileTrue(
+    //         DriveCommands.trenchDrive(
+    //             swerve,
+    //             () -> -driver.getLeftY(),
+    //             () -> -driver.getLeftX(),
+    //             () -> -driver.getRightX()));
 
     superstructure
         .getIntakeDeployed()
         .onTrue(Commands.runOnce(() -> driver.setRumble(RumbleType.kBothRumble, 0.01)))
         .onFalse(Commands.runOnce(() -> driver.setRumble(RumbleType.kBothRumble, 0.0)));
 
-    driver.back().whileTrue(hood.zeroHood()); // TODO: Disable roller while zeroing rack
+    // driver.back().whileTrue(hood.zeroHood()); // TODO: Disable roller while zeroing rack
     // driver.back().whileTrue(Commands.parallel(hood.zeroHood(), intakeRack.zeroIntake()));
-    driver.start().whileTrue(intake.zeroIntake());
+    // driver.start().whileTrue(intake.zeroIntake());
 
-    driver.leftStick().whileTrue(Commands.runOnce(() -> swerve.stopWithX(), swerve));
+    // driver.leftStick().whileTrue(Commands.runOnce(() -> swerve.stopWithX(), swerve));
 
     driver
-        .povRight()
-        .whileTrue(spindexer.setVoltage(() -> -6.0).alongWith(feeder.setVoltage(() -> -6.0)));
+        .leftTrigger()
+        .whileTrue(intakeRoller.setVoltage(() -> intakeRoller.configurableNumber.get()))
+        .whileFalse(intakeRoller.stop());
 
-    copilot
-        .rightBumper()
-        .onTrue(Commands.runOnce(() -> shotCalculator.incrementFlywheelOffset(50.0)));
-    copilot
+    driver
         .rightTrigger()
-        .onTrue(Commands.runOnce(() -> shotCalculator.incrementFlywheelOffset(-50.0)));
-    copilot.a().onTrue(Commands.runOnce(() -> shotCalculator.setFlywheelOffset(0.0)));
+        .whileTrue(flywheel.setVoltage(() -> flywheel.flywheelConfigNumber1.get()))
+        .whileFalse(flywheel.stop());
+
+    driver
+        .rightBumper()
+        .whileTrue(hood.setPosition(() -> Degrees.of(hood.hoodConfigNumber1.get())))
+        .whileFalse(hood.stop());
+
+    driver
+        .leftBumper()
+        .whileTrue(hood.setPosition(() -> Degrees.of(hood.hoodConfigNumber2.get())))
+        .whileFalse(hood.stop());
+
+    driver.start().onTrue(Commands.runOnce(() -> hood.zeroMotor()));
+
+    // driver
+    //     .povRight()
+    //     .whileTrue(spindexer.setVoltage(() -> -6.0).alongWith(feeder.setVoltage(() -> -6.0)));
+
+    // copilot
+    //     .rightBumper()
+    //     .onTrue(Commands.runOnce(() -> shotCalculator.incrementFlywheelOffset(50.0)));
+    // copilot
+    //     .rightTrigger()
+    //     .onTrue(Commands.runOnce(() -> shotCalculator.incrementFlywheelOffset(-50.0)));
+    // copilot.a().onTrue(Commands.runOnce(() -> shotCalculator.setFlywheelOffset(0.0)));
 
     RobotModeTriggers.teleop()
         .or(RobotModeTriggers.autonomous())

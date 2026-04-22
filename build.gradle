@@ -40,8 +40,8 @@ deploy {
                     jvmArgs.add("-XX:+UseSerialGC")
                     jvmArgs.add("-XX:MaxGCPauseMillis=50")
                     // Enable class loading logs for debugging class loading issues.
-                    jvmArgs.add("-verbose:class")
-                    jvmArgs.add("-Xlog:class+load=info")
+                    // jvmArgs.add("-verbose:class")
+                    // jvmArgs.add("-Xlog:class+load=info")
                 }
 
                 // Static files artifact

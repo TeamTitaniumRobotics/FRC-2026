@@ -93,6 +93,6 @@ public class Feeder extends GenericRoller {
     //             }),
     //         Commands.waitSeconds(0.5),
     //         runOnce(() -> setState(lastState))));
-    setDefaultCommand(setVoltage(() -> state.getFeederVoltage().get()));
+    // setDefaultCommand(setVoltage(() -> state.getFeederVoltage().get()));
   }
 }

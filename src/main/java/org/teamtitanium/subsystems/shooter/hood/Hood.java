@@ -172,6 +172,14 @@ public class Hood extends SubsystemBase {
             }));
   }
 
+  public void zeroMotor() {
+    io.setMotorPosition(0.0);
+  }
+
+  public Command stop() {
+    return Commands.runOnce(() -> io.stopMotor());
+  }
+
   /**
    * Gets the current position of the hood.
    *
