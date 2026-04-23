@@ -40,15 +40,15 @@ public class Spindexer extends GenericRoller {
   public static final boolean SPINDEXER_INVERTED = true;
 
   public static final AngularVelocity IDLE_VELOCITY = RotationsPerSecond.of(0.0);
-  public static final AngularVelocity AGITATE_VELOCITY = RotationsPerSecond.of(12.0);
-  public static final AngularVelocity FEED_VELOCITY = RotationsPerSecond.of(24.0);
+  public static final AngularVelocity AGITATE_VELOCITY = RotationsPerSecond.of(4.75);
+  public static final AngularVelocity FEED_VELOCITY = RotationsPerSecond.of(4.75);
 
   public static final double STATOR_CURRENT_LIMIT = 60.0;
   public static final double SUPPLY_CURRENT_LIMIT = 40.0;
 
-  public static final double SPINDEXER_GEAR_RATIO = (38.0 / 12.0) * (38.0 / 20.0) * (36.0 / 18.0);
+  public static final double SPINDEXER_GEAR_RATIO = (38.0 / 12.0) * (46.0 / 20.0) * (36.0 / 18.0);
 
-  public static final Gains SPINDEXER_GAINS = new Gains(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+  public static final Gains SPINDEXER_GAINS = new Gains(3.0, 0.0, 0.0, 0.2575, 1.675, 0.0, 0.0);
   public static final Constraints SPINDEXER_CONSTRAINTS = new Constraints(24.0, 36.0);
 
   public static final DCMotor SPINDEXER_MOTOR_GEARBOX = DCMotor.getKrakenX44(1);

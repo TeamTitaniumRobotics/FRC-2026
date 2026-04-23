@@ -35,7 +35,7 @@ public class Feeder extends GenericRoller {
       new LoggedTunableNumber("Feeder/Roller/ConfigShotNum", 0.0);
 
   public static final AngularVelocity IDLE_VELOCITY = RotationsPerSecond.of(0.0);
-  public static final AngularVelocity FEED_VELOCITY = RotationsPerSecond.of(24.0);
+  public static final AngularVelocity FEED_VELOCITY = RotationsPerSecond.of(88.0);
 
   public static final int FEEDER_MOTOR_ID = 40;
   public static final CANBus FEEDER_CAN_BUS =
@@ -48,8 +48,8 @@ public class Feeder extends GenericRoller {
 
   public static final double FEEDER_GEAR_RATIO = 0.5;
 
-  public static final Gains FEEDER_GAINS = new Gains(0.0, 0.0, 0.0, 0.19, 0.0, 0.0, 0.0);
-  public static final Constraints FEEDER_CONSTRAINTS = new Constraints(24.0, 36.0);
+  public static final Gains FEEDER_GAINS = new Gains(0.15, 0.0, 0.0, 0.325, 0.065, 0.0, 0.0);
+  public static final Constraints FEEDER_CONSTRAINTS = new Constraints(100.0, 400.0);
 
   public static final DCMotor FEEDER_MOTOR_GEARBOX = DCMotor.getKrakenX44(1);
   public static final double FEEDER_MOI = 0.08;

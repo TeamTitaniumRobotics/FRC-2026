@@ -4,7 +4,7 @@
 
 package org.teamtitanium;
 
-import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import choreo.auto.AutoChooser;
 import com.ctre.phoenix6.SignalLogger;
@@ -570,23 +570,21 @@ public class Robot extends LoggedRobot {
 
     driver
         .leftTrigger()
-        .onTrue(intakeRack.setVoltage(() -> (IntakeRack.configRackNumber1.getAsDouble() * -1.0)))
-        .onFalse(intakeRack.stop());
+        .onTrue(spindexer.setVoltage(() -> Spindexer.configNumber.get()))
+        .onFalse(spindexer.stop());
     driver
         .rightTrigger()
-        .onTrue(intakeRack.setVoltage(() -> IntakeRack.configRackNumber1.get()))
-        .onFalse(intakeRack.stop());
+        .onTrue(spindexer.setVelocity(() -> RotationsPerSecond.of(Spindexer.configNumber.get())))
+        .onFalse(spindexer.setVelocity(RotationsPerSecond.of(0.0)));
 
     driver
         .leftBumper()
-        .onTrue(intakeRack.setExtension(() -> Inches.of(0.0)))
-        .onFalse(intakeRack.stop());
+        .onTrue(feeder.setVoltage(() -> Feeder.configNumber.get()))
+        .onFalse(feeder.stop());
     driver
         .rightBumper()
-        .onTrue(intakeRack.setExtension(() -> Inches.of(IntakeRack.configRackNumber2.get())))
-        .onFalse(intakeRack.stop());
-
-    driver.back().onTrue(intakeRack.zeroIntakeMotor());
+        .onTrue(feeder.setVelocity(() -> RotationsPerSecond.of(Feeder.configNumber.get())))
+        .onFalse(feeder.setVelocity(RotationsPerSecond.of(0.0)));
 
     // driver
     //     .pov(0)
