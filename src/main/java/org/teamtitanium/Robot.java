@@ -4,7 +4,6 @@
 
 package org.teamtitanium;
 
-import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.RPM;
 
 import choreo.auto.AutoChooser;
@@ -562,41 +561,50 @@ public class Robot extends LoggedRobot {
 
     // driver.leftStick().whileTrue(Commands.runOnce(() -> swerve.stopWithX(), swerve));
 
-    driver.leftTrigger().onTrue(intakeRoller.setVoltage(6.0)).onFalse(intakeRoller.stop());
+    // driver.leftTrigger().onTrue(intakeRoller.setVoltage(6.0)).onFalse(intakeRoller.stop());
 
+    // driver
+    //     .rightTrigger()
+    //     .onTrue(spindexer.setVoltage(0.7 * 12.0).alongWith(feeder.setVoltage(6.0)))
+    //     .onFalse(Commands.parallel(spindexer.stop(), feeder.stop()));
+
+    driver
+        .leftTrigger()
+        .onTrue(intakeRoller.setVoltage(() -> intakeRoller.configurableNumber.get()))
+        .onFalse(intakeRoller.stop());
     driver
         .rightTrigger()
-        .onTrue(spindexer.setVoltage(0.7 * 12.0).alongWith(feeder.setVoltage(6.0)))
-        .onFalse(Commands.parallel(spindexer.stop(), feeder.stop()));
+        .onTrue(intakeRoller.setVelocity(() -> RPM.of(intakeRoller.configurableNumber.get())))
+        .onFalse(intakeRoller.setVelocity(RPM.of(0.0)));
 
-    driver
-        .pov(0)
-        .onTrue(spindexer.setVoltage(-0.7 * 12.0).alongWith(feeder.setVoltage(-6.0)))
-        .onFalse(Commands.parallel(spindexer.stop(), feeder.stop()));
+    // driver
+    //     .pov(0)
+    //     .onTrue(spindexer.setVoltage(-0.7 * 12.0).alongWith(feeder.setVoltage(-6.0)))
+    //     .onFalse(Commands.parallel(spindexer.stop(), feeder.stop()));
 
-    driver
-        .pov(90)
-        .whileTrue(backRoller.setVelocity(() -> RPM.of(BackRoller.configurableNumber.get())))
-        .onFalse(backRoller.setVoltage(0.0));
+    // driver
+    //     .pov(90)
+    //     .whileTrue(backRoller.setVelocity(() -> RPM.of(BackRoller.configurableNumber.get())))
+    //     .onFalse(backRoller.setVoltage(0.0));
 
     // driver
     //     .pov(90)
     //     .whileTrue(backRoller.setVoltage(() -> BackRoller.configurableNumber.get()))
     //     .onFalse(backRoller.setVoltage(0.0));
 
-    driver
-        .pov(90)
-        .whileTrue(flywheel.setVelocity(() -> RPM.of(flywheel.flywheelConfigNumber2.get())))
-        .whileFalse(flywheel.stop());
+    // driver
+    //     .pov(90)
+    //     .whileTrue(flywheel.setVelocity(() -> RPM.of(flywheel.flywheelConfigNumber2.get())))
+    //     .whileFalse(flywheel.stop());
 
     // driver
     //     .rightTrigger()
     //     .whileTrue(flywheel.setVoltage(() -> flywheel.flywheelConfigNumber1.get()))
     //     .whileFalse(flywheel.stop());
 
-    driver
-        .rightBumper()
-        .toggleOnTrue(hood.setPosition(() -> Degrees.of(hood.hoodConfigNumber1.get())));
+    // driver
+    //     .rightBumper()
+    //     .toggleOnTrue(hood.setPosition(() -> Degrees.of(hood.hoodConfigNumber1.get())));
     // .whileFalse(hood.stop());
 
     // driver
