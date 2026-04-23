@@ -562,11 +562,16 @@ public class Robot extends LoggedRobot {
 
     // driver.leftStick().whileTrue(Commands.runOnce(() -> swerve.stopWithX(), swerve));
 
-    driver.leftTrigger().onTrue(intakeRoller.setVoltage(0.5)).onFalse(intakeRoller.stop());
+    driver.leftTrigger().onTrue(intakeRoller.setVoltage(6.0)).onFalse(intakeRoller.stop());
 
     driver
         .rightTrigger()
         .onTrue(spindexer.setVoltage(0.7 * 12.0).alongWith(feeder.setVoltage(6.0)))
+        .onFalse(Commands.parallel(spindexer.stop(), feeder.stop()));
+
+    driver
+        .pov(0)
+        .onTrue(spindexer.setVoltage(-0.7 * 12.0).alongWith(feeder.setVoltage(-6.0)))
         .onFalse(Commands.parallel(spindexer.stop(), feeder.stop()));
 
     driver
