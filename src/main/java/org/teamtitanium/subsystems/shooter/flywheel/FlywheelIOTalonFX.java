@@ -58,7 +58,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
     rightMotor = new TalonFX(FLYWHEEL_RIGHT_MOTOR_ID, Constants.RIO_CAN_BUS);
 
     // Configure motors
-    config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+    config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
     config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
 
     // Current limits
@@ -206,6 +206,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
       inputs.velocitySetpoint = velocitySetpoint.getValueAsDouble();
     }
 
+    inputs.leadAppliedVolts = appliedVolts.get(0).getValueAsDouble();
     inputs.positionRots = position.getValueAsDouble();
     inputs.appliedVolts = appliedVolts.stream().mapToDouble(s -> s.getValueAsDouble()).toArray();
     inputs.supplyCurrentAmps =

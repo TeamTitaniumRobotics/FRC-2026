@@ -31,7 +31,8 @@ public class BackRollerConstants {
   public static final double VELOCITY_GAIN_TOLERANCE_RPS = 2.0;
 
   // PID Gains (Velocity control)
-  public static final Gains BACK_ROLLER_GAINS = new Gains(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+  public static final Gains BACK_ROLLER_GAINS =
+      new Gains(0.3, 0.0, 0.0, 0.15548, 0.062793, 0.0, 0.0020985);
   public static final Constraints BACK_ROLLER_CONSTRAINTS = new Constraints(100.0, 175.0);
 
   // Current Limits

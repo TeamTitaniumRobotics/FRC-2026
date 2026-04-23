@@ -9,6 +9,7 @@ public interface BackRollerIO {
   public class BackRollerIOInputs {
     public boolean motorConnected = false;
 
+    public double positionRots = 0.0;
     public double velocityRps = 0.0;
     public double velocitySetpoint = 0.0;
     public double appliedVolts = 0.0;

@@ -5,12 +5,13 @@ import static org.teamtitanium.subsystems.shooter.backroller.BackRollerConstants
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Temperature;
@@ -24,10 +25,11 @@ public class BackRollerIOTalonFX implements BackRollerIO {
 
   private final TalonFXConfiguration config = new TalonFXConfiguration();
 
-  private final VelocityVoltage velocityVoltage =
-      new VelocityVoltage(0.0).withUpdateFreqHz(250.0).withEnableFOC(false);
-  private final VoltageOut voltageOut = new VoltageOut(0.0).withEnableFOC(false);
+  private final MotionMagicVelocityVoltage velocityVoltage =
+      new MotionMagicVelocityVoltage(0.0).withUpdateFreqHz(250.0).withEnableFOC(false);
+  private final VoltageOut voltageOut = new VoltageOut(0.0);
 
+  private final StatusSignal<Angle> position;
   private final StatusSignal<AngularVelocity> velocity;
   private final StatusSignal<Double> velocitySetpoint;
   private final StatusSignal<Voltage> appliedVolts;
@@ -79,6 +81,7 @@ public class BackRollerIOTalonFX implements BackRollerIO {
     PhoenixUtil.tryUntilOk(5, () -> rollerMotor.getConfigurator().apply(config));
 
     // Get status signals
+    position = rollerMotor.getPosition();
     velocity = rollerMotor.getVelocity();
     velocitySetpoint = rollerMotor.getClosedLoopReference();
     appliedVolts = rollerMotor.getMotorVoltage();
@@ -89,12 +92,13 @@ public class BackRollerIOTalonFX implements BackRollerIO {
     // Set update frequencies
     BaseStatusSignal.setUpdateFrequencyForAll(250, velocity, velocitySetpoint);
     BaseStatusSignal.setUpdateFrequencyForAll(
-        100, appliedVolts, supplyCurrent, torqueCurrent, temperature);
+        100, position, appliedVolts, supplyCurrent, torqueCurrent, temperature);
 
     PhoenixUtil.tryUntilOk(5, () -> ParentDevice.optimizeBusUtilizationForAll(rollerMotor));
 
     PhoenixUtil.registerSignals(
         BackRollerConstants.BACK_ROLLER_CANBUS,
+        position,
         velocity,
         velocitySetpoint,
         appliedVolts,
@@ -107,8 +111,15 @@ public class BackRollerIOTalonFX implements BackRollerIO {
   public void updateInputs(BackRollerIOInputs inputs) {
     inputs.motorConnected =
         BaseStatusSignal.isAllGood(
-            velocity, velocitySetpoint, appliedVolts, supplyCurrent, torqueCurrent, temperature);
+            position,
+            velocity,
+            velocitySetpoint,
+            appliedVolts,
+            supplyCurrent,
+            torqueCurrent,
+            temperature);
 
+    inputs.positionRots = position.getValueAsDouble();
     inputs.velocityRps = velocity.getValueAsDouble();
     inputs.velocitySetpoint = velocitySetpoint.getValueAsDouble();
     inputs.appliedVolts = appliedVolts.getValueAsDouble();

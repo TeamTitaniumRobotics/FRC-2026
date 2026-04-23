@@ -1,14 +1,17 @@
 package org.teamtitanium.subsystems.shooter.backroller;
 
 import static edu.wpi.first.units.Units.RotationsPerSecond;
+import static edu.wpi.first.units.Units.Volts;
 import static org.teamtitanium.subsystems.shooter.backroller.BackRollerConstants.BACK_ROLLER_CONSTRAINTS;
 import static org.teamtitanium.subsystems.shooter.backroller.BackRollerConstants.BACK_ROLLER_GAINS;
 import static org.teamtitanium.subsystems.shooter.backroller.BackRollerConstants.VELOCITY_TOLERANCE_RPS;
 
+import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -51,8 +54,21 @@ public class BackRoller extends SubsystemBase {
   private final Trigger atSetpoint =
       new Trigger(() -> Math.abs(inputs.velocityRps - targetVelocityRps) < VELOCITY_TOLERANCE_RPS);
 
+  private final SysIdRoutine sysIdRoutine;
+
   public BackRoller(BackRollerIO io) {
     this.io = io;
+    this.sysIdRoutine =
+        new SysIdRoutine(
+            new SysIdRoutine.Config(
+                null,
+                null,
+                null,
+                (state) -> {
+                  Logger.recordOutput("Shooter/BackRoller/SysIdState", state.toString());
+                  SignalLogger.writeString("Shooter/BackRoller/SysIdState", state.toString());
+                }),
+            new SysIdRoutine.Mechanism((volts) -> io.setVoltage(volts.in(Volts)), null, this));
   }
 
   @Override
@@ -126,6 +142,14 @@ public class BackRoller extends SubsystemBase {
    */
   public Command setVoltage(double voltage) {
     return setVoltage(() -> voltage);
+  }
+
+  public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
+    return sysIdRoutine.quasistatic(direction);
+  }
+
+  public Command sysIdDynamic(SysIdRoutine.Direction direction) {
+    return sysIdRoutine.dynamic(direction);
   }
 
   /**
