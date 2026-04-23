@@ -82,7 +82,7 @@ public class IntakeConstants {
     public static final double STOW_CURRENT_DEBOUNCE_TIME_SECS = 0.25;
 
     // Gains
-    public static final Gains RACK_GAINS = new Gains(16.0, 0.0, 0.0, 0.275, 0.475, 0.0, 0.02);
+    public static final Gains RACK_GAINS = new Gains(8.0, 0.0, 0.0, 0.4975, 0.45, 0.0, 0.0);
 
     // Motion constraints (converted to motor rotations per second)
     private static final double MAX_LINEAR_VELOCITY_MPS = 1.2;

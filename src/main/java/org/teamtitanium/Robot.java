@@ -4,7 +4,7 @@
 
 package org.teamtitanium;
 
-import static edu.wpi.first.units.Units.RPM;
+import static edu.wpi.first.units.Units.Inches;
 
 import choreo.auto.AutoChooser;
 import com.ctre.phoenix6.SignalLogger;
@@ -570,12 +570,23 @@ public class Robot extends LoggedRobot {
 
     driver
         .leftTrigger()
-        .onTrue(intakeRoller.setVoltage(() -> intakeRoller.configurableNumber.get()))
-        .onFalse(intakeRoller.stop());
+        .onTrue(intakeRack.setVoltage(() -> (IntakeRack.configRackNumber1.getAsDouble() * -1.0)))
+        .onFalse(intakeRack.stop());
     driver
         .rightTrigger()
-        .onTrue(intakeRoller.setVelocity(() -> RPM.of(intakeRoller.configurableNumber.get())))
-        .onFalse(intakeRoller.setVelocity(RPM.of(0.0)));
+        .onTrue(intakeRack.setVoltage(() -> IntakeRack.configRackNumber1.get()))
+        .onFalse(intakeRack.stop());
+
+    driver
+        .leftBumper()
+        .onTrue(intakeRack.setExtension(() -> Inches.of(0.0)))
+        .onFalse(intakeRack.stop());
+    driver
+        .rightBumper()
+        .onTrue(intakeRack.setExtension(() -> Inches.of(IntakeRack.configRackNumber2.get())))
+        .onFalse(intakeRack.stop());
+
+    driver.back().onTrue(intakeRack.zeroIntakeMotor());
 
     // driver
     //     .pov(0)
