@@ -22,13 +22,13 @@ public class Spindexer extends GenericRoller {
   /** Independent states for the spindexer. */
   @RequiredArgsConstructor
   public enum SpindexerState {
-    IDLE(() -> 0.0),
-    // AGITATE(() -> 0.78 * 12),
-    // FEED(() -> 0.78 * 12);
-    AGITATE(() -> Spindexer.configNumber.get() * 12.0),
-    FEED(() -> Spindexer.configNumber.get() * 12.0);
+    IDLE(() -> IDLE_VELOCITY),
+    AGITATE(() -> AGITATE_VELOCITY),
+    FEED(() -> FEED_VELOCITY);
+    // AGITATE(() -> Spindexer.configNumber.get() * 12.0),
+    // FEED(() -> Spindexer.configNumber.get() * 12.0);
 
-    @Getter private final Supplier<Double> spindexerVoltage;
+    @Getter private final Supplier<AngularVelocity> spindexerVelocity;
   }
 
   public static final LoggedTunableNumber configNumber =
@@ -73,7 +73,7 @@ public class Spindexer extends GenericRoller {
 
   public Spindexer(GenericRollerIO io) {
     super("Spindexer", io, CONSTANTS);
-    // setDefaultCommand(setVoltage(() -> state.getSpindexerVoltage().get()));
+    setDefaultCommand(setVelocity(() -> state.getSpindexerVelocity().get()));
   }
 
   public Trigger hasFuel =

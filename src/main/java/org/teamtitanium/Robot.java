@@ -4,14 +4,13 @@
 
 package org.teamtitanium;
 
-import static edu.wpi.first.units.Units.RotationsPerSecond;
-
 import choreo.auto.AutoChooser;
 import com.ctre.phoenix6.SignalLogger;
 import com.pathplanner.lib.commands.FollowPathCommand;
 import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.hal.AllianceStationID;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -529,17 +528,17 @@ public class Robot extends LoggedRobot {
             () -> -driver.getRightX(),
             () -> false));
 
-    // driver
-    //     .start()
-    //     .onTrue(
-    //         Commands.runOnce(
-    //                 () ->
-    //                     RobotState.getInstance()
-    //                         .setEstimatedPose(
-    //                             new Pose2d(
-    //                                 RobotState.getInstance().getEstimatedPose().getTranslation(),
-    //                                 Rotation2d.kZero)))
-    //             .ignoringDisable(true));
+    driver
+        .start()
+        .onTrue(
+            Commands.runOnce(
+                    () ->
+                        RobotState.getInstance()
+                            .setEstimatedPose(
+                                new Pose2d(
+                                    RobotState.getInstance().getEstimatedPose().getTranslation(),
+                                    Rotation2d.kZero)))
+                .ignoringDisable(true));
 
     // driver
     //     .rightBumper()
@@ -555,7 +554,7 @@ public class Robot extends LoggedRobot {
         .onTrue(Commands.runOnce(() -> driver.setRumble(RumbleType.kBothRumble, 0.01)))
         .onFalse(Commands.runOnce(() -> driver.setRumble(RumbleType.kBothRumble, 0.0)));
 
-    // driver.back().whileTrue(hood.zeroHood()); // TODO: Disable roller while zeroing rack
+    driver.back().whileTrue(hood.zeroHood()); // TODO: Disable roller while zeroing rack
     // driver.back().whileTrue(Commands.parallel(hood.zeroHood(), intakeRack.zeroIntake()));
     // driver.start().whileTrue(intake.zeroIntake());
 
@@ -568,23 +567,23 @@ public class Robot extends LoggedRobot {
     //     .onTrue(spindexer.setVoltage(0.7 * 12.0).alongWith(feeder.setVoltage(6.0)))
     //     .onFalse(Commands.parallel(spindexer.stop(), feeder.stop()));
 
-    driver
-        .leftTrigger()
-        .onTrue(spindexer.setVoltage(() -> Spindexer.configNumber.get()))
-        .onFalse(spindexer.stop());
-    driver
-        .rightTrigger()
-        .onTrue(spindexer.setVelocity(() -> RotationsPerSecond.of(Spindexer.configNumber.get())))
-        .onFalse(spindexer.setVelocity(RotationsPerSecond.of(0.0)));
+    // driver
+    //     .leftTrigger()
+    //     .onTrue(spindexer.setVoltage(() -> Spindexer.configNumber.get()))
+    //     .onFalse(spindexer.stop());
+    // driver
+    //     .rightTrigger()
+    //     .onTrue(spindexer.setVelocity(() -> RotationsPerSecond.of(Spindexer.configNumber.get())))
+    //     .onFalse(spindexer.setVelocity(RotationsPerSecond.of(0.0)));
 
-    driver
-        .leftBumper()
-        .onTrue(feeder.setVoltage(() -> Feeder.configNumber.get()))
-        .onFalse(feeder.stop());
-    driver
-        .rightBumper()
-        .onTrue(feeder.setVelocity(() -> RotationsPerSecond.of(Feeder.configNumber.get())))
-        .onFalse(feeder.setVelocity(RotationsPerSecond.of(0.0)));
+    // driver
+    //     .leftBumper()
+    //     .onTrue(feeder.setVoltage(() -> Feeder.configNumber.get()))
+    //     .onFalse(feeder.stop());
+    // driver
+    //     .rightBumper()
+    //     .onTrue(feeder.setVelocity(() -> RotationsPerSecond.of(Feeder.configNumber.get())))
+    //     .onFalse(feeder.setVelocity(RotationsPerSecond.of(0.0)));
 
     // driver
     //     .pov(0)
@@ -643,7 +642,7 @@ public class Robot extends LoggedRobot {
     //     .whileTrue(backRoller.sysIdQuasistatic(Direction.kReverse))
     //     .onFalse(backRoller.setVoltage(0.0));
 
-    driver.start().onTrue(Commands.runOnce(() -> hood.zeroMotor()));
+    // driver.start().onTrue(Commands.runOnce(() -> hood.zeroMotor()));
 
     // driver
     //     .povRight()

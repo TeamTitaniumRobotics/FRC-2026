@@ -6,6 +6,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.util.Color;
 import java.lang.reflect.Field;
+import java.util.List;
 import java.util.Optional;
 import lombok.Setter;
 import org.littletonrobotics.junction.Logger;
@@ -77,12 +78,13 @@ public class LEDs extends VirtualSubsystem {
               LEDConstants.WAVE_DISABLED_CYCLE_LENGTH,
               LEDConstants.WAVE_DISABLED_DURATION);
         } else {
-          Alliance currentAlliance = alliance.get();
-          wave(
-              currentAlliance == Alliance.Blue ? Color.kBlue : Color.kRed,
-              Color.kBlack,
-              LEDConstants.WAVE_DISABLED_CYCLE_LENGTH,
-              LEDConstants.WAVE_DISABLED_DURATION);
+          stripes(List.of(Color.kRed, Color.kWhite, Color.kDarkBlue), 3, 2.0);
+          // Alliance currentAlliance = alliance.get();
+          // wave(
+          //   currentAlliance == Alliance.Blue ? Color.kBlue : Color.kRed,
+          //   Color.kBlack,
+          //   LEDConstants.WAVE_DISABLED_CYCLE_LENGTH,
+          //   LEDConstants.WAVE_DISABLED_DURATION);
         }
       }
     } else if (DriverStation.isAutonomous()) {
@@ -142,7 +144,7 @@ public class LEDs extends VirtualSubsystem {
   private void wave(Color c1, Color c2, double cycleLength, double duration) {
     double x = (1 - ((Timer.getTimestamp() % duration) / duration)) * 2.0 * Math.PI;
     double xDiffPerLed = (2.0 * Math.PI) / cycleLength;
-    for (int i = LEDConstants.LENGTH - 1; i >= 0; i--) {
+    for (int i = LEDConstants.LENGTH - 1; i >= 0.0; i--) {
       x += xDiffPerLed;
       double ratio = (Math.pow(Math.sin(x), LEDConstants.WAVE_EXPONENT) + 1.0) / 2.0;
       if (Double.isNaN(ratio)) {
@@ -158,12 +160,22 @@ public class LEDs extends VirtualSubsystem {
     }
   }
 
+  private void stripes(List<Color> colors, int stripeLength, double duration) {
+    int offset = (int) (Timer.getTimestamp() % duration / duration * stripeLength * colors.size());
+    for (int i = LEDConstants.LENGTH - 1; i >= 0; i--) {
+      int colorIndex =
+          (int) (Math.floor((double) (i - offset) / stripeLength) + colors.size()) % colors.size();
+      colorIndex = colors.size() - 1 - colorIndex;
+      setLED(i, colors.get(colorIndex));
+    }
+  }
+
   private void setLED(int index, Color color) {
     try {
       buffer.setRGB(
           index,
-          (int) (color.red * 255 * LEDConstants.MAX_BRIGHTNESS),
           (int) (color.green * 255 * LEDConstants.MAX_BRIGHTNESS),
+          (int) (color.red * 255 * LEDConstants.MAX_BRIGHTNESS),
           (int) (color.blue * 255 * LEDConstants.MAX_BRIGHTNESS));
     } catch (Exception e) {
       e.printStackTrace();

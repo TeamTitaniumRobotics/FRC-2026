@@ -4,8 +4,11 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Rotations;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.util.function.Supplier;
 import lombok.Getter;
@@ -43,7 +46,12 @@ public class Shooter {
     @Getter private final Supplier<Angle> turretAngle;
 
     public Supplier<AngularVelocity> getBackRollerVelocity() {
-      return () -> getFlywheelVelocity().get().div(BackRollerConstants.WHEEL_RATIO);
+      return () ->
+          RPM.of(
+              MathUtil.clamp(
+                  getFlywheelVelocity().get().div(BackRollerConstants.WHEEL_RATIO).in(RPM),
+                  0.0,
+                  BackRollerConstants.MAX_VELOCITY.in(RPM)));
     }
   }
 
@@ -75,29 +83,29 @@ public class Shooter {
     this.hood = hood;
     this.turret = turret;
 
-    // flywheel.setDefaultCommand(
-    //     Commands.either(
-    //         flywheel.setVelocity(() -> ShooterState.AIM.getFlywheelVelocity().get()),
-    //         flywheel.setVelocity(() -> state.getFlywheelVelocity().get()),
-    //         RobotModeTriggers.autonomous()));
+    flywheel.setDefaultCommand(
+        Commands.either(
+            flywheel.setVelocity(() -> ShooterState.AIM.getFlywheelVelocity().get()),
+            flywheel.setVelocity(() -> state.getFlywheelVelocity().get()),
+            RobotModeTriggers.autonomous()));
     // flywheel.setDefaultCommand(
     //     flywheel.setVelocity(() -> RPM.of(flywheel.flywheelConfigNumber1.get())));
-    // backRoller.setDefaultCommand(
-    //     Commands.either(
-    //         backRoller.setVelocity(() -> ShooterState.AIM.getBackRollerVelocity().get()),
-    //         backRoller.setVelocity(() -> state.getBackRollerVelocity().get()),
-    //         RobotModeTriggers.autonomous()));
+    backRoller.setDefaultCommand(
+        Commands.either(
+            backRoller.setVelocity(() -> ShooterState.AIM.getBackRollerVelocity().get()),
+            backRoller.setVelocity(() -> state.getBackRollerVelocity().get()),
+            RobotModeTriggers.autonomous()));
     // backRoller.setDefaultCommand(backRoller.setVoltage(() ->
     // BackRoller.configurableNumber.get()));
     // hood.setDefaultCommand(hood.setPosition(() -> Degrees.of(hood.hoodConfigNumber1.get())));
-    // hood.setDefaultCommand(hood.setPosition(() -> state.getHoodAngle().get()));
+    hood.setDefaultCommand(hood.setPosition(() -> state.getHoodAngle().get()));
     // turret.setDefaultCommand(
     //     turret.setPosition(() -> Degrees.of(turret.turretConfigNumber1.get())));
-    // turret.setDefaultCommand(
-    //     Commands.either(
-    //         turret.setPosition(() -> state.getTurretAngle().get()),
-    //         turret.setPosition(() -> turret.getPosition()),
-    //         () -> !turretDisabled));
+    turret.setDefaultCommand(
+        Commands.either(
+            turret.setPosition(() -> state.getTurretAngle().get()),
+            turret.setPosition(() -> turret.getPosition()),
+            () -> !turretDisabled));
   }
 
   @AutoLogOutput(key = "Shooter/AtSetpoint")

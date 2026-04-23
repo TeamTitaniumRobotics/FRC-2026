@@ -24,11 +24,11 @@ public class Feeder extends GenericRoller {
   /** Independent states for the feeder. */
   @RequiredArgsConstructor
   public enum FeederState {
-    IDLE(() -> 0.0),
-    UNJAM(() -> -6.0),
-    FEED(() -> 6.0);
+    IDLE(() -> IDLE_VELOCITY),
+    UNJAM(() -> FEED_VELOCITY.times(-1.0)),
+    FEED(() -> FEED_VELOCITY);
 
-    @Getter private final Supplier<Double> feederVoltage;
+    @Getter private final Supplier<AngularVelocity> feederVelocity;
   }
 
   public static final LoggedTunableNumber configNumber =
@@ -93,6 +93,6 @@ public class Feeder extends GenericRoller {
     //             }),
     //         Commands.waitSeconds(0.5),
     //         runOnce(() -> setState(lastState))));
-    // setDefaultCommand(setVoltage(() -> state.getFeederVoltage().get()));
+    setDefaultCommand(setVelocity(() -> state.getFeederVelocity().get()));
   }
 }
