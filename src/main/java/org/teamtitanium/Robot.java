@@ -591,6 +591,9 @@ public class Robot extends LoggedRobot {
     SmartDashboard.putData("Dashboard/Field2d", field2d);
 
     SmartDashboard.putData(
+        "Dashboard/Commands/ZeroHood",
+        Commands.runOnce(() -> hood.zeroMotor()).ignoringDisable(true));
+    SmartDashboard.putData(
         "Dashboard/Commands/ZeroIntake", intakeRack.zeroIntakeMotor().ignoringDisable(true));
     SmartDashboard.putData(
         "Dashboard/Commands/ZeroTurret",

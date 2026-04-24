@@ -9,7 +9,6 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
@@ -76,10 +75,10 @@ public class Hood extends SubsystemBase {
   public Hood(HoodIO io) {
     this.io = io;
 
-    RobotModeTriggers.teleop()
-        .or(RobotModeTriggers.autonomous())
-        .and(() -> !hoodZeroed)
-        .onTrue(zeroHood());
+    // RobotModeTriggers.teleop()
+    //     .or(RobotModeTriggers.autonomous())
+    //     .and(() -> !hoodZeroed)
+    //     .onTrue(zeroHood());
 
     Robot.getCoastOverrideTrigger()
         .onTrue(runOnce(() -> this.setBrakeMode(false)).ignoringDisable(true))

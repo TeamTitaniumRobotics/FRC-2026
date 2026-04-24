@@ -16,7 +16,9 @@ public class BackRollerConstants {
   public static final int BACK_ROLLER_MOTOR_ID = 21;
   public static final CANBus BACK_ROLLER_CANBUS = Constants.RIO_CAN_BUS;
 
-  public static final AngularVelocity MAX_VELOCITY = RPM.of(9300.0);
+  public static final AngularVelocity MOTOR_MAX_VELOCITY = RPM.of(11637.0);
+  public static final AngularVelocity MAX_VELOCITY = MOTOR_MAX_VELOCITY.times(0.8);
+  public static final AngularVelocity MAX_PASSING_VELOCITY = MOTOR_MAX_VELOCITY.times(0.7);
 
   // Physical Constants
   public static final double BACK_ROLLER_GEAR_RATIO = (16.0 / 24.0); // 1:1.5 reduction
