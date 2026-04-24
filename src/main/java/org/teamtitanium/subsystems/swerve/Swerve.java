@@ -133,7 +133,7 @@ public class Swerve extends SubsystemBase {
   private final PIDController yPosController = new PIDController(10.0, 0.0, 0.0);
   private final PIDController headingController = new PIDController(7.5, 0.0, 0.0);
 
-  private final FollowPath.Builder pathBuilder =
+  public final FollowPath.Builder pathBuilder =
       new FollowPath.Builder(
               this,
               () -> RobotState.getInstance().getEstimatedPose(),
@@ -142,7 +142,8 @@ public class Swerve extends SubsystemBase {
               new PIDController(5.0, 0.0, 0.0),
               new PIDController(3.0, 0.0, 0.0),
               new PIDController(2.0, 0.0, 0.0))
-          .withDefaultShouldFlip();
+          .withDefaultShouldFlip()
+          .withPoseReset((pose) -> RobotState.getInstance().setEstimatedPose(pose));
 
   private int velocityLogCounter = 0;
   private int choreoLogCounter = 0;
