@@ -4,6 +4,8 @@
 
 package org.teamtitanium;
 
+import static edu.wpi.first.units.Units.RotationsPerSecond;
+
 import choreo.auto.AutoChooser;
 import com.ctre.phoenix6.SignalLogger;
 import com.pathplanner.lib.commands.FollowPathCommand;
@@ -401,6 +403,8 @@ public class Robot extends LoggedRobot {
     //     .onTrue(Commands.runOnce(() -> driver.setRumble(RumbleType.kBothRumble, 0.05)))
     //     .onFalse(Commands.runOnce(() -> driver.setRumble(RumbleType.kBothRumble, 0.0)));
 
+    LEDs.getInstance().setInShotTolerance(shooter.atSetpoint());
+
     configureButtonBindings();
     configureDashboard();
   }
@@ -560,93 +564,12 @@ public class Robot extends LoggedRobot {
 
     // driver.leftStick().whileTrue(Commands.runOnce(() -> swerve.stopWithX(), swerve));
 
-    // driver.leftTrigger().onTrue(intakeRoller.setVoltage(6.0)).onFalse(intakeRoller.stop());
-
-    // driver
-    //     .rightTrigger()
-    //     .onTrue(spindexer.setVoltage(0.7 * 12.0).alongWith(feeder.setVoltage(6.0)))
-    //     .onFalse(Commands.parallel(spindexer.stop(), feeder.stop()));
-
-    // driver
-    //     .leftTrigger()
-    //     .onTrue(spindexer.setVoltage(() -> Spindexer.configNumber.get()))
-    //     .onFalse(spindexer.stop());
-    // driver
-    //     .rightTrigger()
-    //     .onTrue(spindexer.setVelocity(() -> RotationsPerSecond.of(Spindexer.configNumber.get())))
-    //     .onFalse(spindexer.setVelocity(RotationsPerSecond.of(0.0)));
-
-    // driver
-    //     .leftBumper()
-    //     .onTrue(feeder.setVoltage(() -> Feeder.configNumber.get()))
-    //     .onFalse(feeder.stop());
-    // driver
-    //     .rightBumper()
-    //     .onTrue(feeder.setVelocity(() -> RotationsPerSecond.of(Feeder.configNumber.get())))
-    //     .onFalse(feeder.setVelocity(RotationsPerSecond.of(0.0)));
-
-    // driver
-    //     .pov(0)
-    //     .onTrue(spindexer.setVoltage(-0.7 * 12.0).alongWith(feeder.setVoltage(-6.0)))
-    //     .onFalse(Commands.parallel(spindexer.stop(), feeder.stop()));
-
-    // driver
-    //     .pov(90)
-    //     .whileTrue(backRoller.setVelocity(() -> RPM.of(BackRoller.configurableNumber.get())))
-    //     .onFalse(backRoller.setVoltage(0.0));
-
-    // driver
-    //     .pov(90)
-    //     .whileTrue(backRoller.setVoltage(() -> BackRoller.configurableNumber.get()))
-    //     .onFalse(backRoller.setVoltage(0.0));
-
-    // driver
-    //     .pov(90)
-    //     .whileTrue(flywheel.setVelocity(() -> RPM.of(flywheel.flywheelConfigNumber2.get())))
-    //     .whileFalse(flywheel.stop());
-
-    // driver
-    //     .rightTrigger()
-    //     .whileTrue(flywheel.setVoltage(() -> flywheel.flywheelConfigNumber1.get()))
-    //     .whileFalse(flywheel.stop());
-
-    // driver
-    //     .rightBumper()
-    //     .toggleOnTrue(hood.setPosition(() -> Degrees.of(hood.hoodConfigNumber1.get())));
-    // .whileFalse(hood.stop());
-
-    // driver
-    //     .leftBumper()
-    //     .whileTrue(hood.setPosition(() -> Degrees.of(hood.hoodConfigNumber2.get())))
-    //     .whileFalse(hood.stop());
-
-    // driver.y().whileTrue(flywheel.sysIdDynamic(Direction.kForward)).onFalse(flywheel.stop());
-    // driver.a().whileTrue(flywheel.sysIdDynamic(Direction.kReverse)).onFalse(flywheel.stop());
-    // driver.b().whileTrue(flywheel.sysIdQuasistatic(Direction.kForward)).onFalse(flywheel.stop());
-    // driver.x().whileTrue(flywheel.sysIdQuasistatic(Direction.kReverse)).onFalse(flywheel.stop());
-
-    // driver
-    //     .pov(0)
-    //     .whileTrue(backRoller.sysIdDynamic(Direction.kForward))
-    //     .onFalse(backRoller.setVoltage(0.0));
-    // driver
-    //     .pov(180)
-    //     .whileTrue(backRoller.sysIdDynamic(Direction.kReverse))
-    //     .onFalse(backRoller.setVoltage(0.0));
-    // driver
-    //     .pov(90)
-    //     .whileTrue(backRoller.sysIdQuasistatic(Direction.kForward))
-    //     .onFalse(backRoller.setVoltage(0.0));
-    // driver
-    //     .pov(270)
-    //     .whileTrue(backRoller.sysIdQuasistatic(Direction.kReverse))
-    //     .onFalse(backRoller.setVoltage(0.0));
-
-    // driver.start().onTrue(Commands.runOnce(() -> hood.zeroMotor()));
-
-    // driver
-    //     .povRight()
-    //     .whileTrue(spindexer.setVoltage(() -> -6.0).alongWith(feeder.setVoltage(() -> -6.0)));
+    driver
+        .povRight()
+        .whileTrue(
+            spindexer
+                .setVelocity(() -> RotationsPerSecond.of(-3))
+                .alongWith(feeder.setVelocity(() -> RotationsPerSecond.of(-88.0))));
 
     // copilot
     //     .rightBumper()

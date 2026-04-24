@@ -25,8 +25,8 @@ public class Spindexer extends GenericRoller {
     IDLE(() -> IDLE_VELOCITY),
     AGITATE(() -> AGITATE_VELOCITY),
     FEED(() -> FEED_VELOCITY);
-    // AGITATE(() -> Spindexer.configNumber.get() * 12.0),
-    // FEED(() -> Spindexer.configNumber.get() * 12.0);
+    // AGITATE(() -> RotationsPerSecond.of(Spindexer.configNumber.get())),
+    // FEED(() -> RotationsPerSecond.of(Spindexer.configNumber.get()));
 
     @Getter private final Supplier<AngularVelocity> spindexerVelocity;
   }
@@ -40,8 +40,8 @@ public class Spindexer extends GenericRoller {
   public static final boolean SPINDEXER_INVERTED = true;
 
   public static final AngularVelocity IDLE_VELOCITY = RotationsPerSecond.of(0.0);
-  public static final AngularVelocity AGITATE_VELOCITY = RotationsPerSecond.of(4.75);
-  public static final AngularVelocity FEED_VELOCITY = RotationsPerSecond.of(4.75);
+  public static final AngularVelocity AGITATE_VELOCITY = RotationsPerSecond.of(5.205);
+  public static final AngularVelocity FEED_VELOCITY = RotationsPerSecond.of(5.205);
 
   public static final double STATOR_CURRENT_LIMIT = 60.0;
   public static final double SUPPLY_CURRENT_LIMIT = 40.0;

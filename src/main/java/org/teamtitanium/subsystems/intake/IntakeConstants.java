@@ -23,7 +23,7 @@ public class IntakeConstants {
 
     public static final AngularVelocity IDLE_VELOCITY = RotationsPerSecond.of(0.0);
     public static final AngularVelocity AGITATE_VELOCITY = RotationsPerSecond.of(16.0);
-    public static final AngularVelocity INTAKE_VELOCITY = RotationsPerSecond.of(42.0);
+    public static final AngularVelocity INTAKE_VELOCITY = RotationsPerSecond.of(40.2);
     public static final AngularVelocity EJECT_VELOCITY = RotationsPerSecond.of(-24.0);
 
     public static final double STATOR_CURRENT_LIMIT = 40.0;

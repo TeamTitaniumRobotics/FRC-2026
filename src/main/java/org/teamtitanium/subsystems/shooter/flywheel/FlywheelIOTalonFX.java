@@ -21,6 +21,7 @@ import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.Notifier;
 import java.util.List;
+import org.littletonrobotics.junction.Logger;
 import org.teamtitanium.utils.Constants;
 import org.teamtitanium.utils.Constants.Constraints;
 import org.teamtitanium.utils.Constants.Gains;
@@ -167,6 +168,9 @@ public class FlywheelIOTalonFX implements FlywheelIO {
               } else if (activeSlot == 1) {
                 newSlot = 0;
               }
+
+              Logger.recordOutput("Shooter/Flywheel/ActiveSlot", activeSlot);
+              Logger.recordOutput("Shooter/Flywheel/NewSlot", newSlot);
 
               if (newSlot != activeSlot) {
                 synchronized (controlLock) {

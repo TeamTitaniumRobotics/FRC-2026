@@ -25,6 +25,8 @@ public class Feeder extends GenericRoller {
   @RequiredArgsConstructor
   public enum FeederState {
     IDLE(() -> IDLE_VELOCITY),
+    // UNJAM(() -> RotationsPerSecond.of(Feeder.configNumber.get()).times(-1.0)),
+    // FEED(() -> RotationsPerSecond.of(Feeder.configNumber.get()));
     UNJAM(() -> FEED_VELOCITY.times(-1.0)),
     FEED(() -> FEED_VELOCITY);
 
@@ -35,7 +37,7 @@ public class Feeder extends GenericRoller {
       new LoggedTunableNumber("Feeder/Roller/ConfigShotNum", 0.0);
 
   public static final AngularVelocity IDLE_VELOCITY = RotationsPerSecond.of(0.0);
-  public static final AngularVelocity FEED_VELOCITY = RotationsPerSecond.of(88.0);
+  public static final AngularVelocity FEED_VELOCITY = RotationsPerSecond.of(144.0);
 
   public static final int FEEDER_MOTOR_ID = 40;
   public static final CANBus FEEDER_CAN_BUS =
@@ -43,8 +45,8 @@ public class Feeder extends GenericRoller {
 
   public static final boolean FEEDER_INVERTED = true;
 
-  public static final double STATOR_CURRENT_LIMIT = 50.0;
-  public static final double SUPPLY_CURRENT_LIMIT = 30.0;
+  public static final double STATOR_CURRENT_LIMIT = 60.0;
+  public static final double SUPPLY_CURRENT_LIMIT = 40.0;
 
   public static final double FEEDER_GEAR_RATIO = 0.5;
 
@@ -73,7 +75,7 @@ public class Feeder extends GenericRoller {
           STATOR_CURRENT_LIMIT,
           SUPPLY_CURRENT_LIMIT,
           FEEDER_INVERTED,
-          true);
+          false);
 
   @Getter
   @Setter

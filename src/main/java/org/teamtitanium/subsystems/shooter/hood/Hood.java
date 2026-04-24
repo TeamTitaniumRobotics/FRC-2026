@@ -62,7 +62,7 @@ public class Hood extends SubsystemBase {
   @AutoLogOutput(key = "Shooter/Hood/HoodZeroed")
   private boolean hoodZeroed = false;
 
-  private final Debouncer currentDebouncer = new Debouncer(0.1, Debouncer.DebounceType.kRising);
+  private final Debouncer currentDebouncer = new Debouncer(0.05, Debouncer.DebounceType.kRising);
   private final Debouncer velocityDebouncer = new Debouncer(0.05, Debouncer.DebounceType.kRising);
   private final Trigger currentTrigger =
       new Trigger(

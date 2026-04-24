@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj.util.Color;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.BooleanSupplier;
 import lombok.Setter;
 import org.littletonrobotics.junction.Logger;
 import org.teamtitanium.utils.HubTracker;
@@ -23,7 +24,7 @@ public class LEDs extends VirtualSubsystem {
 
   @Setter private boolean lowBatteryAlert = false;
   @Setter private boolean coastOverride = false;
-  @Setter private boolean inShotTolerance = false;
+  @Setter private BooleanSupplier inShotTolerance;
   @Setter private boolean autoWinnerNotSet = false;
   @Setter private boolean eStopped = false;
   private Optional<Alliance> alliance = Optional.empty();
@@ -53,9 +54,9 @@ public class LEDs extends VirtualSubsystem {
     io.updateInputs(inputs);
     Logger.processInputs("LEDs", inputs);
 
-    if (DriverStation.isFMSAttached()) {
-      alliance = DriverStation.getAlliance();
-    }
+    // if (DriverStation.isFMSAttached()) {
+    alliance = DriverStation.getAlliance();
+    // }
 
     if (DriverStation.isEStopped()) {
       eStopped = true;
@@ -72,19 +73,19 @@ public class LEDs extends VirtualSubsystem {
         strobe(Color.kOrangeRed, Color.kBlack, LEDConstants.STROBE_DURATION);
       } else {
         if (alliance.isEmpty()) {
+          // wave(
+          //     Color.kGold,
+          //     Color.kDarkBlue,
+          //     LEDConstants.WAVE_DISABLED_CYCLE_LENGTH,
+          //     LEDConstants.WAVE_DISABLED_DURATION);
+          stripes(List.of(Color.kRed, Color.kWhite, Color.kDarkBlue), 3, 2.0);
+        } else {
+          Alliance currentAlliance = alliance.get();
           wave(
-              Color.kGold,
-              Color.kDarkBlue,
+              currentAlliance == Alliance.Blue ? Color.kBlue : Color.kRed,
+              Color.kBlack,
               LEDConstants.WAVE_DISABLED_CYCLE_LENGTH,
               LEDConstants.WAVE_DISABLED_DURATION);
-        } else {
-          stripes(List.of(Color.kRed, Color.kWhite, Color.kDarkBlue), 3, 2.0);
-          // Alliance currentAlliance = alliance.get();
-          // wave(
-          //   currentAlliance == Alliance.Blue ? Color.kBlue : Color.kRed,
-          //   Color.kBlack,
-          //   LEDConstants.WAVE_DISABLED_CYCLE_LENGTH,
-          //   LEDConstants.WAVE_DISABLED_DURATION);
         }
       }
     } else if (DriverStation.isAutonomous()) {
@@ -104,7 +105,7 @@ public class LEDs extends VirtualSubsystem {
                 : Color.kRed,
             LEDConstants.WAVE_FAST_CYCLE_LENGTH,
             LEDConstants.WAVE_FAST_DURATION);
-      } else if (inShotTolerance) {
+      } else if (inShotTolerance.getAsBoolean()) {
         wave(
             Color.kGreen,
             Color.kWhite,

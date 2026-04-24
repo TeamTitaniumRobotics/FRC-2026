@@ -1,11 +1,11 @@
 package org.teamtitanium.subsystems.intake;
 
+import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static org.teamtitanium.subsystems.intake.IntakeConstants.RackConstants.*;
 
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.util.function.Supplier;
 import lombok.Getter;
@@ -50,14 +50,14 @@ public class Intake {
     //         () -> state == IntakeState.AGITATE));
     rack.setDefaultCommand(rack.setExtension(() -> state.getRackDistance().get()));
     // roller.setDefaultCommand(roller.setVelocity(() -> state.getIntakeVelocity().get()));
-    // roller.setDefaultCommand(
-    //     roller.setVelocity(() -> RotationsPerSecond.of(roller.configurableNumber.get())));
-    // roller.setDefaultCommand(roller.setVoltage(() -> roller.configurableNumber.get() * 12.0));
     roller.setDefaultCommand(
-        Commands.either(
-            roller.setVelocity(() -> RollerConstants.INTAKE_VELOCITY),
-            roller.setVelocity(() -> state.getIntakeVelocity().get()),
-            () -> state == IntakeState.STOW && rack.atSetpoint().negate().getAsBoolean()));
+        roller.setVelocity(() -> RotationsPerSecond.of(roller.configurableNumber.get())));
+    // roller.setDefaultCommand(roller.setVoltage(() -> roller.configurableNumber.get() * 12.0));
+    // roller.setDefaultCommand(
+    //     Commands.either(
+    //         roller.setVelocity(() -> RollerConstants.INTAKE_VELOCITY),
+    //         roller.setVelocity(() -> state.getIntakeVelocity().get()),
+    //         () -> state == IntakeState.STOW && rack.atSetpoint().negate().getAsBoolean()));
   }
 
   public Command zeroIntake() {

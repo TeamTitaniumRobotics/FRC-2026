@@ -33,7 +33,7 @@ public class BackRollerConstants {
 
   // PID Gains (Velocity control)
   public static final Gains BACK_ROLLER_GAINS =
-      new Gains(0.3, 0.0, 0.0, 0.15548, 0.062793, 0.0, 0.0020985);
+      new Gains(0.2, 0.0, 0.0, 0.15548, 0.062793, 0.0, 0.0020985);
   public static final Constraints BACK_ROLLER_CONSTRAINTS =
       new Constraints(MAX_VELOCITY.in(RotationsPerSecond), 175.0);
 
