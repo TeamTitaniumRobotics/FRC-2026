@@ -166,8 +166,6 @@ public class Robot extends LoggedRobot {
   private final AutoChooser autoChooser = new AutoChooser();
   private final AutoRoutines autoRoutines;
 
-  private final Autos autos;
-
   private final Field2d field2d = new Field2d();
 
   public Robot() {
@@ -382,11 +380,8 @@ public class Robot extends LoggedRobot {
     autoChooser.addCmd("Right Outpost", autoRoutines::getRightOutpostAuto);
     autoChooser.addCmd("Left Double Pass", autoRoutines::leftDoublePass);
     autoChooser.addCmd("Right Double Pass", autoRoutines::rightDoublePass);
-    autoChooser.addCmd("Right Double Pass Bump", autoRoutines::rightDoublePassBump);
+    // autoChooser.addCmd("Right Double Pass Bump", autoRoutines::rightDoublePassBump);
     autoChooser.addCmd("Straight Test", autoRoutines::straightTuningAuto);
-
-    autos = new Autos(swerve);
-    autoChooser.addCmd("Right OP Auto", autos::rightDoublePassBump);
 
     autoChooser.addCmd(
         "Swerve FF Characterization", () -> DriveCommands.feedforwardCharacterization(swerve));

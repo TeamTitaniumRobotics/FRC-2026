@@ -142,8 +142,7 @@ public class Swerve extends SubsystemBase {
               new PIDController(5.0, 0.0, 0.0),
               new PIDController(3.0, 0.0, 0.0),
               new PIDController(2.0, 0.0, 0.0))
-          .withDefaultShouldFlip()
-          .withPoseReset((pose) -> RobotState.getInstance().setEstimatedPose(pose));
+          .withDefaultShouldFlip();
 
   private int velocityLogCounter = 0;
   private int choreoLogCounter = 0;
