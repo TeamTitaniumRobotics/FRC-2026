@@ -579,6 +579,9 @@ public class Robot extends LoggedRobot {
         .onTrue(Commands.runOnce(() -> shotCalculator.incrementFlywheelOffset(-25.0)));
     copilot.a().onTrue(Commands.runOnce(() -> shotCalculator.setFlywheelOffset(0.0)));
 
+    copilot.leftBumper().onTrue(Commands.runOnce(() -> shotCalculator.incrementHoodOffset(1.0)));
+    copilot.leftTrigger().onTrue(Commands.runOnce(() -> shotCalculator.incrementHoodOffset(-1.0)));
+    copilot.y().onTrue(Commands.runOnce(() -> shotCalculator.setHoodOffset(0.0)));
     RobotModeTriggers.teleop()
         .or(RobotModeTriggers.autonomous())
         .or(RobotModeTriggers.disabled())

@@ -38,6 +38,9 @@ public class ShotCalculator {
   @AutoLogOutput(key = "ShotCalculator/FlywheelOffset")
   private double flywheelOffset = 0.0;
 
+  @AutoLogOutput(key = "ShotCalculator/HoodOffset")
+  private double hoodOffset = 0.0;
+
   private ShotParameters latestParameters = null;
 
   private static final double phaseDelay = 0.03; // Turret response delay
@@ -218,6 +221,14 @@ public class ShotCalculator {
 
   public void setFlywheelOffset(double offset) {
     flywheelOffset = offset;
+  }
+
+  public void incrementHoodOffset(double incrementValue) {
+    hoodOffset += incrementValue;
+  }
+
+  public void setHoodOffset(double offset) {
+    hoodOffset = offset;
   }
 
   public record ShotParameters(
