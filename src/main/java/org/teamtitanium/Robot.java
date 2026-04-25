@@ -4,6 +4,8 @@
 
 package org.teamtitanium;
 
+import static edu.wpi.first.units.Units.RotationsPerSecond;
+
 import choreo.auto.AutoChooser;
 import com.ctre.phoenix6.SignalLogger;
 import com.pathplanner.lib.commands.FollowPathCommand;
@@ -403,6 +405,8 @@ public class Robot extends LoggedRobot {
     //     .onTrue(Commands.runOnce(() -> driver.setRumble(RumbleType.kBothRumble, 0.05)))
     //     .onFalse(Commands.runOnce(() -> driver.setRumble(RumbleType.kBothRumble, 0.0)));
 
+    LEDs.getInstance().setInShotTolerance(shooter.atSetpoint());
+
     configureButtonBindings();
     configureDashboard();
   }
@@ -542,14 +546,14 @@ public class Robot extends LoggedRobot {
                                     Rotation2d.kZero)))
                 .ignoringDisable(true));
 
-    driver
-        .rightBumper()
-        .whileTrue(
-            DriveCommands.trenchDrive(
-                swerve,
-                () -> -driver.getLeftY(),
-                () -> -driver.getLeftX(),
-                () -> -driver.getRightX()));
+    // driver
+    //     .rightBumper()
+    //     .whileTrue(
+    //         DriveCommands.trenchDrive(
+    //             swerve,
+    //             () -> -driver.getLeftY(),
+    //             () -> -driver.getLeftX(),
+    //             () -> -driver.getRightX()));
 
     superstructure
         .getIntakeDeployed()
@@ -558,22 +562,28 @@ public class Robot extends LoggedRobot {
 
     driver.back().whileTrue(hood.zeroHood()); // TODO: Disable roller while zeroing rack
     // driver.back().whileTrue(Commands.parallel(hood.zeroHood(), intakeRack.zeroIntake()));
-    driver.start().whileTrue(intake.zeroIntake());
+    // driver.start().whileTrue(intake.zeroIntake());
 
-    driver.leftStick().whileTrue(Commands.runOnce(() -> swerve.stopWithX(), swerve));
+    // driver.leftStick().whileTrue(Commands.runOnce(() -> swerve.stopWithX(), swerve));
 
     driver
         .povRight()
-        .whileTrue(spindexer.setVoltage(() -> -6.0).alongWith(feeder.setVoltage(() -> -6.0)));
+        .whileTrue(
+            spindexer
+                .setVelocity(() -> RotationsPerSecond.of(-3))
+                .alongWith(feeder.setVelocity(() -> RotationsPerSecond.of(-88.0))));
 
     copilot
         .rightBumper()
-        .onTrue(Commands.runOnce(() -> shotCalculator.incrementFlywheelOffset(50.0)));
+        .onTrue(Commands.runOnce(() -> shotCalculator.incrementFlywheelOffset(25.0)));
     copilot
         .rightTrigger()
-        .onTrue(Commands.runOnce(() -> shotCalculator.incrementFlywheelOffset(-50.0)));
+        .onTrue(Commands.runOnce(() -> shotCalculator.incrementFlywheelOffset(-25.0)));
     copilot.a().onTrue(Commands.runOnce(() -> shotCalculator.setFlywheelOffset(0.0)));
 
+    copilot.leftBumper().onTrue(Commands.runOnce(() -> shotCalculator.incrementHoodOffset(1.0)));
+    copilot.leftTrigger().onTrue(Commands.runOnce(() -> shotCalculator.incrementHoodOffset(-1.0)));
+    copilot.y().onTrue(Commands.runOnce(() -> shotCalculator.setHoodOffset(0.0)));
     RobotModeTriggers.teleop()
         .or(RobotModeTriggers.autonomous())
         .or(RobotModeTriggers.disabled())
@@ -585,6 +595,9 @@ public class Robot extends LoggedRobot {
   private void configureDashboard() {
     SmartDashboard.putData("Dashboard/Field2d", field2d);
 
+    SmartDashboard.putData(
+        "Dashboard/Commands/ZeroHood",
+        Commands.runOnce(() -> hood.zeroMotor()).ignoringDisable(true));
     SmartDashboard.putData(
         "Dashboard/Commands/ZeroIntake", intakeRack.zeroIntakeMotor().ignoringDisable(true));
     SmartDashboard.putData(

@@ -21,6 +21,7 @@ import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.Notifier;
 import java.util.List;
+import org.littletonrobotics.junction.Logger;
 import org.teamtitanium.utils.Constants;
 import org.teamtitanium.utils.Constants.Constraints;
 import org.teamtitanium.utils.Constants.Gains;
@@ -58,7 +59,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
     rightMotor = new TalonFX(FLYWHEEL_RIGHT_MOTOR_ID, Constants.RIO_CAN_BUS);
 
     // Configure motors
-    config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+    config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
     config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
 
     // Current limits
@@ -168,6 +169,9 @@ public class FlywheelIOTalonFX implements FlywheelIO {
                 newSlot = 0;
               }
 
+              Logger.recordOutput("Shooter/Flywheel/ActiveSlot", activeSlot);
+              Logger.recordOutput("Shooter/Flywheel/NewSlot", newSlot);
+
               if (newSlot != activeSlot) {
                 synchronized (controlLock) {
                   activeSlot = newSlot;
@@ -206,6 +210,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
       inputs.velocitySetpoint = velocitySetpoint.getValueAsDouble();
     }
 
+    inputs.leadAppliedVolts = appliedVolts.get(0).getValueAsDouble();
     inputs.positionRots = position.getValueAsDouble();
     inputs.appliedVolts = appliedVolts.stream().mapToDouble(s -> s.getValueAsDouble()).toArray();
     inputs.supplyCurrentAmps =

@@ -24,18 +24,20 @@ public class Feeder extends GenericRoller {
   /** Independent states for the feeder. */
   @RequiredArgsConstructor
   public enum FeederState {
-    IDLE(() -> 0.0),
-    UNJAM(() -> -6.0),
-    FEED(() -> 6.0);
+    IDLE(() -> IDLE_VELOCITY),
+    // UNJAM(() -> RotationsPerSecond.of(Feeder.configNumber.get()).times(-1.0)),
+    // FEED(() -> RotationsPerSecond.of(Feeder.configNumber.get()));
+    UNJAM(() -> FEED_VELOCITY.times(-1.0)),
+    FEED(() -> FEED_VELOCITY);
 
-    @Getter private final Supplier<Double> feederVoltage;
+    @Getter private final Supplier<AngularVelocity> feederVelocity;
   }
 
   public static final LoggedTunableNumber configNumber =
       new LoggedTunableNumber("Feeder/Roller/ConfigShotNum", 0.0);
 
   public static final AngularVelocity IDLE_VELOCITY = RotationsPerSecond.of(0.0);
-  public static final AngularVelocity FEED_VELOCITY = RotationsPerSecond.of(24.0);
+  public static final AngularVelocity FEED_VELOCITY = RotationsPerSecond.of(126.0);
 
   public static final int FEEDER_MOTOR_ID = 40;
   public static final CANBus FEEDER_CAN_BUS =
@@ -43,13 +45,13 @@ public class Feeder extends GenericRoller {
 
   public static final boolean FEEDER_INVERTED = true;
 
-  public static final double STATOR_CURRENT_LIMIT = 50.0;
-  public static final double SUPPLY_CURRENT_LIMIT = 30.0;
+  public static final double STATOR_CURRENT_LIMIT = 60.0;
+  public static final double SUPPLY_CURRENT_LIMIT = 40.0;
 
   public static final double FEEDER_GEAR_RATIO = 0.5;
 
-  public static final Gains FEEDER_GAINS = new Gains(0.0, 0.0, 0.0, 0.19, 0.0, 0.0, 0.0);
-  public static final Constraints FEEDER_CONSTRAINTS = new Constraints(24.0, 36.0);
+  public static final Gains FEEDER_GAINS = new Gains(0.15, 0.0, 0.0, 0.325, 0.065, 0.0, 0.0);
+  public static final Constraints FEEDER_CONSTRAINTS = new Constraints(100.0, 400.0);
 
   public static final DCMotor FEEDER_MOTOR_GEARBOX = DCMotor.getKrakenX44(1);
   public static final double FEEDER_MOI = 0.08;
@@ -73,7 +75,7 @@ public class Feeder extends GenericRoller {
           STATOR_CURRENT_LIMIT,
           SUPPLY_CURRENT_LIMIT,
           FEEDER_INVERTED,
-          true);
+          false);
 
   @Getter
   @Setter
@@ -93,6 +95,6 @@ public class Feeder extends GenericRoller {
     //             }),
     //         Commands.waitSeconds(0.5),
     //         runOnce(() -> setState(lastState))));
-    setDefaultCommand(setVoltage(() -> state.getFeederVoltage().get()));
+    setDefaultCommand(setVelocity(() -> state.getFeederVelocity().get()));
   }
 }

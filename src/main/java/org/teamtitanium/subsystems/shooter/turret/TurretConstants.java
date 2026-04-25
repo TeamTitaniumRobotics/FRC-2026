@@ -29,8 +29,8 @@ public class TurretConstants {
   public static final boolean TURRET_INVERTED = false;
   public static final boolean CANCODER_1_INVERTED = true;
   public static final boolean CANCODER_2_INVERTED = true;
-  public static final double CANCODER_1_OFFSET = -0.619873;
-  public static final double CANCODER_2_OFFSET = -0.946533;
+  public static final double CANCODER_1_OFFSET = -0.615966796875;
+  public static final double CANCODER_2_OFFSET = -0.8505859375;
 
   // CANcoder Gear Ratios from Turret
   public static final double CANCODER_COMMON_RATIO = (85.0 / 10.0); // 8.5:1 reduction
@@ -45,8 +45,8 @@ public class TurretConstants {
           * (CANCODER_DRIVE_GEAR_TEETH / (double) CANCODER_2_GEAR_TEETH); // 21.25:1 reduction
   public static final Angle CRT_OFFSET = Degrees.of(0.0);
   // Mechanical Limits
-  public static final Angle MIN_ANGLE = Degrees.of(-390.0);
-  public static final Angle MAX_ANGLE = Degrees.of(90.0);
+  public static final Angle MIN_ANGLE = Degrees.of(-360.0);
+  public static final Angle MAX_ANGLE = Degrees.of(60.0);
   public static final Angle TURRET_RANGE = MAX_ANGLE.minus(MIN_ANGLE); // 450 degrees
 
   // Tolerance

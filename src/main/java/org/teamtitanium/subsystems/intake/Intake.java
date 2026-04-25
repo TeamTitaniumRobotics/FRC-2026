@@ -43,21 +43,21 @@ public class Intake {
     this.rack = rack;
     this.roller = roller;
 
-    rack.setDefaultCommand(
-        Commands.either(
-            rack.setExtension(() -> state.getRackDistance().get(), AGITATE_CONSTRAINTS),
-            rack.setExtension(() -> state.getRackDistance().get()),
-            () -> state == IntakeState.AGITATE));
-    // rack.setDefaultCommand(rack.setExtension(() -> state.getRackDistance().get()));
+    // rack.setDefaultCommand(
+    //     Commands.either(
+    //         rack.setExtension(() -> state.getRackDistance().get(), AGITATE_CONSTRAINTS),
+    //         rack.setExtension(() -> state.getRackDistance().get()),
+    //         () -> state == IntakeState.AGITATE));
+    rack.setDefaultCommand(rack.setExtension(() -> state.getRackDistance().get()));
     // roller.setDefaultCommand(roller.setVelocity(() -> state.getIntakeVelocity().get()));
     // roller.setDefaultCommand(
     //     roller.setVelocity(() -> RotationsPerSecond.of(roller.configurableNumber.get())));
-    roller.setDefaultCommand(roller.setVoltage(() -> roller.configurableNumber.get() * 12.0));
-    // roller.setDefaultCommand(
-    //     Commands.either(
-    //         roller.setVelocity(() -> RollerConstants.INTAKE_VELOCITY),
-    //         roller.setVelocity(() -> state.getIntakeVelocity().get()),
-    //         () -> state == IntakeState.STOW && rack.atSetpoint().negate().getAsBoolean()));
+    // roller.setDefaultCommand(roller.setVoltage(() -> roller.configurableNumber.get() * 12.0));
+    roller.setDefaultCommand(
+        Commands.either(
+            roller.setVelocity(() -> RollerConstants.INTAKE_VELOCITY),
+            roller.setVelocity(() -> state.getIntakeVelocity().get()),
+            () -> state == IntakeState.STOW && rack.atSetpoint().negate().getAsBoolean()));
   }
 
   public Command zeroIntake() {
