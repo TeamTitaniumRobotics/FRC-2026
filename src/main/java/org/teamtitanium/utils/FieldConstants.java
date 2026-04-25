@@ -409,7 +409,9 @@ public class FieldConstants {
 
   public static class PassingTargets {
     public static final Translation2d outpostTarget =
-        new Translation2d(Outpost.centerPoint.getX() + 0.75, Outpost.centerPoint.getY() + 0.75);
+        new Translation2d(
+            Outpost.centerPoint.getX() + 0.75 + Units.inchesToMeters(30.0),
+            Outpost.centerPoint.getY() + 0.75);
     public static final Translation2d depotTarget =
         new Translation2d(outpostTarget.getX(), FieldConstants.fieldWidth - outpostTarget.getY());
   }

@@ -97,13 +97,15 @@ public class Shooter {
     //         backRoller.setVelocity(() -> state.getBackRollerVelocity().get()),
     //         RobotModeTriggers.autonomous()));
     backRoller.setDefaultCommand(
-        backRoller.setVelocity(
-            () ->
-                RPM.of(
-                    MathUtil.clamp(
-                        flywheel.flywheelConfigNumber1.get() / BackRollerConstants.WHEEL_RATIO,
-                        0.0,
-                        BackRollerConstants.MAX_VELOCITY.in(RPM)))));
+        backRoller.setVelocity(() -> RPM.of(BackRoller.configurableNumber.get())));
+    // backRoller.setDefaultCommand(
+    //     backRoller.setVelocity(
+    //         () ->
+    //             RPM.of(
+    //                 MathUtil.clamp(
+    //                     flywheel.flywheelConfigNumber1.get() / BackRollerConstants.WHEEL_RATIO,
+    //                     0.0,
+    //                     BackRollerConstants.MAX_VELOCITY.in(RPM)))));
     hood.setDefaultCommand(hood.setPosition(() -> Degrees.of(hood.hoodConfigNumber1.get())));
     // hood.setDefaultCommand(hood.setPosition(() -> state.getHoodAngle().get()));
     // turret.setDefaultCommand(
