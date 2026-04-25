@@ -134,6 +134,11 @@ public class Shooter {
         .and(backRoller.atSetpoint());
   }
 
+  @AutoLogOutput(key = "Shooter/TurretWrapping")
+  public Trigger turretIsWrapping() {
+    return turret.isWrapping();
+  }
+
   public Angle getTurretAngle() {
     return turret.getPosition();
   }
