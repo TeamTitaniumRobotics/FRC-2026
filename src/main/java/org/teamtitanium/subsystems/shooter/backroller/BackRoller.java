@@ -44,6 +44,8 @@ public class BackRoller extends SubsystemBase {
 
   public static final LoggedTunableNumber configurableNumber =
       new LoggedTunableNumber("Shooter/BackRoller/ConfigurableNumber", 0.0);
+  public static final LoggedTunableNumber useConfigurableNumber =
+      new LoggedTunableNumber("Shooter/BackRoller/UseConfigurableNumber", 0.0);
 
   private final BackRollerIO io;
   private final BackRollerIOInputsAutoLogged inputs = new BackRollerIOInputsAutoLogged();
