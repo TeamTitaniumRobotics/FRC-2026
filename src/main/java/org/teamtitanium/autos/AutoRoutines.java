@@ -184,6 +184,8 @@ public class AutoRoutines {
         return intakePath(path, routine);
       case SCORE:
         return scorePath(path, routine);
+      case SHUFFLE:
+        return emptyPath(path, routine).deadlineFor(shuffleShoot());
       case NOTHING:
         return emptyPath(path, routine);
       default:
@@ -278,7 +280,7 @@ public class AutoRoutines {
   }
 
   private Command shuffleShoot() {
-    return Commands.sequence(setAutoScore(true), shuffleIntake(0.75, 0.75), setAutoScore(false));
+    return Commands.sequence(setAutoScore(true), shuffleIntake(0.5, 0.75), setAutoScore(false));
   }
 
   private Command shuffleIntake(double outDelay, double inDelay) {
@@ -317,6 +319,7 @@ public class AutoRoutines {
   public enum PathAction {
     INTAKE,
     SCORE,
+    SHUFFLE,
     NOTHING
   }
 
