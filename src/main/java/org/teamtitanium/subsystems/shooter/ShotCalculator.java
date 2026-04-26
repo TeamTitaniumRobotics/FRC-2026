@@ -70,18 +70,18 @@ public class ShotCalculator {
     shotMap.put(5.55, new ShotData(2675, 19, 1.14));
     shotMap.put(5.80, new ShotData(2750, 20, 1.14));
 
-    passingMap.put(4.00, new ShotData(1800, 10, 2.1225, 1800));
-    passingMap.put(5.00, new ShotData(2150, 12, 2.4100, 2150));
-    passingMap.put(6.00, new ShotData(2500, 14, 2.6975, 2500));
-    passingMap.put(7.00, new ShotData(2850, 16, 2.5867, 2850));
-    passingMap.put(8.00, new ShotData(3100, 20, 2.4758, 3100));
-    passingMap.put(9.00, new ShotData(3450, 24, 2.3650, 3450));
-    passingMap.put(9.90, new ShotData(3700, 28, 2.5609, 3700));
-    passingMap.put(11.40, new ShotData(4000, 32, 2.8875, 4000));
-    passingMap.put(12.25, new ShotData(4350, 35, 3.0725, 4350));
-    passingMap.put(13.25, new ShotData(4775, 35, 3.2289, 4775));
-    passingMap.put(14.50, new ShotData(5200, 35, 3.4243, 5200));
-    passingMap.put(15.00, new ShotData(5750, 35, 3.5025, 5950));
+    passingMap.put(4.00, new ShotData(1800, 10, 1.1225, 1800));
+    passingMap.put(5.00, new ShotData(2150, 12, 1.4100, 2150));
+    passingMap.put(6.00, new ShotData(2500, 14, 1.6975, 2500));
+    passingMap.put(7.00, new ShotData(2850, 16, 1.5867, 2850));
+    passingMap.put(8.00, new ShotData(3100, 20, 1.4758, 3100));
+    passingMap.put(9.00, new ShotData(3450, 24, 1.3650, 3450));
+    passingMap.put(9.90, new ShotData(3700, 28, 1.5609, 3700));
+    passingMap.put(11.40, new ShotData(4000, 32, 1.8875, 4000));
+    passingMap.put(12.25, new ShotData(4350, 35, 2.0725, 4350));
+    passingMap.put(13.25, new ShotData(4775, 35, 2.2289, 4775));
+    passingMap.put(14.50, new ShotData(5200, 35, 2.4243, 5200));
+    passingMap.put(15.00, new ShotData(5750, 35, 2.5025, 5950));
   }
 
   public ShotParameters getParameters() {
