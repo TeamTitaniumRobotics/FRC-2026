@@ -108,6 +108,16 @@ public class AutoRoutines {
     return routine.cmd();
   }
 
+  public Command depotAuto() {
+    final AutoRoutine routine = factory.newRoutine("Depot");
+    Command autoCmd =
+        Commands.sequence(
+            resetPose(Path.HS_DM),
+            followPath(Path.HS_DM, routine),
+            shuffleShoot().withTimeout(5.0));
+    return autoCmd;
+  }
+
   // public Command rightDoublePassBump() {
   //   final AutoRoutine routine = factory.newRoutine("Right Double Pass Bump");
   //   Command autoCmd = resetPose(Path.RTSR_RFME);
@@ -315,7 +325,8 @@ public class AutoRoutines {
     LB_LTS(PathAction.INTAKE),
     LTS_LCME(PathAction.INTAKE),
     LCME_LTS(PathAction.NOTHING, true),
-    LCME_LTSH(PathAction.NOTHING, true);
+    LCME_LTSH(PathAction.NOTHING, true),
+    HS_DM(PathAction.INTAKE);
 
     private final PathAction action;
     private final boolean intakeDeployed;
