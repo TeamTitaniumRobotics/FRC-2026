@@ -34,8 +34,6 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.lib.BLine.FollowPath;
-import frc.robot.lib.BLine.Path;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.locks.Lock;
@@ -133,17 +131,6 @@ public class Swerve extends SubsystemBase {
   private final PIDController yPosController = new PIDController(10.0, 0.0, 0.0);
   private final PIDController headingController = new PIDController(7.5, 0.0, 0.0);
 
-  public final FollowPath.Builder pathBuilder =
-      new FollowPath.Builder(
-              this,
-              () -> RobotState.getInstance().getEstimatedPose(),
-              () -> RobotState.getInstance().getRobotVelocity(),
-              (speeds) -> this.runVelocity(speeds),
-              new PIDController(5.0, 0.0, 0.0),
-              new PIDController(3.0, 0.0, 0.0),
-              new PIDController(2.0, 0.0, 0.0))
-          .withDefaultShouldFlip();
-
   private int velocityLogCounter = 0;
   private int choreoLogCounter = 0;
 
@@ -190,9 +177,6 @@ public class Swerve extends SubsystemBase {
         config,
         () -> AllianceFlipUtil.shouldFlip(),
         this);
-
-    Path.setDefaultGlobalConstraints(
-        new Path.DefaultGlobalConstraints(4.5, 10.0, 600, 2000, 0.03, 2.0, 0.25));
 
     HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_AdvantageKit);
 

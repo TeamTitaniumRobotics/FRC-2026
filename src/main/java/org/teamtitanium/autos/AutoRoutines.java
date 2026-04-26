@@ -173,17 +173,6 @@ public class AutoRoutines {
     return routine.cmd();
   }
 
-  private Command followPath(Paths.Path path) {
-    return switch (path.action()) {
-      case INTAKE -> intakePath(path);
-      case SCORE -> scorePath(path);
-      case NOTHING -> emptyPath(path);
-      default -> emptyPath(path);
-    };
-  }
-
-  /** Deprecated version of followPath that uses the old auto system. */
-  @Deprecated(since = "2026-4-24", forRemoval = true)
   private Command followPath(Path path, AutoRoutine routine) {
     PathAction action = path.action;
     switch (action) {
@@ -200,39 +189,11 @@ public class AutoRoutines {
     }
   }
 
-  /**
-   * Follows a path while running the intake, then turns off the intake at the end.
-   *
-   * @param path The {@link Paths.Path} to follow while intaking.
-   * @return A command that follows the path while intaking, then turns off the intake at the end.
-   */
-  private Command intakePath(Paths.Path path) {
-    return Commands.deadline(emptyPath(path), setAutoIntake(true), setAutoScore(false))
-        .andThen(setAutoIntake(false));
-  }
-
-  /** Deprecated version of intakePath that uses the old auto system. */
-  @Deprecated(since = "2026-4-24", forRemoval = true)
   private Command intakePath(Path path, AutoRoutine routine) {
     return Commands.deadline(path.getPathCommand(), setAutoIntake(true), setAutoScore(false))
         .andThen(setAutoIntake(false));
   }
 
-  /**
-   * Follows a path while running the scoring command, then turns off the scoring command at the
-   * end.
-   *
-   * @param path The {@link Paths.Path} to follow while scoring.
-   * @return A command that follows the path while scoring, then turns off the scoring command at
-   *     the end.
-   */
-  private Command scorePath(Paths.Path path) {
-    return Commands.deadline(emptyPath(path), setAutoIntake(false), setAutoScore(true))
-        .andThen(setAutoScore(false));
-  }
-
-  /** Deprecated version of scorePath that uses the old auto system. */
-  @Deprecated(since = "2026-4-24", forRemoval = true)
   private Command scorePath(Path path, AutoRoutine routine) {
     boolean deployIntake = path.intakeDeployed;
     return Commands.deadline(
@@ -240,24 +201,10 @@ public class AutoRoutines {
         .andThen(setAutoScore(false), setAutoIntakeOverride(false));
   }
 
-  /**
-   * Follows a path without running any superstructure commands.
-   *
-   * @param path The {@link Paths.Path} to follow.
-   * @return A command that follows the path without running any superstructure commands.
-   */
-  private Command emptyPath(Paths.Path path) {
-    return swerve.pathBuilder.build(path.getPath());
-  }
-
-  /** Deprecated version of emptyPath that uses the old auto system. */
-  @Deprecated(since = "2026-4-24", forRemoval = true)
   private Command emptyPath(Path path, AutoRoutine routine) {
     return path.getPathCommand();
   }
 
-  /** Deprecated version of resetPose that uses the old auto system. */
-  @Deprecated(since = "2026-4-24", forRemoval = true)
   private Command resetPose(Path path) {
     return Commands.runOnce(
         () -> {
@@ -266,22 +213,6 @@ public class AutoRoutines {
               .setEstimatedPose(
                   AllianceFlipUtil.apply(
                       path.getPathPlannerPath().getStartingHolonomicPose().orElse(Pose2d.kZero)));
-          Logger.recordOutput("Autos/CurrentState", "Pose Reset");
-        });
-  }
-
-  /**
-   * Resets the robot's pose to the starting pose of the given path.
-   *
-   * @param path The {@link Paths.Path} whose starting pose to reset to.
-   * @return A command that resets the robot's pose to the starting pose of the given path.
-   */
-  private Command resetPose(Paths.Path path) {
-    return Commands.runOnce(
-        () -> {
-          Logger.recordOutput("Autos/CurrentState", "Resetting Pose");
-          RobotState.getInstance()
-              .setEstimatedPose(AllianceFlipUtil.apply(path.points().get(0).getPoint().getPose()));
           Logger.recordOutput("Autos/CurrentState", "Pose Reset");
         });
   }
