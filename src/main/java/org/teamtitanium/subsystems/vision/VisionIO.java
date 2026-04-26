@@ -11,6 +11,7 @@ public interface VisionIO {
   @AutoLog
   public class VisionIOInputs {
     public boolean connected = false;
+    public String name = "";
 
     public PoseObservation[] poseObservations = new PoseObservation[0];
     public int[] tagIds = new int[0];

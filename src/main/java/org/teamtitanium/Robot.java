@@ -331,6 +331,10 @@ public class Robot extends LoggedRobot {
                 new VisionIOSim(
                     VisionConstants.leftCameraName,
                     VisionConstants.leftCameraPose,
+                    () -> RobotState.getInstance().getEstimatedPose()),
+                new VisionIOSim(
+                    VisionConstants.frCameraName,
+                    VisionConstants.frCameraPose,
                     () -> RobotState.getInstance().getEstimatedPose()));
       }
       default -> {
@@ -351,7 +355,8 @@ public class Robot extends LoggedRobot {
         intakeRoller = new IntakeRoller(new IntakeRollerIO() {});
 
         leds = new LEDs(new LEDsIO() {});
-        vision = new Vision(new VisionIO() {}, new VisionIO() {}, new VisionIO() {});
+        vision =
+            new Vision(new VisionIO() {}, new VisionIO() {}, new VisionIO() {}, new VisionIO() {});
       }
     }
 

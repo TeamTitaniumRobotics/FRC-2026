@@ -19,10 +19,15 @@ public class VisionConstants {
       new Transform3d(
           new Translation3d(-0.282414, 0.306387, 0.510389),
           new Rotation3d(0.0, Units.degreesToRadians(-22.0), Units.degreesToRadians(0.0)));
+  //   public static final Transform3d backCameraPose =
+  //       new Transform3d(
+  //           new Translation3d(-0.304646, 0.300480, 0.325744),
+  //           new Rotation3d(0.0, Units.degreesToRadians(-28.0),
+  // Units.degreesToRadians(157.22839)));
   public static final Transform3d backCameraPose =
       new Transform3d(
           new Translation3d(-0.304646, 0.300480, 0.325744),
-          new Rotation3d(0.0, Units.degreesToRadians(-28.0), Units.degreesToRadians(157.22839)));
+          new Rotation3d(0.0, Units.degreesToRadians(-28.0), Units.degreesToRadians(154.0)));
   public static final Transform3d leftCameraPose =
       new Transform3d(
           new Translation3d(-0.265486, 0.350036, 0.446487),
