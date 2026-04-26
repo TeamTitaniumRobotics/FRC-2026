@@ -98,7 +98,7 @@
     {
       "name": "Intake",
       "minWaypointRelativePos": 1.5007751937984517,
-      "maxWaypointRelativePos": 3.0,
+      "maxWaypointRelativePos": 4.0,
       "constraints": {
         "maxVelocity": 2.5,
         "maxAcceleration": 4.0,
@@ -120,7 +120,7 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 1.0,
+    "velocity": 0.75,
     "rotation": -125.00000000000001
   },
   "reversed": false,

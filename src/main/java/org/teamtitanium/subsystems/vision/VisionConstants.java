@@ -44,6 +44,6 @@ public class VisionConstants {
   public static final double angularStdDevBaseline = 0.06;
 
   public static final Matrix<N3, N1> SINGLE_TAG_STD_DEVS = VecBuilder.fill(4, 4, 8);
-  public static final Matrix<N3, N1> MULTI_TAG_STD_DEVS = VecBuilder.fill(0.76, 0.75, 2);
-  public static final Matrix<N3, N1> DISABLED_STD_DEVS = VecBuilder.fill(0.5, 0.5, 0.75);
+  public static final Matrix<N3, N1> MULTI_TAG_STD_DEVS = VecBuilder.fill(1.0, 1.0, 3);
+  public static final Matrix<N3, N1> DISABLED_STD_DEVS = VecBuilder.fill(0.75, 0.75, 1.0);
 }

@@ -34,7 +34,7 @@ public class FlywheelConstants {
   // public static final Gains FLYWHEEL_GAINS =
   //     new Gains(0.3, 0.0, 0.0, 0.22791, 0.093687, 0.0, 0.012626);
   public static final Gains FLYWHEEL_RECOVERY_GAINS =
-      new Gains(0.6, 0.0, 0.0, 0.046785, 0.083074, 0.0, 0.028363);
+      new Gains(0.7, 0.0, 0.0, 0.046785, 0.083074, 0.0, 0.028363);
   // public static final Gains FLYWHEEL_RECOVERY_GAINS =
   //     new Gains(1.2, 0.0, 0.0, 0.22791, 0.093687, 0.0, 0.012626);
   // public static final Gains FLYWHEEL_GAINS = new Gains(8.1, 0.0, 0.0, 3.75, 0.0006, 0.0, 0.0);

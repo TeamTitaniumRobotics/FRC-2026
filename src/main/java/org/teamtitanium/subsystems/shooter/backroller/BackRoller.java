@@ -7,6 +7,7 @@ import static org.teamtitanium.subsystems.shooter.backroller.BackRollerConstants
 import static org.teamtitanium.subsystems.shooter.backroller.BackRollerConstants.VELOCITY_TOLERANCE_RPS;
 
 import com.ctre.phoenix6.SignalLogger;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -161,6 +162,6 @@ public class BackRoller extends SubsystemBase {
    */
   @AutoLogOutput(key = "Shooter/BackRoller/AtSetpoint")
   public Trigger atSetpoint() {
-    return atSetpoint;
+    return atSetpoint.debounce(0.5, DebounceType.kFalling);
   }
 }

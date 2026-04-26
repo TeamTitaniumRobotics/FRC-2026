@@ -37,7 +37,7 @@ public class Feeder extends GenericRoller {
       new LoggedTunableNumber("Feeder/Roller/ConfigShotNum", 0.0);
 
   public static final AngularVelocity IDLE_VELOCITY = RotationsPerSecond.of(0.0);
-  public static final AngularVelocity FEED_VELOCITY = RotationsPerSecond.of(126.0);
+  public static final AngularVelocity FEED_VELOCITY = RotationsPerSecond.of(100.8);
 
   public static final int FEEDER_MOTOR_ID = 40;
   public static final CANBus FEEDER_CAN_BUS =

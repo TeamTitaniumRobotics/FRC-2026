@@ -101,6 +101,7 @@ public class AutoRoutines {
             resetPose(Path.RTS_RFME_RBSH),
             followPath(Path.RTS_RFME_RBSH, routine),
             followPath(Path.RBSH_RTS, routine),
+            shuffleShoot().withTimeout(2.0),
             followPath(Path.RTS_RFME_RBSH, routine),
             followPath(Path.RBSH_RTS, routine));
     routine.active().onTrue(autoCmd);
@@ -181,7 +182,7 @@ public class AutoRoutines {
       case SCORE:
         return scorePath(path, routine);
       case SHUFFLE:
-        return emptyPath(path, routine).deadlineFor(shuffleShoot());
+        return emptyPath(path, routine).deadlineFor(shuffleShoot()).andThen(setAutoScore(false));
       case NOTHING:
         return emptyPath(path, routine);
       default:
@@ -218,7 +219,7 @@ public class AutoRoutines {
   }
 
   private Command shuffleShoot() {
-    return Commands.sequence(setAutoScore(true), shuffleIntake(0.5, 0.75), setAutoScore(false));
+    return Commands.sequence(setAutoScore(true), shuffleIntake(0.75, 0.75), setAutoScore(false));
   }
 
   private Command shuffleIntake(double outDelay, double inDelay) {
