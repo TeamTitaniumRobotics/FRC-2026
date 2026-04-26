@@ -3,16 +3,16 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.35,
+        "x": 3.75,
         "y": 2.5
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.35,
+        "x": 2.75,
         "y": 2.5
       },
       "isLocked": false,
-      "linkedName": "RBSH"
+      "linkedName": "RBSHR"
     },
     {
       "anchor": {
@@ -32,16 +32,16 @@
     },
     {
       "anchor": {
-        "x": 4.325,
+        "x": 3.65,
         "y": 0.65
       },
       "prevControl": {
-        "x": 2.575,
-        "y": 0.6500000000000002
+        "x": 2.4,
+        "y": 0.6500000000000001
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "RTS"
+      "linkedName": null
     }
   ],
   "rotationTargets": [],
@@ -57,14 +57,14 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 1.0,
-    "rotation": 0.0
+    "velocity": 0.0,
+    "rotation": 180.0
   },
   "reversed": false,
   "folder": "RT",
   "idealStartingState": {
     "velocity": 0.75,
-    "rotation": -125.00000000000001
+    "rotation": 125.00000000000001
   },
   "useDefaultConstraints": false
 }

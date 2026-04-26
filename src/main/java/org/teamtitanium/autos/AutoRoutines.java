@@ -100,10 +100,10 @@ public class AutoRoutines {
         Commands.sequence(
             resetPose(Path.RTS_RFME_RBSH),
             followPath(Path.RTS_RFME_RBSH, routine),
-            followPath(Path.RBSH_RTS, routine),
+            followPath(Path.RBSH_RTSH, routine),
             shuffleShoot().withTimeout(2.0),
-            followPath(Path.RTS_RFME_RBSH, routine),
-            followPath(Path.RBSH_RTS, routine));
+            followPath(Path.RTSH_RCME_RBSHR, routine),
+            followPath(Path.RBSHR_RTSHB, routine));
     routine.active().onTrue(autoCmd);
     return routine.cmd();
   }
@@ -182,7 +182,7 @@ public class AutoRoutines {
       case SCORE:
         return scorePath(path, routine);
       case SHUFFLE:
-        return emptyPath(path, routine).deadlineFor(shuffleShoot()).andThen(setAutoScore(false));
+        return shufflePath(path, routine);
       case NOTHING:
         return emptyPath(path, routine);
       default:
@@ -200,6 +200,12 @@ public class AutoRoutines {
     return Commands.deadline(
             path.getPathCommand(), setAutoScore(true), setAutoIntakeOverride(deployIntake))
         .andThen(setAutoScore(false), setAutoIntakeOverride(false));
+  }
+
+  public Command shufflePath(Path path, AutoRoutine routine) {
+    return Commands.deadline(
+        scorePath(path, routine),
+        shuffleIntake(0.75, 0.75).beforeStarting(Commands.waitSeconds(1.0)));
   }
 
   private Command emptyPath(Path path, AutoRoutine routine) {
@@ -278,13 +284,12 @@ public class AutoRoutines {
    * - Third/Fourth letter (if present): (S = Start, E = End)
    * - Third/Fourth letter (if present): Final pose (F = Facing forward, B = Facing backward)
    */
-  /** Deprecated Path system to be replaced with {@link Paths} */
-  @Deprecated(since = "2026-4-24", forRemoval = true)
   public enum Path {
     RTS_RFME(PathAction.INTAKE),
     RTS_RCME(PathAction.INTAKE),
     RTS_RB(PathAction.NOTHING, true),
     RTS_RFME_RBSH(PathAction.INTAKE),
+    RTSH_RCME_RBSHR(PathAction.INTAKE),
     RTSH_RCME(PathAction.INTAKE),
     RTSR_RFME(PathAction.INTAKE),
     RTSR_RCME(PathAction.INTAKE),
@@ -300,7 +305,8 @@ public class AutoRoutines {
     RCME_RTS(PathAction.NOTHING, true),
     ROB_RBB(PathAction.NOTHING, true),
     RB_RTS(PathAction.INTAKE),
-    RBSH_RTS(PathAction.SHUFFLE),
+    RBSH_RTSH(PathAction.SHUFFLE),
+    RBSHR_RTSHB(PathAction.SHUFFLE),
     LTS_LFME(PathAction.INTAKE),
     LTSH_LCME(PathAction.INTAKE),
     LFME_LTS(PathAction.NOTHING, true),
