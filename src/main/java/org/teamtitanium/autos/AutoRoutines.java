@@ -95,9 +95,16 @@ public class AutoRoutines {
   }
 
   public Command rightDoubleBump() {
+    final AutoRoutine routine = factory.newRoutine("Right Double Bump");
     Command autoCmd =
-        Commands.sequence(resetPose(Paths.RTS_RFM.getPath()), followPath(Paths.RTS_RFM.getPath()));
-    return autoCmd;
+        Commands.sequence(
+            resetPose(Path.RTS_RFME_RBSH),
+            followPath(Path.RTS_RFME_RBSH, routine),
+            followPath(Path.RBSH_RTS, routine),
+            followPath(Path.RTS_RFME_RBSH, routine),
+            followPath(Path.RBSH_RTS, routine));
+    routine.active().onTrue(autoCmd);
+    return routine.cmd();
   }
 
   // public Command rightDoublePassBump() {
@@ -345,6 +352,7 @@ public class AutoRoutines {
     RTS_RFME(PathAction.INTAKE),
     RTS_RCME(PathAction.INTAKE),
     RTS_RB(PathAction.NOTHING, true),
+    RTS_RFME_RBSH(PathAction.INTAKE),
     RTSH_RCME(PathAction.INTAKE),
     RTSR_RFME(PathAction.INTAKE),
     RTSR_RCME(PathAction.INTAKE),
@@ -360,7 +368,7 @@ public class AutoRoutines {
     RCME_RTS(PathAction.NOTHING, true),
     ROB_RBB(PathAction.NOTHING, true),
     RB_RTS(PathAction.INTAKE),
-    RBSH_RTSR(PathAction.SCORE),
+    RBSH_RTS(PathAction.SHUFFLE),
     LTS_LFME(PathAction.INTAKE),
     LTSH_LCME(PathAction.INTAKE),
     LFME_LTS(PathAction.NOTHING, true),
