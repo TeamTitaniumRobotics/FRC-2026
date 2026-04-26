@@ -387,7 +387,7 @@ public class Robot extends LoggedRobot {
     autoChooser.addCmd("Right Outpost", autoRoutines::getRightOutpostAuto);
     autoChooser.addCmd("Left Double Pass", autoRoutines::leftDoublePass);
     autoChooser.addCmd("Right Double Pass", autoRoutines::rightDoublePass);
-    // autoChooser.addCmd("Right Double Pass Bump", autoRoutines::rightDoublePassBump);
+    autoChooser.addCmd("Right Double  Bump", autoRoutines::rightDoubleBump);
     autoChooser.addCmd("Straight Test", autoRoutines::straightTuningAuto);
 
     autoChooser.addCmd(
@@ -401,8 +401,6 @@ public class Robot extends LoggedRobot {
     RobotModeTriggers.autonomous()
         .onTrue(Commands.runOnce(() -> autonomousCommand = autoChooser.selectedCommand()));
     RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());
-    // RobotModeTriggers.autonomous()
-    //     .onTrue(Commands.runOnce(() -> autos.rightDoublePassBump().schedule()));
 
     CommandScheduler.getInstance().schedule(FollowPathCommand.warmupCommand());
 
