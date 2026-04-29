@@ -89,11 +89,12 @@ public class LEDs extends VirtualSubsystem {
         }
       }
     } else if (DriverStation.isAutonomous()) {
-      wave(
-          Color.kGold,
-          Color.kDarkBlue,
-          LEDConstants.WAVE_FAST_CYCLE_LENGTH,
-          LEDConstants.WAVE_FAST_DURATION);
+      // wave(
+      //     Color.kGold,
+      //     Color.kDarkBlue,
+      //     LEDConstants.WAVE_FAST_CYCLE_LENGTH,
+      //     LEDConstants.WAVE_FAST_DURATION);
+      stripes(List.of(Color.kRed, Color.kWhite, Color.kDarkBlue), 3, 2.0);
     } else {
       if (autoWinnerNotSet) {
         strobe(Color.kWhite, Color.kRed, LEDConstants.STROBE_DURATION);
