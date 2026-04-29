@@ -155,7 +155,7 @@ public class ShotCalculator {
 
     Rotation2d turretAngle = getTurretAngle(predictedRobotPose, target);
     ShotData shotData = activeMap.get(predictedDistance);
-    double hoodAngleRots = shotData.getHoodAngleRots();
+    double hoodAngleRots = shotData.getHoodAngleRots() + Units.degreesToRotations(hoodOffset);
     double flywheelRPM = shotData.flywheelRPM() + flywheelOffset;
     double flywheelIdleRPM = MathUtil.clamp(flywheelRPM, 0.0, maxFlywheelIdleRPM.get());
     double backRollerRPM = shotData.backRollerRPM();
