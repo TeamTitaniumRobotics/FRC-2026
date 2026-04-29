@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Rotations;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -45,7 +46,19 @@ public class Shooter {
     @Getter private final Supplier<Angle> turretAngle;
 
     public Supplier<AngularVelocity> getBackRollerVelocity() {
-      return () -> getFlywheelVelocity().get().div(BackRollerConstants.WHEEL_RATIO);
+      return () -> {
+        var shotParameters = ShotCalculator.getInstance().getParameters();
+
+        double calculatedBackRollerRpm =
+            getFlywheelVelocity().get().div(BackRollerConstants.WHEEL_RATIO).in(RPM);
+        double targetBackRollerRpm =
+            Double.isFinite(shotParameters.backRollerRPM())
+                ? shotParameters.backRollerRPM()
+                : calculatedBackRollerRpm;
+
+        return RPM.of(
+            MathUtil.clamp(targetBackRollerRpm, 0.0, BackRollerConstants.MAX_VELOCITY.in(RPM)));
+      };
     }
   }
 
@@ -89,8 +102,16 @@ public class Shooter {
             backRoller.setVelocity(() -> ShooterState.AIM.getBackRollerVelocity().get()),
             backRoller.setVelocity(() -> state.getBackRollerVelocity().get()),
             RobotModeTriggers.autonomous()));
-    // backRoller.setDefaultCommand(backRoller.setVoltage(() ->
-    // BackRoller.configurableNumber.get()));
+    // backRoller.setDefaultCommand(
+    //     backRoller.setVelocity(() -> RPM.of(BackRoller.configurableNumber.get())));
+    // backRoller.setDefaultCommand(
+    //     backRoller.setVelocity(
+    //         () ->
+    //             RPM.of(
+    //                 MathUtil.clamp(
+    //                     flywheel.flywheelConfigNumber1.get() / BackRollerConstants.WHEEL_RATIO,
+    //                     0.0,
+    //                     BackRollerConstants.MAX_VELOCITY.in(RPM)))));
     // hood.setDefaultCommand(hood.setPosition(() -> Degrees.of(hood.hoodConfigNumber1.get())));
     hood.setDefaultCommand(hood.setPosition(() -> state.getHoodAngle().get()));
     // turret.setDefaultCommand(
@@ -108,6 +129,11 @@ public class Shooter {
         .and(flywheel.atSetpoint())
         .and(turret.atSetpoint())
         .and(backRoller.atSetpoint());
+  }
+
+  @AutoLogOutput(key = "Shooter/TurretWrapping")
+  public Trigger turretIsWrapping() {
+    return turret.isWrapping();
   }
 
   public Angle getTurretAngle() {

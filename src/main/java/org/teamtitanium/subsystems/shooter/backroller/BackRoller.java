@@ -1,14 +1,18 @@
 package org.teamtitanium.subsystems.shooter.backroller;
 
 import static edu.wpi.first.units.Units.RotationsPerSecond;
+import static edu.wpi.first.units.Units.Volts;
 import static org.teamtitanium.subsystems.shooter.backroller.BackRollerConstants.BACK_ROLLER_CONSTRAINTS;
 import static org.teamtitanium.subsystems.shooter.backroller.BackRollerConstants.BACK_ROLLER_GAINS;
 import static org.teamtitanium.subsystems.shooter.backroller.BackRollerConstants.VELOCITY_TOLERANCE_RPS;
 
+import com.ctre.phoenix6.SignalLogger;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -41,6 +45,8 @@ public class BackRoller extends SubsystemBase {
 
   public static final LoggedTunableNumber configurableNumber =
       new LoggedTunableNumber("Shooter/BackRoller/ConfigurableNumber", 0.0);
+  public static final LoggedTunableNumber useConfigurableNumber =
+      new LoggedTunableNumber("Shooter/BackRoller/UseConfigurableNumber", 0.0);
 
   private final BackRollerIO io;
   private final BackRollerIOInputsAutoLogged inputs = new BackRollerIOInputsAutoLogged();
@@ -51,8 +57,21 @@ public class BackRoller extends SubsystemBase {
   private final Trigger atSetpoint =
       new Trigger(() -> Math.abs(inputs.velocityRps - targetVelocityRps) < VELOCITY_TOLERANCE_RPS);
 
+  private final SysIdRoutine sysIdRoutine;
+
   public BackRoller(BackRollerIO io) {
     this.io = io;
+    this.sysIdRoutine =
+        new SysIdRoutine(
+            new SysIdRoutine.Config(
+                null,
+                null,
+                null,
+                (state) -> {
+                  Logger.recordOutput("Shooter/BackRoller/SysIdState", state.toString());
+                  SignalLogger.writeString("Shooter/BackRoller/SysIdState", state.toString());
+                }),
+            new SysIdRoutine.Mechanism((volts) -> io.setVoltage(volts.in(Volts)), null, this));
   }
 
   @Override
@@ -128,6 +147,14 @@ public class BackRoller extends SubsystemBase {
     return setVoltage(() -> voltage);
   }
 
+  public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
+    return sysIdRoutine.quasistatic(direction);
+  }
+
+  public Command sysIdDynamic(SysIdRoutine.Direction direction) {
+    return sysIdRoutine.dynamic(direction);
+  }
+
   /**
    * Checks if the flywheel is at the target velocity.
    *
@@ -135,6 +162,6 @@ public class BackRoller extends SubsystemBase {
    */
   @AutoLogOutput(key = "Shooter/BackRoller/AtSetpoint")
   public Trigger atSetpoint() {
-    return atSetpoint;
+    return atSetpoint.debounce(0.5, DebounceType.kFalling);
   }
 }

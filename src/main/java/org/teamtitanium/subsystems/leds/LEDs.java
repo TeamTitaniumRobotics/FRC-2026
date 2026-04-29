@@ -6,7 +6,9 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.util.Color;
 import java.lang.reflect.Field;
+import java.util.List;
 import java.util.Optional;
+import java.util.function.BooleanSupplier;
 import lombok.Setter;
 import org.littletonrobotics.junction.Logger;
 import org.teamtitanium.utils.HubTracker;
@@ -22,7 +24,7 @@ public class LEDs extends VirtualSubsystem {
 
   @Setter private boolean lowBatteryAlert = false;
   @Setter private boolean coastOverride = false;
-  @Setter private boolean inShotTolerance = false;
+  @Setter private BooleanSupplier inShotTolerance = () -> false;
   @Setter private boolean autoWinnerNotSet = false;
   @Setter private boolean eStopped = false;
   private Optional<Alliance> alliance = Optional.empty();
@@ -52,9 +54,9 @@ public class LEDs extends VirtualSubsystem {
     io.updateInputs(inputs);
     Logger.processInputs("LEDs", inputs);
 
-    if (DriverStation.isFMSAttached()) {
-      alliance = DriverStation.getAlliance();
-    }
+    // if (DriverStation.isFMSAttached()) {
+    alliance = DriverStation.getAlliance();
+    // }
 
     if (DriverStation.isEStopped()) {
       eStopped = true;
@@ -71,11 +73,12 @@ public class LEDs extends VirtualSubsystem {
         strobe(Color.kOrangeRed, Color.kBlack, LEDConstants.STROBE_DURATION);
       } else {
         if (alliance.isEmpty()) {
-          wave(
-              Color.kGold,
-              Color.kDarkBlue,
-              LEDConstants.WAVE_DISABLED_CYCLE_LENGTH,
-              LEDConstants.WAVE_DISABLED_DURATION);
+          // wave(
+          //     Color.kGold,
+          //     Color.kDarkBlue,
+          //     LEDConstants.WAVE_DISABLED_CYCLE_LENGTH,
+          //     LEDConstants.WAVE_DISABLED_DURATION);
+          stripes(List.of(Color.kRed, Color.kWhite, Color.kDarkBlue), 3, 2.0);
         } else {
           Alliance currentAlliance = alliance.get();
           wave(
@@ -86,11 +89,12 @@ public class LEDs extends VirtualSubsystem {
         }
       }
     } else if (DriverStation.isAutonomous()) {
-      wave(
-          Color.kGold,
-          Color.kDarkBlue,
-          LEDConstants.WAVE_FAST_CYCLE_LENGTH,
-          LEDConstants.WAVE_FAST_DURATION);
+      // wave(
+      //     Color.kGold,
+      //     Color.kDarkBlue,
+      //     LEDConstants.WAVE_FAST_CYCLE_LENGTH,
+      //     LEDConstants.WAVE_FAST_DURATION);
+      stripes(List.of(Color.kRed, Color.kWhite, Color.kDarkBlue), 3, 2.0);
     } else {
       if (autoWinnerNotSet) {
         strobe(Color.kWhite, Color.kRed, LEDConstants.STROBE_DURATION);
@@ -102,7 +106,7 @@ public class LEDs extends VirtualSubsystem {
                 : Color.kRed,
             LEDConstants.WAVE_FAST_CYCLE_LENGTH,
             LEDConstants.WAVE_FAST_DURATION);
-      } else if (inShotTolerance) {
+      } else if (inShotTolerance.getAsBoolean()) {
         wave(
             Color.kGreen,
             Color.kWhite,
@@ -142,7 +146,7 @@ public class LEDs extends VirtualSubsystem {
   private void wave(Color c1, Color c2, double cycleLength, double duration) {
     double x = (1 - ((Timer.getTimestamp() % duration) / duration)) * 2.0 * Math.PI;
     double xDiffPerLed = (2.0 * Math.PI) / cycleLength;
-    for (int i = LEDConstants.LENGTH - 1; i >= 0; i--) {
+    for (int i = LEDConstants.LENGTH - 1; i >= 0.0; i--) {
       x += xDiffPerLed;
       double ratio = (Math.pow(Math.sin(x), LEDConstants.WAVE_EXPONENT) + 1.0) / 2.0;
       if (Double.isNaN(ratio)) {
@@ -158,12 +162,22 @@ public class LEDs extends VirtualSubsystem {
     }
   }
 
+  private void stripes(List<Color> colors, int stripeLength, double duration) {
+    int offset = (int) (Timer.getTimestamp() % duration / duration * stripeLength * colors.size());
+    for (int i = LEDConstants.LENGTH - 1; i >= 0; i--) {
+      int colorIndex =
+          (int) (Math.floor((double) (i - offset) / stripeLength) + colors.size()) % colors.size();
+      colorIndex = colors.size() - 1 - colorIndex;
+      setLED(i, colors.get(colorIndex));
+    }
+  }
+
   private void setLED(int index, Color color) {
     try {
       buffer.setRGB(
           index,
-          (int) (color.red * 255 * LEDConstants.MAX_BRIGHTNESS),
           (int) (color.green * 255 * LEDConstants.MAX_BRIGHTNESS),
+          (int) (color.red * 255 * LEDConstants.MAX_BRIGHTNESS),
           (int) (color.blue * 255 * LEDConstants.MAX_BRIGHTNESS));
     } catch (Exception e) {
       e.printStackTrace();

@@ -3,29 +3,45 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.75,
+        "x": 3.75,
         "y": 2.5
       },
       "prevControl": null,
       "nextControl": {
         "x": 2.75,
-        "y": 1.0
+        "y": 2.5
       },
       "isLocked": false,
-      "linkedName": "RBSH"
+      "linkedName": "RBSHR"
     },
     {
       "anchor": {
-        "x": 4.325,
-        "y": 0.5
+        "x": 2.0,
+        "y": 1.5
       },
       "prevControl": {
-        "x": 2.825,
-        "y": 0.5000000000000002
+        "x": 2.0,
+        "y": 2.0
+      },
+      "nextControl": {
+        "x": 2.0,
+        "y": 1.0
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 3.65,
+        "y": 0.65
+      },
+      "prevControl": {
+        "x": 2.4,
+        "y": 0.6500000000000001
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "RTSR"
+      "linkedName": null
     }
   ],
   "rotationTargets": [],
@@ -33,22 +49,22 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 1.0,
-    "maxAcceleration": 3.0,
-    "maxAngularVelocity": 540.0,
+    "maxVelocity": 0.75,
+    "maxAcceleration": 2.5,
+    "maxAngularVelocity": 360.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 1.0,
-    "rotation": 90.0
+    "velocity": 0.0,
+    "rotation": 180.0
   },
   "reversed": false,
   "folder": "RT",
   "idealStartingState": {
-    "velocity": 0,
-    "rotation": 0.0
+    "velocity": 0.75,
+    "rotation": 125.00000000000001
   },
   "useDefaultConstraints": false
 }

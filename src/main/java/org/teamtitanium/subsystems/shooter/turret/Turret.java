@@ -28,6 +28,9 @@ import yams.units.EasyCRTConfig.CrtGearPair;
 
 public class Turret extends SubsystemBase {
   private static final int dashboardLogDivisor = 5;
+  private static final double wrapBoundaryEntryMarginRad = Math.toRadians(12.0);
+  private static final double wrapBoundaryExitMarginRad = Math.toRadians(18.0);
+  private static final double wrapMinCommandDeltaRad = Math.toRadians(25.0);
 
   // Real-time tunable PID gains
   private final LoggedTunableNumber turretkP =
@@ -69,10 +72,20 @@ public class Turret extends SubsystemBase {
   @AutoLogOutput(key = "Shooter/Turret/TargetPositionRots")
   private double targetPositionRots = 0.0;
 
+  @AutoLogOutput(key = "Shooter/Turret/Wrap/IsWrapping")
+  private boolean isWrapping = false;
+
+  @AutoLogOutput(key = "Shooter/Turret/Wrap/DetectedThisCycle")
+  private boolean wrapDetectedThisCycle = false;
+
   private int dashboardLogCounter = 0;
 
   private Trigger atSetpoint =
       new Trigger(() -> Math.abs(inputs.positionRots - targetPositionRots) < ANGLE_TOLERANCE_ROTS);
+
+  private Trigger wrappingTrigger = new Trigger(() -> isWrapping);
+
+  static record WrapEvaluation(boolean wrappingThisCycle, boolean wrappingAfterUpdate) {}
 
   /** Creates a new Turret subsystem. */
   public Turret(TurretIO io) {
@@ -176,10 +189,76 @@ public class Turret extends SubsystemBase {
       bestTarget = distToMin < distToMax ? minRad : maxRad;
     }
 
+    updateWrapState(currentRad, bestTarget);
+
     // Logger.recordOutput("Shooter/Turret/DeltaAngle", bestTarget - currentRad);
     // Logger.recordOutput("Shooter/Turret/OptimalAngle", bestTarget);
 
     return Radians.of(bestTarget);
+  }
+
+  private void updateWrapState(double currentRad, double commandedTargetRad) {
+    WrapEvaluation evaluation =
+        evaluateWrappingState(
+            currentRad,
+            commandedTargetRad,
+            isWrapping,
+            MIN_ANGLE.in(Radians),
+            MAX_ANGLE.in(Radians),
+            wrapBoundaryEntryMarginRad,
+            wrapBoundaryExitMarginRad,
+            wrapMinCommandDeltaRad,
+            ANGLE_TOLERANCE_ROTS * 2.0 * Math.PI);
+
+    isWrapping = evaluation.wrappingAfterUpdate();
+    wrapDetectedThisCycle = evaluation.wrappingThisCycle();
+
+    double commandedDeltaRad = Math.abs(commandedTargetRad - currentRad);
+
+    Logger.recordOutput("Shooter/Turret/Wrap/CurrentAngleDeg", Math.toDegrees(currentRad));
+    Logger.recordOutput(
+        "Shooter/Turret/Wrap/CommandedTargetDeg", Math.toDegrees(commandedTargetRad));
+    Logger.recordOutput("Shooter/Turret/Wrap/CommandedDeltaDeg", Math.toDegrees(commandedDeltaRad));
+  }
+
+  static WrapEvaluation evaluateWrappingState(
+      double currentRad,
+      double commandedTargetRad,
+      boolean wasWrapping,
+      double minRad,
+      double maxRad,
+      double boundaryEntryMarginRad,
+      double boundaryExitMarginRad,
+      double minCommandDeltaRad,
+      double nearTargetDeltaRad) {
+    double commandedDeltaRad = Math.abs(commandedTargetRad - currentRad);
+
+    boolean nearCurrentMin = currentRad - minRad <= boundaryEntryMarginRad;
+    boolean nearCurrentMax = maxRad - currentRad <= boundaryEntryMarginRad;
+    boolean nearTargetMin = commandedTargetRad - minRad <= boundaryEntryMarginRad;
+    boolean nearTargetMax = maxRad - commandedTargetRad <= boundaryEntryMarginRad;
+
+    boolean wrappingThisCycle =
+        commandedDeltaRad > minCommandDeltaRad
+            && ((nearCurrentMax && nearTargetMin) || (nearCurrentMin && nearTargetMax));
+
+    boolean wrappingAfterUpdate = wasWrapping;
+    if (wrappingThisCycle) {
+      wrappingAfterUpdate = true;
+    } else if (wrappingAfterUpdate) {
+      boolean nearBoundaryForExit =
+          (currentRad - minRad <= boundaryExitMarginRad)
+              || (maxRad - currentRad <= boundaryExitMarginRad)
+              || (commandedTargetRad - minRad <= boundaryExitMarginRad)
+              || (maxRad - commandedTargetRad <= boundaryExitMarginRad);
+      boolean nearCommandedTarget = commandedDeltaRad < nearTargetDeltaRad;
+
+      if (!nearBoundaryForExit || nearCommandedTarget) {
+        wrappingAfterUpdate = false;
+      }
+    }
+
+    return new WrapEvaluation(wrappingThisCycle, wrappingAfterUpdate);
   }
 
   /**
@@ -248,6 +327,11 @@ public class Turret extends SubsystemBase {
   @AutoLogOutput(key = "Shooter/Turret/AtSetpoint")
   public Trigger atSetpoint() {
     return atSetpoint;
+  }
+
+  @AutoLogOutput(key = "Shooter/Turret/Wrapping")
+  public Trigger isWrapping() {
+    return wrappingTrigger;
   }
 
   /**

@@ -23,7 +23,7 @@ public class IntakeConstants {
 
     public static final AngularVelocity IDLE_VELOCITY = RotationsPerSecond.of(0.0);
     public static final AngularVelocity AGITATE_VELOCITY = RotationsPerSecond.of(16.0);
-    public static final AngularVelocity INTAKE_VELOCITY = RotationsPerSecond.of(42.0);
+    public static final AngularVelocity INTAKE_VELOCITY = RotationsPerSecond.of(40.2);
     public static final AngularVelocity EJECT_VELOCITY = RotationsPerSecond.of(-24.0);
 
     public static final double STATOR_CURRENT_LIMIT = 40.0;
@@ -31,8 +31,9 @@ public class IntakeConstants {
 
     public static final double ROLLER_GEAR_RATIO = (27.0 / 12.0);
 
-    public static final Gains ROLLER_GAINS = new Gains(0.05, 0.0, 0.0, 0.195, 0.185, 0.0, 0.0);
-    public static final Constraints ROLLER_CONSTRAINTS = new Constraints(48.0, 75.0);
+    // public static final Gains ROLLER_GAINS = new Gains(0.05, 0.0, 0.0, 0.195, 0.185, 0.0, 0.0);
+    public static final Gains ROLLER_GAINS = new Gains(0.5, 0.0, 0.0, 0.285, 0.225, 0.0, 0.0);
+    public static final Constraints ROLLER_CONSTRAINTS = new Constraints(48.0, 125.0);
 
     public static final DCMotor ROLLER_MOTOR_GEARBOX = DCMotor.getKrakenX44(2);
     public static final double ROLLER_MOI = 0.004;
@@ -81,7 +82,7 @@ public class IntakeConstants {
     public static final double STOW_CURRENT_DEBOUNCE_TIME_SECS = 0.25;
 
     // Gains
-    public static final Gains RACK_GAINS = new Gains(16.0, 0.0, 0.0, 0.275, 0.475, 0.0, 0.02);
+    public static final Gains RACK_GAINS = new Gains(8.0, 0.0, 0.0, 0.4975, 0.45, 0.0, 0.0);
 
     // Motion constraints (converted to motor rotations per second)
     private static final double MAX_LINEAR_VELOCITY_MPS = 1.2;

@@ -20,12 +20,12 @@ public class HoodConstants {
 
   // Physical Constants
   public static final double HOOD_GEAR_RATIO =
-      (50.0 / 12.0) * (166.0 / 12.0); // ~57.639:1 reduction
+      (40.0 / 12.0) * (20.0 / 16.0) * (166.0 / 12.0); // ~57.639:1 reduction
   public static final double HOOD_MOMENT_OF_INERTIA = 0.02; // kg*m^2
 
   // Mechanical Limits
   public static final double MIN_ANGLE_ROTS = 0.0; // 0 degrees (horizontal)
-  public static final double MAX_ANGLE_ROTS = 30.0 / 360.0; // 30 degrees
+  public static final double MAX_ANGLE_ROTS = 35.0 / 360.0; // 35 degrees
 
   // Tolerance
   public static final double ANGLE_TOLERANCE_ROTS = Units.degreesToRotations(3.0); // ~1.8 degrees
@@ -34,8 +34,11 @@ public class HoodConstants {
   public static final Constraints HOOD_MOTION_CONSTRAINTS =
       new Constraints(1.5, 2.5); // Max velocity (rps), accel (rps^2)
 
+  // High end: 0.475
+  // Low end: 0.315
+
   // PID Gains
-  public static final Gains HOOD_GAINS = new Gains(225.0, 0.0, 0.5, 0.3125, 5.25, 0.0, 0.01);
+  public static final Gains HOOD_GAINS = new Gains(128.0, 0.0, 0.0, 0.08, 5.5, 0.395, 0.0);
 
   // Current Limits
   public static final double STATOR_CURRENT_LIMIT = 60.0;

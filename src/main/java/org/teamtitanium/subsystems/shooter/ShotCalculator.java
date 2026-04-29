@@ -38,6 +38,9 @@ public class ShotCalculator {
   @AutoLogOutput(key = "ShotCalculator/FlywheelOffset")
   private double flywheelOffset = 0.0;
 
+  @AutoLogOutput(key = "ShotCalculator/HoodOffset")
+  private double hoodOffset = 0.0;
+
   private ShotParameters latestParameters = null;
 
   private static final double phaseDelay = 0.03; // Turret response delay
@@ -48,31 +51,37 @@ public class ShotCalculator {
       new InterpolatingTreeMap<>(InverseInterpolator.forDouble(), ShotData::interpolate);
 
   static {
-    shotMap.put(1.15, new ShotData(2500, 0));
-    shotMap.put(1.25, new ShotData(2525, 0));
-    shotMap.put(1.50, new ShotData(2550, 2.5));
-    shotMap.put(1.75, new ShotData(2600, 4));
-    shotMap.put(2.00, new ShotData(2650, 5));
-    shotMap.put(2.50, new ShotData(2750, 7, 1.1));
-    shotMap.put(2.75, new ShotData(2750, 10, 1.1));
-    shotMap.put(3.00, new ShotData(2850, 11, 1.1));
-    shotMap.put(3.25, new ShotData(3000, 12, 1.1));
-    shotMap.put(3.50, new ShotData(3075, 13, 1.1));
-    shotMap.put(3.75, new ShotData(3200, 14, 1.1));
-    shotMap.put(4.00, new ShotData(3400, 14.5, 1.12));
-    shotMap.put(4.25, new ShotData(3600, 14.5, 1.12));
-    shotMap.put(4.55, new ShotData(3800, 15, 1.12));
-    shotMap.put(4.75, new ShotData(4000, 16, 1.13));
-    shotMap.put(5.0, new ShotData(4100, 18, 1.13));
-    shotMap.put(5.25, new ShotData(4250, 19, 1.13));
-    shotMap.put(5.5, new ShotData(4450, 20, 1.13));
+    shotMap.put(1.50, new ShotData(1650, 0));
+    shotMap.put(1.75, new ShotData(1700, 0));
+    shotMap.put(2.00, new ShotData(1750, 0));
+    shotMap.put(2.25, new ShotData(1800, 1, 1.0));
+    shotMap.put(2.50, new ShotData(1850, 3, 1.0));
+    shotMap.put(2.75, new ShotData(1900, 4, 1.0));
+    shotMap.put(3.00, new ShotData(1950, 6, 1.1));
+    shotMap.put(3.25, new ShotData(2000, 8, 1.1));
+    shotMap.put(3.50, new ShotData(2075, 9, 1.1));
+    shotMap.put(3.75, new ShotData(2125, 11, 1.1));
+    shotMap.put(4.00, new ShotData(2200, 12, 1.12));
+    shotMap.put(4.25, new ShotData(2275, 13, 1.12));
+    shotMap.put(4.50, new ShotData(2375, 14, 1.12));
+    shotMap.put(4.78, new ShotData(2450, 15, 1.13));
+    shotMap.put(5.00, new ShotData(2525, 17, 1.13));
+    shotMap.put(5.255, new ShotData(2600, 18, 1.13));
+    shotMap.put(5.55, new ShotData(2675, 19, 1.14));
+    shotMap.put(5.80, new ShotData(2750, 20, 1.14));
 
-    passingMap.put(5.0, new ShotData(3350, 20.0, 1.13));
-    passingMap.put(6.0, new ShotData(3600, 22.5, 1.13));
-    passingMap.put(7.0, new ShotData(4000, 25.0, 1.14));
-    passingMap.put(8.0, new ShotData(4500, 27.5, 1.14));
-    passingMap.put(9.0, new ShotData(5250, 27.5, 1.15));
-    passingMap.put(10.0, new ShotData(5700, 27.5, 1.15));
+    passingMap.put(4.00, new ShotData(1800, 10, 1.1225, 1800));
+    passingMap.put(5.00, new ShotData(2150, 12, 1.4100, 2150));
+    passingMap.put(6.00, new ShotData(2500, 14, 1.6975, 2500));
+    passingMap.put(7.00, new ShotData(2850, 16, 1.5867, 2850));
+    passingMap.put(8.00, new ShotData(3100, 20, 1.4758, 3100));
+    passingMap.put(9.00, new ShotData(3450, 24, 1.3650, 3450));
+    passingMap.put(9.90, new ShotData(3700, 28, 1.5609, 3700));
+    passingMap.put(11.40, new ShotData(4000, 32, 1.8875, 4000));
+    passingMap.put(12.25, new ShotData(4350, 35, 2.0725, 4350));
+    passingMap.put(13.25, new ShotData(4775, 35, 2.2289, 4775));
+    passingMap.put(14.50, new ShotData(5200, 35, 2.4243, 5200));
+    passingMap.put(15.00, new ShotData(5750, 35, 2.5025, 5950));
   }
 
   public ShotParameters getParameters() {
@@ -124,15 +133,14 @@ public class ShotCalculator {
             TURRET_TO_ROBOT.getTranslation().toTranslation2d(),
             RobotState.getInstance().getRotation());
 
-    double tof =
-        passing
-            ? passingMap.get(targetToTurretDistance).tof()
-            : shotMap.get(targetToTurretDistance).tof();
+    InterpolatingTreeMap<Double, ShotData> activeMap = passing ? passingMap : shotMap;
+
+    double tof = activeMap.get(targetToTurretDistance).tof();
     Pose2d predictedTurretPose = turretPosition;
     double predictedDistance = targetToTurretDistance;
 
     for (int i = 0; i < 5; i++) {
-      tof = shotMap.get(predictedDistance).tof();
+      tof = activeMap.get(predictedDistance).tof();
       double offsetX = turretVelocity.vxMetersPerSecond * tof;
       double offsetY = turretVelocity.vyMetersPerSecond * tof;
       predictedTurretPose =
@@ -146,15 +154,11 @@ public class ShotCalculator {
         predictedTurretPose.transformBy(TURRET_TO_ROBOT.toTransform2d().inverse());
 
     Rotation2d turretAngle = getTurretAngle(predictedRobotPose, target);
-    double hoodAngleRots =
-        passing
-            ? passingMap.get(predictedDistance).getHoodAngleRots()
-            : shotMap.get(predictedDistance).getHoodAngleRots();
-    double flywheelRPM =
-        passing
-            ? passingMap.get(predictedDistance).flywheelRPM() + flywheelOffset
-            : shotMap.get(predictedDistance).flywheelRPM() + flywheelOffset;
+    ShotData shotData = activeMap.get(predictedDistance);
+    double hoodAngleRots = shotData.getHoodAngleRots() + Units.degreesToRotations(hoodOffset);
+    double flywheelRPM = shotData.flywheelRPM() + flywheelOffset;
     double flywheelIdleRPM = MathUtil.clamp(flywheelRPM, 0.0, maxFlywheelIdleRPM.get());
+    double backRollerRPM = shotData.backRollerRPM();
 
     boolean isValid =
         FieldConstants.Zones.NO_SHOOT_ZONE
@@ -169,6 +173,7 @@ public class ShotCalculator {
             hoodAngleRots,
             flywheelRPM,
             flywheelIdleRPM,
+            backRollerRPM,
             predictedDistance,
             targetToTurretDistance,
             tof,
@@ -202,20 +207,34 @@ public class ShotCalculator {
     flywheelOffset = offset;
   }
 
+  public void incrementHoodOffset(double incrementValue) {
+    hoodOffset += incrementValue;
+  }
+
+  public void setHoodOffset(double offset) {
+    hoodOffset = offset;
+  }
+
   public record ShotParameters(
       boolean isValid,
       double turretAngleRots,
       double hoodAngleRots,
       double flywheelRPM,
       double flywheelIdleRPM,
+      double backRollerRPM,
       double distance,
       double distanceNoLookahead,
       double timeOfFlight,
       boolean passing) {}
 
-  public record ShotData(double flywheelRPM, double hoodAngleDegs, double tof) {
+  public record ShotData(
+      double flywheelRPM, double hoodAngleDegs, double tof, double backRollerRPM) {
     public ShotData(double flywheelRPM, double hoodAngleDegs) {
-      this(flywheelRPM, hoodAngleDegs, 0.95);
+      this(flywheelRPM, hoodAngleDegs, 0.95, Double.NaN);
+    }
+
+    public ShotData(double flywheelRPM, double hoodAngleDegs, double tof) {
+      this(flywheelRPM, hoodAngleDegs, tof, Double.NaN);
     }
 
     public double getHoodAngleRots() {
@@ -226,7 +245,15 @@ public class ShotCalculator {
       return new ShotData(
           MathUtil.interpolate(start.flywheelRPM, end.flywheelRPM, t),
           MathUtil.interpolate(start.hoodAngleDegs, end.hoodAngleDegs, t),
-          MathUtil.interpolate(start.tof, end.tof, t));
+          MathUtil.interpolate(start.tof, end.tof, t),
+          interpolateBackRollerRpm(start.backRollerRPM, end.backRollerRPM, t));
+    }
+
+    private static double interpolateBackRollerRpm(double start, double end, double t) {
+      if (Double.isFinite(start) && Double.isFinite(end)) {
+        return MathUtil.interpolate(start, end, t);
+      }
+      return Double.NaN;
     }
   }
 }

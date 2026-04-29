@@ -114,6 +114,8 @@ public class IntakeRollerIOTalonFX implements IntakeRollerIO {
     PhoenixUtil.registerSignals(
         ROLLER_CAN_BUS,
         position,
+        velocity,
+        velocitySetpoint,
         appliedVolts.get(0),
         appliedVolts.get(1),
         supplyCurrent.get(0),

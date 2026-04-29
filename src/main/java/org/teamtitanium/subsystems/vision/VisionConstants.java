@@ -19,10 +19,15 @@ public class VisionConstants {
       new Transform3d(
           new Translation3d(-0.282414, 0.306387, 0.510389),
           new Rotation3d(0.0, Units.degreesToRadians(-22.0), Units.degreesToRadians(0.0)));
+  //   public static final Transform3d backCameraPose =
+  //       new Transform3d(
+  //           new Translation3d(-0.304646, 0.300480, 0.325744),
+  //           new Rotation3d(0.0, Units.degreesToRadians(-28.0),
+  // Units.degreesToRadians(157.22839)));
   public static final Transform3d backCameraPose =
       new Transform3d(
           new Translation3d(-0.304646, 0.300480, 0.325744),
-          new Rotation3d(0.0, Units.degreesToRadians(-28.0), Units.degreesToRadians(157.22839)));
+          new Rotation3d(0.0, Units.degreesToRadians(-28.0), Units.degreesToRadians(154.0)));
   public static final Transform3d leftCameraPose =
       new Transform3d(
           new Translation3d(-0.265486, 0.350036, 0.446487),
@@ -39,6 +44,6 @@ public class VisionConstants {
   public static final double angularStdDevBaseline = 0.06;
 
   public static final Matrix<N3, N1> SINGLE_TAG_STD_DEVS = VecBuilder.fill(4, 4, 8);
-  public static final Matrix<N3, N1> MULTI_TAG_STD_DEVS = VecBuilder.fill(0.76, 0.75, 2);
-  public static final Matrix<N3, N1> DISABLED_STD_DEVS = VecBuilder.fill(0.5, 0.5, 0.75);
+  public static final Matrix<N3, N1> MULTI_TAG_STD_DEVS = VecBuilder.fill(1.0, 1.0, 3);
+  public static final Matrix<N3, N1> DISABLED_STD_DEVS = VecBuilder.fill(0.75, 0.75, 1.0);
 }

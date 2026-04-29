@@ -22,13 +22,13 @@ public class Spindexer extends GenericRoller {
   /** Independent states for the spindexer. */
   @RequiredArgsConstructor
   public enum SpindexerState {
-    IDLE(() -> 0.0),
-    // AGITATE(() -> 0.78 * 12),
-    // FEED(() -> 0.78 * 12);
-    AGITATE(() -> Spindexer.configNumber.get() * 12.0),
-    FEED(() -> Spindexer.configNumber.get() * 12.0);
+    IDLE(() -> IDLE_VELOCITY),
+    AGITATE(() -> AGITATE_VELOCITY),
+    FEED(() -> FEED_VELOCITY);
+    // AGITATE(() -> RotationsPerSecond.of(Spindexer.configNumber.get())),
+    // FEED(() -> RotationsPerSecond.of(Spindexer.configNumber.get()));
 
-    @Getter private final Supplier<Double> spindexerVoltage;
+    @Getter private final Supplier<AngularVelocity> spindexerVelocity;
   }
 
   public static final LoggedTunableNumber configNumber =
@@ -40,15 +40,15 @@ public class Spindexer extends GenericRoller {
   public static final boolean SPINDEXER_INVERTED = true;
 
   public static final AngularVelocity IDLE_VELOCITY = RotationsPerSecond.of(0.0);
-  public static final AngularVelocity AGITATE_VELOCITY = RotationsPerSecond.of(12.0);
-  public static final AngularVelocity FEED_VELOCITY = RotationsPerSecond.of(24.0);
+  public static final AngularVelocity AGITATE_VELOCITY = RotationsPerSecond.of(5.205);
+  public static final AngularVelocity FEED_VELOCITY = RotationsPerSecond.of(5.205);
 
   public static final double STATOR_CURRENT_LIMIT = 60.0;
   public static final double SUPPLY_CURRENT_LIMIT = 40.0;
 
-  public static final double SPINDEXER_GEAR_RATIO = (38.0 / 12.0) * (38.0 / 20.0) * (36.0 / 18.0);
+  public static final double SPINDEXER_GEAR_RATIO = (38.0 / 12.0) * (46.0 / 20.0) * (36.0 / 18.0);
 
-  public static final Gains SPINDEXER_GAINS = new Gains(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+  public static final Gains SPINDEXER_GAINS = new Gains(3.0, 0.0, 0.0, 0.2575, 1.675, 0.0, 0.0);
   public static final Constraints SPINDEXER_CONSTRAINTS = new Constraints(24.0, 36.0);
 
   public static final DCMotor SPINDEXER_MOTOR_GEARBOX = DCMotor.getKrakenX44(1);
@@ -73,7 +73,7 @@ public class Spindexer extends GenericRoller {
 
   public Spindexer(GenericRollerIO io) {
     super("Spindexer", io, CONSTANTS);
-    setDefaultCommand(setVoltage(() -> state.getSpindexerVoltage().get()));
+    setDefaultCommand(setVelocity(() -> state.getSpindexerVelocity().get()));
   }
 
   public Trigger hasFuel =

@@ -9,7 +9,6 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
@@ -62,7 +61,7 @@ public class Hood extends SubsystemBase {
   @AutoLogOutput(key = "Shooter/Hood/HoodZeroed")
   private boolean hoodZeroed = false;
 
-  private final Debouncer currentDebouncer = new Debouncer(0.1, Debouncer.DebounceType.kRising);
+  private final Debouncer currentDebouncer = new Debouncer(0.05, Debouncer.DebounceType.kRising);
   private final Debouncer velocityDebouncer = new Debouncer(0.05, Debouncer.DebounceType.kRising);
   private final Trigger currentTrigger =
       new Trigger(
@@ -76,10 +75,10 @@ public class Hood extends SubsystemBase {
   public Hood(HoodIO io) {
     this.io = io;
 
-    RobotModeTriggers.teleop()
-        .or(RobotModeTriggers.autonomous())
-        .and(() -> !hoodZeroed)
-        .onTrue(zeroHood());
+    // RobotModeTriggers.teleop()
+    //     .or(RobotModeTriggers.autonomous())
+    //     .and(() -> !hoodZeroed)
+    //     .onTrue(zeroHood());
 
     Robot.getCoastOverrideTrigger()
         .onTrue(runOnce(() -> this.setBrakeMode(false)).ignoringDisable(true))
@@ -170,6 +169,14 @@ public class Hood extends SubsystemBase {
               io.setMotorPosition(0.0);
               hoodZeroed = true;
             }));
+  }
+
+  public void zeroMotor() {
+    io.setMotorPosition(0.0);
+  }
+
+  public Command stop() {
+    return Commands.runOnce(() -> io.stopMotor());
   }
 
   /**
