@@ -47,6 +47,10 @@ public class Shooter {
 
     public Supplier<AngularVelocity> getBackRollerVelocity() {
       return () -> {
+        if (this.equals(ShooterState.STOW)) {
+          return RPM.of(0.0);
+        }
+
         var shotParameters = ShotCalculator.getInstance().getParameters();
 
         double calculatedBackRollerRpm =
