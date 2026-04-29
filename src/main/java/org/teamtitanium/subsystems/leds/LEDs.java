@@ -24,7 +24,7 @@ public class LEDs extends VirtualSubsystem {
 
   @Setter private boolean lowBatteryAlert = false;
   @Setter private boolean coastOverride = false;
-  @Setter private BooleanSupplier inShotTolerance;
+  @Setter private BooleanSupplier inShotTolerance = () -> false;
   @Setter private boolean autoWinnerNotSet = false;
   @Setter private boolean eStopped = false;
   private Optional<Alliance> alliance = Optional.empty();
