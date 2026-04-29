@@ -27,7 +27,7 @@ public class Feeder extends GenericRoller {
     IDLE(() -> IDLE_VELOCITY),
     // UNJAM(() -> RotationsPerSecond.of(Feeder.configNumber.get()).times(-1.0)),
     // FEED(() -> RotationsPerSecond.of(Feeder.configNumber.get()));
-    UNJAM(() -> FEED_VELOCITY.times(-1.0)),
+    UNJAM(() -> FEED_VELOCITY.times(-0.5)),
     FEED(() -> FEED_VELOCITY);
 
     @Getter private final Supplier<AngularVelocity> feederVelocity;

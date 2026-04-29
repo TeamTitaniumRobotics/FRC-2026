@@ -17,7 +17,7 @@ public class FlywheelConstants {
 
   public static final AngularVelocity IDLE_VELOCITY = RPM.of(1500.0);
   public static final AngularVelocity SHOOT_VELOCITY = RPM.of(3500);
-  public static final AngularVelocity EJECT_VELOCITY = RPM.of(1000);
+  public static final AngularVelocity EJECT_VELOCITY = RPM.of(500);
 
   // Physical Constants
   public static final double FLYWHEEL_GEAR_RATIO = (16.0 / 24.0); // 1:1.5 reduction
