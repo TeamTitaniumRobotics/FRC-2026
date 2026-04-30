@@ -83,7 +83,10 @@ public class Turret extends SubsystemBase {
   private Trigger atSetpoint =
       new Trigger(() -> Math.abs(inputs.positionRots - targetPositionRots) < ANGLE_TOLERANCE_ROTS);
 
-  private Trigger wrappingTrigger = new Trigger(() -> isWrapping);
+  @AutoLogOutput(key = "Shooter/Turret/Wrapping")
+  private Trigger wrappingTrigger =
+      new Trigger(
+          () -> Math.abs(inputs.positionRots - targetPositionRots) < WRAPPING_TOLERANCE_ROTS);
 
   static record WrapEvaluation(boolean wrappingThisCycle, boolean wrappingAfterUpdate) {}
 
@@ -329,9 +332,8 @@ public class Turret extends SubsystemBase {
     return atSetpoint;
   }
 
-  @AutoLogOutput(key = "Shooter/Turret/Wrapping")
   public Trigger isWrapping() {
-    return wrappingTrigger;
+    return new Trigger(() -> false);
   }
 
   /**

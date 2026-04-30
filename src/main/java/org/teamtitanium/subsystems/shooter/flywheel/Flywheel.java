@@ -14,6 +14,7 @@ import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
+import org.teamtitanium.subsystems.shooter.ShotCalculator;
 import org.teamtitanium.utils.Constants.Constraints;
 import org.teamtitanium.utils.Constants.Gains;
 import org.teamtitanium.utils.LoggedTracer;
@@ -65,7 +66,12 @@ public class Flywheel extends SubsystemBase {
   private double targetVelocityRps = 0.0;
 
   private final Trigger atSetpoint =
-      new Trigger(() -> Math.abs(inputs.velocityRps - targetVelocityRps) < VELOCITY_TOLERANCE_RPS);
+      new Trigger(
+          () ->
+              ShotCalculator.getInstance().getParameters().passing()
+                  ? Math.abs(inputs.velocityRps - targetVelocityRps)
+                      < VELOCITY_PASSING_TOLERANCE_RPS
+                  : Math.abs(inputs.velocityRps - targetVelocityRps) < VELOCITY_TOLERANCE_RPS);
 
   private final SysIdRoutine sysIdRoutine;
 

@@ -51,16 +51,17 @@ public class TurretConstants {
 
   // Tolerance
   public static final double ANGLE_TOLERANCE_ROTS = Units.degreesToRotations(3.5);
+  public static final double WRAPPING_TOLERANCE_ROTS = Units.degreesToRotations(180.0);
 
   // Motion Magic Constraints
-  public static final Constraints TURRET_CONSTRAINTS = new Constraints(1.6, 12.0);
+  public static final Constraints TURRET_CONSTRAINTS = new Constraints(2.0, 24.0);
 
   // PID Gains
   public static final Gains TURRET_GAINS = new Gains(75.0, 0.0, 0.0, 0.35, 3.5, 0.0, 0.0);
 
   // Current Limits
-  public static final double STATOR_CURRENT_LIMIT = 40.0;
-  public static final double SUPPLY_CURRENT_LIMIT = 30.0;
+  public static final double STATOR_CURRENT_LIMIT = 50.0;
+  public static final double SUPPLY_CURRENT_LIMIT = 40.0;
 
   // Simulation
   public static final DCMotor TURRET_GEARBOX = DCMotor.getKrakenX44(1);

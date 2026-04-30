@@ -25,6 +25,7 @@ public class FlywheelConstants {
 
   // Tolerance
   public static final double VELOCITY_TOLERANCE_RPS = 6.0; // ~60 RPM tolerance
+  public static final double VELOCITY_PASSING_TOLERANCE_RPS = 16.66; // ~60 RPM tolerance
   public static final double VELOCITY_GAIN_TOLERANCE_RPS = 2.0;
 
   // PID Gains (Velocity control)
