@@ -48,16 +48,16 @@
     },
     {
       "anchor": {
-        "x": 6.5,
-        "y": 3.75
+        "x": 6.75,
+        "y": 3.25
       },
       "prevControl": {
-        "x": 6.721810059033619,
-        "y": 3.6346730833174568
+        "x": 6.971810059033619,
+        "y": 3.1346730833174568
       },
       "nextControl": {
-        "x": 6.278189940966381,
-        "y": 3.8653269166825432
+        "x": 6.528189940966381,
+        "y": 3.3653269166825432
       },
       "isLocked": false,
       "linkedName": null
@@ -89,7 +89,7 @@
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "RBSHR"
+      "linkedName": "RBSH"
     }
   ],
   "rotationTargets": [
@@ -102,8 +102,12 @@
       "rotationDegrees": 75.0
     },
     {
-      "waypointRelativePos": 3.2,
-      "rotationDegrees": 125.00000000000001
+      "waypointRelativePos": 2.5,
+      "rotationDegrees": 105.00000000000001
+    },
+    {
+      "waypointRelativePos": 3.7468123861566474,
+      "rotationDegrees": -125.00000000000001
     }
   ],
   "constraintZones": [
@@ -133,7 +137,7 @@
   },
   "goalEndState": {
     "velocity": 0.75,
-    "rotation": 125.00000000000001
+    "rotation": -125.00000000000001
   },
   "reversed": false,
   "folder": "RT",

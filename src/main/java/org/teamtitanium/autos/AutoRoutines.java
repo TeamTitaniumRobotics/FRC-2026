@@ -100,10 +100,19 @@ public class AutoRoutines {
         Commands.sequence(
             resetPose(Path.RTS_RFME_RBSH),
             followPath(Path.RTS_RFME_RBSH, routine),
+            Commands.deadline(
+                followPath(Path.RBSH_RTSH, routine).andThen(Commands.waitSeconds(2.0)),
+                Commands.sequence(
+                        setAutoScore(true),
+                        setAutoIntakeOverride(true),
+                        Commands.waitSeconds(2.0),
+                        setAutoIntakeOverride(false),
+                        shuffleIntake(1.0, 0.75))
+                    .andThen(setAutoScore(false))),
+            // shuffleShoot().withTimeout(2.0),
+            followPath(Path.RTSH_RCME_RBSH, routine),
             followPath(Path.RBSH_RTSH, routine),
-            shuffleShoot().withTimeout(2.0),
-            followPath(Path.RTSH_RCME_RBSHR, routine),
-            followPath(Path.RBSHR_RTSHB, routine));
+            shuffleShoot().withTimeout(2.0));
     routine.active().onTrue(autoCmd);
     return routine.cmd();
   }
@@ -283,7 +292,7 @@ public class AutoRoutines {
     RTS_RCME(PathAction.INTAKE),
     RTS_RB(PathAction.NOTHING, true),
     RTS_RFME_RBSH(PathAction.INTAKE),
-    RTSH_RCME_RBSHR(PathAction.INTAKE),
+    RTSH_RCME_RBSH(PathAction.INTAKE),
     RTSH_RCME(PathAction.INTAKE),
     RTSR_RFME(PathAction.INTAKE),
     RTSR_RCME(PathAction.INTAKE),
@@ -299,7 +308,7 @@ public class AutoRoutines {
     RCME_RTS(PathAction.NOTHING, true),
     ROB_RBB(PathAction.NOTHING, true),
     RB_RTS(PathAction.INTAKE),
-    RBSH_RTSH(PathAction.SCORE, true),
+    RBSH_RTSH(PathAction.NOTHING, true),
     RBSHR_RTSHB(PathAction.SHUFFLE),
     LTS_LFME(PathAction.INTAKE),
     LTS_LFME_LBSH(PathAction.INTAKE),
