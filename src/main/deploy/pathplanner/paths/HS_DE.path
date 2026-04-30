@@ -8,39 +8,55 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.7542954855157413,
-        "y": 4.676426480279181
+        "x": 2.021437176469292,
+        "y": 5.175046660648861
       },
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "HS"
     },
     {
       "anchor": {
-        "x": 0.6498444444444444,
-        "y": 6.0
+        "x": 0.75,
+        "y": 5.259909930104693
       },
       "prevControl": {
-        "x": 2.1498444444444447,
+        "x": 0.75,
+        "y": 5.009909930104693
+      },
+      "nextControl": {
+        "x": 0.75,
+        "y": 5.509909930104693
+      },
+      "isLocked": false,
+      "linkedName": "DS"
+    },
+    {
+      "anchor": {
+        "x": 0.75,
+        "y": 6.25
+      },
+      "prevControl": {
+        "x": 0.75,
         "y": 6.0
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "DE"
     }
   ],
   "rotationTargets": [
     {
-      "waypointRelativePos": 0.5,
+      "waypointRelativePos": 1.0,
       "rotationDegrees": 135.0
     }
   ],
   "constraintZones": [
     {
       "name": "Intake",
-      "minWaypointRelativePos": 0.6948936170212819,
-      "maxWaypointRelativePos": 1.0,
+      "minWaypointRelativePos": 1.4,
+      "maxWaypointRelativePos": 2.0,
       "constraints": {
-        "maxVelocity": 1.0,
+        "maxVelocity": 1.5,
         "maxAcceleration": 4.0,
         "maxAngularVelocity": 540.0,
         "maxAngularAcceleration": 720.0,
@@ -60,8 +76,8 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 0,
-    "rotation": 180.0
+    "velocity": 1.5,
+    "rotation": 135.0
   },
   "reversed": false,
   "folder": "Depot",

@@ -50,7 +50,7 @@ public class TurretConstants {
   public static final Angle TURRET_RANGE = MAX_ANGLE.minus(MIN_ANGLE); // 450 degrees
 
   // Tolerance
-  public static final double ANGLE_TOLERANCE_ROTS = Units.degreesToRotations(3.5);
+  public static final double ANGLE_TOLERANCE_ROTS = Units.degreesToRotations(5.0);
   public static final double WRAPPING_TOLERANCE_ROTS = Units.degreesToRotations(180.0);
 
   // Motion Magic Constraints

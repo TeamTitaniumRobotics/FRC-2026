@@ -388,6 +388,7 @@ public class Robot extends LoggedRobot {
     autoChooser.addCmd("Left Double Pass", autoRoutines::leftDoublePass);
     autoChooser.addCmd("Right Double Pass", autoRoutines::rightDoublePass);
     autoChooser.addCmd("Right Double Bump", autoRoutines::rightDoubleBump);
+    autoChooser.addCmd("Left Double Bump", autoRoutines::leftDoubleBump);
     autoChooser.addCmd("Depot", autoRoutines::depotAuto);
     autoChooser.addCmd("Straight Test", autoRoutines::straightTuningAuto);
 

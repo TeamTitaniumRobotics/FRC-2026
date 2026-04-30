@@ -108,6 +108,21 @@ public class AutoRoutines {
     return routine.cmd();
   }
 
+  public Command leftDoubleBump() {
+    final AutoRoutine routine = factory.newRoutine("Left Double Bump");
+    Command autoCmd =
+        Commands.sequence(
+            resetPose(Path.LTS_LFME_LBSH),
+            followPath(Path.LTS_LFME_LBSH, routine),
+            followPath(Path.LBSH_LTSH, routine),
+            shuffleShoot().withTimeout(2.0),
+            followPath(Path.LTSH_LCME_LBSH, routine),
+            followPath(Path.LBSH_LTSH, routine),
+            shuffleShoot().withTimeout(2.0));
+    routine.active().onTrue(autoCmd);
+    return routine.cmd();
+  }
+
   public Command depotAuto() {
     final AutoRoutine routine = factory.newRoutine("Depot");
     Command autoCmd =
@@ -117,37 +132,6 @@ public class AutoRoutines {
             shuffleShoot().withTimeout(5.0));
     return autoCmd;
   }
-
-  // public Command rightDoublePassBump() {
-  //   final AutoRoutine routine = factory.newRoutine("Right Double Pass Bump");
-  //   Command autoCmd = resetPose(Path.RTSR_RFME);
-
-  //   autoCmd =
-  //       autoCmd.andThen(
-  //           Commands.sequence(
-  //               followPath(Path.RTSR_RFME, routine), followPath(Path.RFME_RBSH, routine)));
-
-  //   autoCmd =
-  //       autoCmd.andThen(
-  //           Commands.deadline(
-  //               followPath(Path.RBSH_RTSR, routine),
-  //               Commands.waitSeconds(1.0).andThen(shuffleShoot())));
-
-  //   autoCmd =
-  //       autoCmd.andThen(
-  //           Commands.sequence(
-  //               followPath(Path.RTSR_RCME, routine), followPath(Path.RCME_RBSH, routine)));
-
-  //   autoCmd =
-  //       autoCmd.andThen(
-  //           Commands.deadline(
-  //               followPath(Path.RBSH_RTSR, routine),
-  //               Commands.waitSeconds(1.0).andThen(shuffleShoot())));
-
-  //   routine.active().onTrue(autoCmd);
-
-  //   return routine.cmd();
-  // }
 
   public Command rightDoublePass() {
     final AutoRoutine routine = factory.newRoutine("Right Double Pass");
@@ -315,10 +299,13 @@ public class AutoRoutines {
     RCME_RTS(PathAction.NOTHING, true),
     ROB_RBB(PathAction.NOTHING, true),
     RB_RTS(PathAction.INTAKE),
-    RBSH_RTSH(PathAction.SHUFFLE),
+    RBSH_RTSH(PathAction.SCORE, true),
     RBSHR_RTSHB(PathAction.SHUFFLE),
     LTS_LFME(PathAction.INTAKE),
+    LTS_LFME_LBSH(PathAction.INTAKE),
+    LBSH_LTSH(PathAction.SCORE, true),
     LTSH_LCME(PathAction.INTAKE),
+    LTSH_LCME_LBSH(PathAction.INTAKE),
     LFME_LTS(PathAction.NOTHING, true),
     LFME_LTSH(PathAction.NOTHING, true),
     LTS_LB(PathAction.SCORE, true),
