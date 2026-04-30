@@ -36,7 +36,7 @@ public class ShotCalculator {
       new LoggedTunableNumber("ShotCalculator/MaxFlywheelIdleRPM", 0.0);
 
   @AutoLogOutput(key = "ShotCalculator/FlywheelOffset")
-  private double flywheelOffset = 0.0;
+  private double flywheelOffset = 50.0;
 
   @AutoLogOutput(key = "ShotCalculator/HoodOffset")
   private double hoodOffset = 0.0;

@@ -579,11 +579,11 @@ public class Robot extends LoggedRobot {
 
     copilot
         .rightBumper()
-        .onTrue(Commands.runOnce(() -> shotCalculator.incrementFlywheelOffset(25.0)));
+        .onTrue(Commands.runOnce(() -> shotCalculator.incrementFlywheelOffset(50.0)));
     copilot
         .rightTrigger()
-        .onTrue(Commands.runOnce(() -> shotCalculator.incrementFlywheelOffset(-25.0)));
-    copilot.a().onTrue(Commands.runOnce(() -> shotCalculator.setFlywheelOffset(0.0)));
+        .onTrue(Commands.runOnce(() -> shotCalculator.incrementFlywheelOffset(-50.0)));
+    copilot.a().onTrue(Commands.runOnce(() -> shotCalculator.setFlywheelOffset(50.0)));
 
     copilot.leftBumper().onTrue(Commands.runOnce(() -> shotCalculator.incrementHoodOffset(1.0)));
     copilot.leftTrigger().onTrue(Commands.runOnce(() -> shotCalculator.incrementHoodOffset(-1.0)));
