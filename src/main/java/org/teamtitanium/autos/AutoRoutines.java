@@ -100,6 +100,21 @@ public class AutoRoutines {
         Commands.sequence(
             resetPose(Path.RTS_RFME_RBSH),
             followPath(Path.RTS_RFME_RBSH, routine),
+            followPath(Path.RBSH_RTSH, routine),
+            shuffleShoot().withTimeout(2.0),
+            followPath(Path.RTSH_RCME_RBSH, routine),
+            followPath(Path.RBSH_RTSH, routine),
+            shuffleShoot().withTimeout(2.0));
+    routine.active().onTrue(autoCmd);
+    return routine.cmd();
+  }
+
+  public Command wiprightDoubleBump() {
+    final AutoRoutine routine = factory.newRoutine("Right Double Bump");
+    Command autoCmd =
+        Commands.sequence(
+            resetPose(Path.RTS_RFME_RBSH),
+            followPath(Path.RTS_RFME_RBSH, routine),
             Commands.deadline(
                 followPath(Path.RBSH_RTSH, routine).andThen(Commands.waitSeconds(2.0)),
                 Commands.sequence(
@@ -308,7 +323,7 @@ public class AutoRoutines {
     RCME_RTS(PathAction.NOTHING, true),
     ROB_RBB(PathAction.NOTHING, true),
     RB_RTS(PathAction.INTAKE),
-    RBSH_RTSH(PathAction.NOTHING, true),
+    RBSH_RTSH(PathAction.SCORE, true),
     RBSHR_RTSHB(PathAction.SHUFFLE),
     LTS_LFME(PathAction.INTAKE),
     LTS_LFME_LBSH(PathAction.INTAKE),
